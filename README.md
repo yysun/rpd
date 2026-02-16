@@ -28,9 +28,11 @@ RPD gives you 11 command keywords you can use in conversation to drive a systema
 
 Default trigger behavior:
 
+- `REQ` → AR loop (auto)
+- `AP` → AR loop (auto)
+- `SS` → CR loop (auto)
+- `GC` → CR (auto)
 - `RPD` orchestrates the full flow.
-- Standalone commands (`REQ`, `AP`, `AR`, `SS`, `CC`, `DF`, `DD`, `TT`, `CR`, `GC`) run only what was requested.
-- Follow-up steps for standalone commands are recommendations unless explicitly requested.
 - In `RPD`, use one AR pass that reviews REQ + AP together unless the user asks for separate reviews.
 
 ## Installation
@@ -110,7 +112,8 @@ REQ do following:
 ## Core Rules
 
 - Requirements focus on WHAT (REQ/AR), not HOW.
-- CR auto-fixes critical issues before reporting.
+- AR auto-fixes high priority issues before reporting.
+- CR auto-fixes high priority issues before reporting.
 - Run checks relevant to changed artifacts (tests/build/lint/docs preview as applicable).
 - Ignore command keywords inside fenced code blocks and inline code unless explicitly requested.
 - After REQ/AP/AR, ask for explicit approval before SS/DF/CC/TT/GC.

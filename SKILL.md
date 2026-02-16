@@ -29,6 +29,7 @@ A concise command-driven workflow for software development.
   - Ensure no major flaws.
   - Provide options and tradeoffs.
   - Update existing REQ/AP docs in place (no separate review doc).
+  - Automatically fix high priority issues before reporting.
 - **SS**: Implement step-by-step from the plan.
   - Update plan progress (`- [x]`) as tasks complete.
   - Wait for approval gate before starting.
@@ -42,17 +43,17 @@ A concise command-driven workflow for software development.
   - If project uses another test command, use that instead.
 - **CR**: Review uncommitted changes with git.
   - Check architecture, quality, performance, maintainability, and security.
-  - Automatically fix critical findings before reporting.
+  - Automatically fix high priority issues before reporting.
 - **GC**: Commit changes with a clear conventional commit message.
   - If requested as a standalone command, run CR first.
 
 ## Automatic Triggers
 
-Keep auto-triggers minimal to avoid accidental chaining:
-
+- `REQ` → AR loop (auto)
+- `AP` → AR loop (auto)
+- `SS` → CR loop (auto)
+- `GC` → CR (auto)
 - `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`).
-- Standalone commands (`REQ`, `AP`, `AR`, `SS`, `CC`, `DF`, `DD`, `TT`, `CR`, `GC`) run only what was requested.
-- Follow-up steps for standalone commands are recommendations, not implicit auto-runs, unless the user explicitly asks.
 
 ## Core Rules
 

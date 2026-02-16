@@ -37,21 +37,23 @@ RPD (runs: REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC)
 | `RPD` | Full end-to-end flow |
 | `REQ` | Requirements (WHAT only) |
 | `AP` | Architecture and phased plan |
-| `AR` | Review REQ/AP and update in place |
+| `AR` | Review REQ/AP and update in place; auto-fix high priority issues |
 | `SS` | Implement tasks phase-by-phase |
 | `DF` | Debug root cause and fix |
 | `CC` | Consolidate/clean code |
 | `TT` | Test and fix failures |
-| `CR` | Review changes; auto-fix critical issues |
+| `CR` | Review changes; auto-fix high priority issues |
 | `DD` | Document completed work |
 | `GC` | Commit with conventional message |
 
 ## Automatic Triggers
 
 ```
+REQ → AR loop (auto)
+AP → AR loop (auto)
+SS → CR loop (auto)
+GC → CR (auto)
 RPD orchestrates full flow
-Standalone commands run only what was requested
-Follow-up steps are recommendations unless user explicitly asks
 In RPD, prefer one AR pass that reviews REQ + AP together unless user asks for separate reviews
 ```
 
@@ -79,7 +81,8 @@ DD creates:  .docs/done/{date}/{name}.md
 ## Rules
 
 - **Requirements = WHAT only** — no how, no optimization
-- **CR auto-fixes critical issues** — don't just report, fix them
+- **AR auto-fixes high priority issues** — before reporting
+- **CR auto-fixes high priority issues** — don't just report, fix them
 - **Validate relevant checks** — run tests/build/lint/docs preview based on changed artifacts
 - **Approval gate** — after REQ/AP/AR, ask for approval before SS/DF/CC/TT/GC
 - **File header comments** — add/update only when consistent with project conventions

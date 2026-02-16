@@ -2,37 +2,17 @@
 
 Quick reference guide for the Requirements, Planning, and Development workflow commands.
 
-## Command Cheat Sheet
+## Canonical Flow
 
 ```
-RPD - Requirements, Planning, and Development Workflow
-
-REQUIREMENTS & PLANNING
-├─ REQ → Create requirement document (.docs/reqs/)
-├─ AP  → Create architecture plan (.docs/plans/)
-└─ AR  → Review architecture (auto after REQ/AP)
-
-IMPLEMENTATION
-├─ SS  → Step-by-step implementation
-├─ DF  → Debug and fix issues
-└─ CC  → Consolidate/clean code
-
-DOCUMENTATION
-└─ DD  → Document completed features (.docs/done/)
-
-TESTING
-└─ TT  → Run tests and fix failures
-
-GIT WORKFLOW
-├─ CR  → Code review via git diff
-└─ GC  → Review + commit (auto CR)
+RPD = REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC
 ```
 
 ## Quick Workflows
 
 ### New Feature (Complete)
 ```
-REQ → AP → SS → TT → DD → GC
+REQ → AP → AR → SS → TT → DD → GC
 ```
 
 ### Bug Fix (Quick)
@@ -47,58 +27,32 @@ CC → TT → GC
 
 ### End-to-End (One Command)
 ```
-RDP (runs: REQ → AP → AR loop → SS → CR loop → DD → GC)
+RPD (runs: REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC)
 ```
 
-## Command Details
+## Commands
 
-### REQ - Requirements
-**Purpose**: Document WHAT is needed, not HOW
-**Output**: `.docs/reqs/{date}/req-{name}.md`
-**Auto-triggers**: AR
-
-### AP - Architecture Plan
-**Purpose**: Design implementation with phased tasks
-**Output**: `.docs/plans/{date}/plan-{name}.md`
-**Auto-triggers**: AR
-
-### AR - Architecture Review
-**Purpose**: Validate approach, provide alternatives
-**Updates**: Existing req/plan documents in place
-
-### SS - Step-by-Step
-**Purpose**: Execute plan systematically
-**Updates**: Plan checkboxes as tasks complete
-
-### CC - Consolidate Code
-**Purpose**: Remove redundancy, dead code, unused imports
-
-### DF - Debug & Fix
-**Purpose**: Find root cause and fix (not just symptoms)
-
-### DD - Document Done
-**Purpose**: Record completed work
-**Output**: `.docs/done/{date}/{name}.md`
-
-### TT - Test & Fix
-**Purpose**: Run tests and fix failures
-**Process**: Run → Analyze → Fix → Repeat
-
-### CR - Code Review
-**Purpose**: Review uncommitted changes via `git diff`
-**Outputs**: Critical (auto-fixed), Important (should fix), Nice-to-have
-
-### GC - Git Commit
-**Purpose**: Review then commit
-**Auto-runs**: CR before committing
-**Format**: `<type>(<scope>): <subject>`
+| Command | Purpose |
+|---------|---------|
+| `RPD` | Full end-to-end flow |
+| `REQ` | Requirements (WHAT only) |
+| `AP` | Architecture and phased plan |
+| `AR` | Review REQ/AP and update in place |
+| `SS` | Implement tasks phase-by-phase |
+| `DF` | Debug root cause and fix |
+| `CC` | Consolidate/clean code |
+| `TT` | Test and fix failures |
+| `CR` | Review changes; auto-fix critical issues |
+| `DD` | Document completed work |
+| `GC` | Commit with conventional message |
 
 ## Automatic Triggers
 
 ```
-REQ ──→ AR (auto)
-AP  ──→ AR (auto)
-GC  ──→ CR (auto)
+RPD orchestrates full flow
+Standalone commands run only what was requested
+Follow-up steps are recommendations unless user explicitly asks
+In RPD, prefer one AR pass that reviews REQ + AP together unless user asks for separate reviews
 ```
 
 ## Documentation Trail
@@ -114,20 +68,37 @@ DD creates:  .docs/done/{date}/{name}.md
 
 | Situation | Commands |
 |-----------|----------|
-| New big feature | REQ → AP → SS → TT → DD → GC |
+| New big feature | REQ → AP → AR → SS → TT → DD → GC |
 | New small feature | SS → TT → GC |
 | Bug fix | DF → TT → GC |
 | Code cleanup | CC → TT → GC |
 | UI feature | SS → TT → GC |
 | Refactoring | AP → SS → TT → GC |
-| Full delivery | RDP |
+| Full delivery | RPD |
 
 ## Rules
 
 - **Requirements = WHAT only** — no how, no optimization
 - **CR auto-fixes critical issues** — don't just report, fix them
-- **Compile after every change** — verify no errors before moving on
-- **File header comments** — summarize features, implementation, and changes at top of each source file
+- **Validate relevant checks** — run tests/build/lint/docs preview based on changed artifacts
+- **Approval gate** — after REQ/AP/AR, ask for approval before SS/DF/CC/TT/GC
+- **File header comments** — add/update only when consistent with project conventions
+
+## Invocation Notes
+
+- Match command keywords case-insensitively and prioritize clear user intent.
+- Plain-language requests are valid; no strict command format is required.
+- Multi-line messages are valid; detect command keywords on the first non-empty line or any clear command line.
+- Ignore keywords inside fenced code blocks and inline code unless explicitly requested.
+
+Example:
+
+```text
+REQ do following:
+- x
+- y
+- z
+```
 
 ## Commit Types
 

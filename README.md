@@ -4,11 +4,11 @@ An AI agent skill that provides a structured workflow for software development, 
 
 ## What It Does
 
-RPD gives you 12 command keywords you can use in conversation to drive a systematic development process:
+RPD gives you 11 command keywords you can use in conversation to drive a systematic development process:
 
 | Command | Purpose |
 |---------|---------|
-| `RDP` | Run the full end-to-end loop |
+| `RPD` | Run the full end-to-end loop |
 | `REQ` | Document requirements |
 | `AP` | Create architecture plan |
 | `AR` | Review architecture |
@@ -19,6 +19,19 @@ RPD gives you 12 command keywords you can use in conversation to drive a systema
 | `TT` | Run tests and fix |
 | `CR` | Code review |
 | `GC` | Git commit with review |
+
+## Canonical Flow
+
+`RPD` runs:
+
+**REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC**
+
+Default trigger behavior:
+
+- `RPD` orchestrates the full flow.
+- Standalone commands (`REQ`, `AP`, `AR`, `SS`, `CC`, `DF`, `DD`, `TT`, `CR`, `GC`) run only what was requested.
+- Follow-up steps for standalone commands are recommendations unless explicitly requested.
+- In `RPD`, use one AR pass that reviews REQ + AP together unless the user asks for separate reviews.
 
 ## Installation
 
@@ -49,7 +62,7 @@ You can also append it to a project-level `CLAUDE.md`, `AGENTS.md`, or any markd
 
 ## Usage
 
-Just include a command keyword in your message:
+Include a command keyword in your message (no strict prefix or wrapper format required):
 
 ```
 REQ - Add user authentication with JWT tokens
@@ -62,13 +75,46 @@ GC - Commit changes
 Or run everything at once:
 
 ```
-RDP - Implement JWT authentication end-to-end
+RPD - Implement JWT authentication end-to-end
+```
+
+Recommended workflow by task:
+
+- Big feature: `REQ → AP → AR → SS → TT → DD → GC`
+- Small feature/UI: `SS → TT → GC`
+- Bug fix: `DF → TT → GC`
+- Cleanup/refactor: `CC/AP → SS/TT → GC`
+
+Natural-language examples (also valid):
+
+```
+Can you run req for a JWT auth feature?
+Please do AP for this payment retry system.
+Let's do TT on the current branch.
+```
+
+Multi-line example (also valid):
+
+```text
+REQ do following:
+- x
+- y
+- z
 ```
 
 ## Prerequisites
 
 - **Git** (for CR and GC commands)
 - **Test runner** (for TT - auto-detected from project config)
+
+## Core Rules
+
+- Requirements focus on WHAT (REQ/AR), not HOW.
+- CR auto-fixes critical issues before reporting.
+- Run checks relevant to changed artifacts (tests/build/lint/docs preview as applicable).
+- Ignore command keywords inside fenced code blocks and inline code unless explicitly requested.
+- After REQ/AP/AR, ask for explicit approval before SS/DF/CC/TT/GC.
+- Ask targeted clarification when blocked by ambiguity.
 
 ## File Structure
 

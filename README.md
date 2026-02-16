@@ -26,6 +26,12 @@ RPD gives you 11 command keywords you can use in conversation to drive a systema
 
 **REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC**
 
+What `loop` means:
+
+- `AR (loop)`: repeat architecture review/update until no major flaws remain or the user approves.
+- `CR (loop)`: repeat code review/fixes until no high-priority issues remain.
+- `loop` has an exit condition; once met, continue to the next step.
+
 Default trigger behavior:
 
 - `REQ` → AR loop (auto)

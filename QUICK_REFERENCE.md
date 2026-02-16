@@ -2,17 +2,12 @@
 
 Quick reference guide for the Requirements, Planning, and Development workflow commands.
 
-## Canonical Flow
-
-```
-RPD = REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC
-```
 
 ## Quick Workflows
 
-### New Feature (Complete)
+### Full end-to-end
 ```
-REQ → AP → AR → SS → TT → DD → GC
+RPD = REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC
 ```
 
 ### Bug Fix (Quick)
@@ -30,12 +25,18 @@ CC → TT → GC
 RPD (runs: REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC)
 ```
 
+### What `loop` Means
+
+- `AR (loop)`: repeat review/update until no major flaws remain or user approves.
+- `CR (loop)`: repeat review/fixes until no high-priority issues remain.
+- `loop` has an exit condition and then continues to the next command.
+
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
 | `RPD` | Full end-to-end flow |
-| `REQ` | Requirements (WHAT only) |
+| `REQ` | Requirements doc only (WHAT only, no coding) |
 | `AP` | Architecture and phased plan |
 | `AR` | Review REQ/AP and update in place; auto-fix high priority issues |
 | `SS` | Implement tasks phase-by-phase |
@@ -60,7 +61,7 @@ In RPD, prefer one AR pass that reviews REQ + AP together unless user asks for s
 ## Documentation Trail
 
 ```
-REQ creates: .docs/reqs/{date}/req-{name}.md
+REQ creates/updates only: .docs/reqs/{date}/req-{name}.md
 AP creates:  .docs/plans/{date}/plan-{name}.md
 SS updates:  checkboxes in plan
 DD creates:  .docs/done/{date}/{name}.md
@@ -81,6 +82,7 @@ DD creates:  .docs/done/{date}/{name}.md
 ## Rules
 
 - **Requirements = WHAT only** — no how, no optimization
+- **REQ is doc-only** — do not change source code, tests, or configs
 - **AR auto-fixes high priority issues** — before reporting
 - **CR auto-fixes high priority issues** — don't just report, fix them
 - **Validate relevant checks** — run tests/build/lint/docs preview based on changed artifacts

@@ -22,6 +22,8 @@ A concise command-driven workflow for software development.
   - Stop for approval after `REQ/AP/AR` before continuing to implementation/testing/commit steps.
 - **REQ**: Create or update requirements in `.docs/reqs/{yyyy-mm-dd}/req-{name}.md`.
   - Focus on WHAT, not HOW, not optimization.
+  - REQ is documentation-only: create/update the requirement doc and do not implement code.
+  - Do not modify source code, tests, configs, or non-REQ docs when executing REQ.
 - **AP**: Create architecture/implementation plan in `.docs/plans/{yyyy-mm-dd}/plan-{name}.md`.
   - Use markdown checkboxes for phased tasks.
   - Use Mermaid for complex structures or flows.
@@ -55,9 +57,16 @@ A concise command-driven workflow for software development.
 - `GC` → CR (auto)
 - `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`).
 
+### What `loop` Means
+
+- `AR (loop)`: Repeat architecture review/update until no major flaws remain or explicit user approval is given.
+- `CR (loop)`: Repeat code review/fixes until no high-priority issues remain.
+- A `loop` is not infinite: stop when the exit condition is met, then continue to the next step.
+
 ## Core Rules
 
 - Requirements work (REQ/AR) must focus on WHAT, not HOW.
+- REQ must only create/update `.docs/reqs/{yyyy-mm-dd}/req-{name}.md` and then stop for approval.
 - For large changes or AP requests, create/update plan first and get approval before implementation.
 - Be truthful about execution: only claim tests/build/lint ran if actually run.
 - If blocked by ambiguity or tradeoffs, ask targeted clarification questions.

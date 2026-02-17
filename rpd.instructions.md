@@ -9,9 +9,6 @@ applyTo: '**'
 ## Command Keywords
 
 Use the following keywords:
-- **RPD**: Run the full end-to-end workflow.
-  - Sequence: `REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`.
-  - Stop for approval after `REQ/AP/AR` before continuing to implementation/testing/commit steps.
 - **REQ**: Create or update requirements to `.docs/reqs/{yyyy-mm-dd}/req-{name}.md` → focus on `what`, not `how`, not optimization.
 - **AP**: Architecture Plan → Create an implementation plan using markdown check boxes → save to `.docs/plans/{yyyy-mm-dd}/plan-{name}.md`.
 - **AR**: Architecture Review → think harder ensure no flaw → provide options and suggestions → update the requirement and plan docs only, do not create review doc.
@@ -22,6 +19,21 @@ Use the following keywords:
 - **TT**: Test and → Run 'npm test' and fix all failed tests.
 - **CR**: Code Review → use git to get uncommitted change → perform a code review to ensure architecture best practices, efficiency, maintainability, and security → suggest improvements.
 - **GC**: Commit changes with clear message → use git to commit all changes with a clear, concise message.
+- **RPD**: Run the full end-to-end workflow. Sequence: `REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`.
+
+## Automatic Triggers
+
+- `REQ` → AR loop (auto)
+- `AP` → AR loop (auto)
+- `SS` → CR loop (auto)
+- `GC` → CR (auto)
+- `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`).
+
+### What `loop` Means
+
+- A `loop` is not infinite: stop when the exit condition is met, then continue to the next step.
+- `AR (loop)`: Repeat architecture review/update until no major flaws remain or explicit user approval is given.
+- `CR (loop)`: Repeat code review/fixes until no high-priority issues remain.
 
 ## Requirement and Planning Rules
 - Requirement creation or analysis → focus on `what`, not `how`, not optimization.

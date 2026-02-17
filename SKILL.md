@@ -1,6 +1,6 @@
 ---
 name: rpd
-description: Use this skill when user intent invokes any RPD command keyword: RPD, REQ, AP, AR, SS, CC, DF, DD, TT, CR, or GC. Detection is case-insensitive and intent-first. Ignore keywords inside fenced code blocks and inline code unless the user explicitly asks to run them.
+description: Use this skill when user intent invokes any RPD command keywords, RPD, REQ, AP, AR, SS, CC, DF, DD, TT, CR, or GC. Detection is case-insensitive and intent-first. Ignore keywords inside fenced code blocks and inline code unless the user explicitly asks to run them.
 ---
 
 # RPD - Requirements, Planning, and Development Workflow

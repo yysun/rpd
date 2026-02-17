@@ -1,3 +1,11 @@
+---
+applyTo: '**'
+---
+
+## File Comment Blocks
+- Add/update comment blocks at the top of each source file summarizing features, implementation, and changes.
+- Create before editing, if missing update after changes.
+
 ## Command Keywords
 
 Use the following keywords:

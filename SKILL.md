@@ -20,11 +20,11 @@ A concise command-driven workflow for software development.
 - **RPD**: Run the full end-to-end workflow.
   - Sequence: `REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`.
   - Stop for approval after `REQ/AP/AR` before continuing to implementation/testing/commit steps.
-- **REQ**: Create or update requirements in `.docs/reqs/{yyyy-mm-dd}/req-{name}.md`.
+- **REQ**: Create or update requirements in `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`.
   - Focus on WHAT, not HOW, not optimization.
   - REQ is documentation-only: create/update the requirement doc and do not implement code.
   - Do not modify source code, tests, configs, or non-REQ docs when executing REQ.
-- **AP**: Create architecture/implementation plan in `.docs/plans/{yyyy-mm-dd}/plan-{name}.md`.
+- **AP**: Create architecture/implementation plan in `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`.
   - Use markdown checkboxes for phased tasks.
   - Use Mermaid for complex structures or flows.
 - **AR**: Review architecture and assumptions.
@@ -39,7 +39,7 @@ A concise command-driven workflow for software development.
 - **DF**: Debug and fix root cause.
   - Explain the issue clearly.
   - Provide fix options when useful.
-- **DD**: Document completed work in `.docs/done/{yyyy-mm-dd}/{name}.md`.
+- **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
 - **TT**: Run tests and fix failures.
   - Default command: `npm test`.
   - If project uses another test command, use that instead.
@@ -66,7 +66,7 @@ A concise command-driven workflow for software development.
 ## Core Rules
 
 - Requirements work (REQ/AR) must focus on WHAT, not HOW.
-- REQ must only create/update `.docs/reqs/{yyyy-mm-dd}/req-{name}.md` and then stop for approval.
+- REQ must only create/update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md` and then stop for approval.
 - For large changes or AP requests, create/update plan first and get approval before implementation.
 - Be truthful about execution: only claim tests/build/lint ran if actually run.
 - If blocked by ambiguity or tradeoffs, ask targeted clarification questions.
@@ -79,7 +79,7 @@ A concise command-driven workflow for software development.
 
 ```
 .docs/
-├── reqs/{yyyy-mm-dd}/req-{name}.md
-├── plans/{yyyy-mm-dd}/plan-{name}.md
-└── done/{yyyy-mm-dd}/{name}.md
+├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
+├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
+└── done/{yyyy}/{mm}/{dd}/{name}.md
 ```

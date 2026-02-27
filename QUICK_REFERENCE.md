@@ -61,10 +61,10 @@ In RPD, prefer one AR pass that reviews REQ + AP together unless user asks for s
 ## Documentation Trail
 
 ```
-REQ creates/updates only: .docs/reqs/{date}/req-{name}.md
-AP creates:  .docs/plans/{date}/plan-{name}.md
+REQ creates/updates only: .docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md
+AP creates:  .docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md
 SS updates:  checkboxes in plan
-DD creates:  .docs/done/{date}/{name}.md
+DD creates:  .docs/done/{yyyy}/{mm}/{dd}/{name}.md
 ```
 
 ## Decision Matrix

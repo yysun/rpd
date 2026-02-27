@@ -1,11 +1,11 @@
 ---
 name: rpd
-description: Use this skill when user intent invokes any RPD command keywords, RPD, REQ, AP, AR, SS, CC, DF, DD, TT, CR, or GC. Detection is case-insensitive and intent-first. Ignore keywords inside fenced code blocks and inline code unless the user explicitly asks to run them.
+description: Use this skill when (1) the user’s intent is to architect, design, or develop software, and (2) the message contains any RPD command keyword anywhere (case-insensitive), such as RPD, REQ, AP, AR, SS, CC, DF, DD, TT, CR, GC. The detected keyword(s) trigger the corresponding workflow rules/stage behavior below. Ignore keywords that appear only inside fenced code blocks or inline code unless the user explicitly says they are invoking the keyword.
 ---
 
 # RPD - Requirements, Planning, and Development Workflow
 
-A concise command-driven workflow for software development.
+A concise software development workflow for with automatic triggers and loops for architecture review and code review.
 
 ## Command Detection
 

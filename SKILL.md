@@ -1,6 +1,6 @@
 ---
 name: rpd
-description: Use this skill when (1) the user’s intent is to architect, design, or develop software, and (2) the message contains any RPD command keyword anywhere (case-insensitive), such as RPD, REQ, AP, AR, SS, CC, DF, DD, TT, CR, GC. The detected keyword(s) trigger the corresponding workflow rules/stage behavior below. Ignore keywords that appear only inside fenced code blocks or inline code unless the user explicitly says they are invoking the keyword.
+description: Use this skill when (1) the user’s intent is to architect, design, or develop software, and (2) the message contains any RPD command keyword anywhere (case-insensitive), such as RPD, REQ, AP, AR, AT, SS, CC, DF, DD, ET, TT, CR, GC, !!. The detected keyword(s) trigger the corresponding workflow rules/stage behavior below. Ignore keywords that appear only inside fenced code blocks or inline code unless the user explicitly says they are invoking the keyword.
 ---
 
 # RPD - Requirements, Planning, and Development Workflow
@@ -18,7 +18,7 @@ A concise software development workflow for with automatic triggers and loops fo
 ## Command Keywords
 
 - **RPD**: Run the full end-to-end workflow.
-  - Sequence: `REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`.
+  - Sequence: `REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`.
   - Stop for approval after `REQ/AP/AR` before continuing to implementation/testing/commit steps.
 - **REQ**: Create or update requirements in `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`.
   - Focus on WHAT, not HOW, not optimization.
@@ -48,6 +48,15 @@ A concise software development workflow for with automatic triggers and loops fo
   - Automatically fix high priority issues before reporting.
 - **GC**: Commit changes with a clear conventional commit message.
   - If requested as a standalone command, run CR first.
+- **AT**: Generate (or update) an E2E test spec markdown file at `.docs/tests/test-{name}.md`.
+  - Write clear, human-readable test scenarios covering happy paths and key edge cases.
+  - AT is documentation-only: create/update the test spec doc and do not run or implement code.
+- **ET**: Run E2E tests.
+  - If a path is provided after `ET`, run that single test file.
+  - If no path is provided, run the canonical test for the current story (`.docs/tests/test-{name}.md`).
+- **!!**: Update all relevant docs with new requirements, clarifications, and changes.
+  - Update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`, `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`, and `.docs/tests/test-{name}.md` in place.
+  - Do not implement code; documentation only.
 
 ## Automatic Triggers
 
@@ -55,7 +64,7 @@ A concise software development workflow for with automatic triggers and loops fo
 - `AP` → AR loop (auto)
 - `SS` → CR loop (auto)
 - `GC` → CR (auto)
-- `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`).
+- `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`).
 
 ### What `loop` Means
 
@@ -74,6 +83,7 @@ A concise software development workflow for with automatic triggers and loops fo
 ## Naming and Paths
 
 - `{name}` must be short kebab-case (for example: `user-auth`, `offline-sync`).
+- Choose names that are unique within the project to avoid conflicts between req, plan, test, and done docs that share the same `{name}`.
 
 ## Documentation Structure
 
@@ -81,5 +91,6 @@ A concise software development workflow for with automatic triggers and loops fo
 .docs/
 ├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
 ├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
+├── tests/test-{name}.md
 └── done/{yyyy}/{mm}/{dd}/{name}.md
 ```

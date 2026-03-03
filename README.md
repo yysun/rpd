@@ -4,27 +4,30 @@ An AI agent skill that provides a structured workflow for software development, 
 
 ## What It Does
 
-RPD gives you 11 command keywords you can use in conversation to drive a systematic development process:
+RPD gives you 14 command keywords you can use in conversation to drive a systematic development process:
 
 | Command | Purpose |
-|---------|---------|
+|---------|----------|
 | `RPD` | Run the full end-to-end loop |
 | `REQ` | Document requirements |
 | `AP` | Create architecture plan |
 | `AR` | Review architecture |
+| `AT` | Generate/update E2E test spec doc |
 | `SS` | Step-by-step implementation |
 | `DF` | Debug and fix |
 | `CC` | Code consolidation |
-| `DD` | Document completed work |
 | `TT` | Run tests and fix |
+| `ET` | Run E2E tests |
 | `CR` | Code review |
+| `DD` | Document completed work |
 | `GC` | Git commit with review |
+| `!!` | Update all relevant docs with new requirements, clarifications, and changes |
 
 ## Canonical Flow
 
 `RPD` runs:
 
-**REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC**
+**REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC**
 
 What `loop` means:
 
@@ -40,6 +43,8 @@ Default trigger behavior:
 - `GC` → CR (auto)
 - `RPD` orchestrates the full flow.
 - In `RPD`, use one AR pass that reviews REQ + AP together unless the user asks for separate reviews.
+- `AT` generates the E2E test spec after architecture review, before implementation.
+- `ET (if any)` runs E2E tests after code review when a test spec or test runner is available.
 
 ## Installation
 
@@ -88,10 +93,11 @@ RPD - Implement JWT authentication end-to-end
 
 Recommended workflow by task:
 
-- Big feature: `REQ → AP → AR → SS → TT → DD → GC`
+- Big feature: `REQ → AP → AR → AT → SS → TT → ET → DD → GC`
 - Small feature/UI: `SS → TT → GC`
 - Bug fix: `DF → TT → GC`
 - Cleanup/refactor: `CC/AP → SS/TT → GC`
+- Sync docs after scope change: `!!` (updates req, plan, and E2E test spec with new requirements, clarifications, and changes)
 
 Natural-language examples (also valid):
 

@@ -19,7 +19,10 @@ Use the following keywords:
 - **TT**: Test and → Run 'npm test' and fix all failed tests.
 - **CR**: Code Review → use git to get uncommitted change → perform a code review to ensure architecture best practices, efficiency, maintainability, and security → suggest improvements.
 - **GC**: Commit changes with clear message → use git to commit all changes with a clear, concise message.
-- **RPD**: Run the full end-to-end workflow. Sequence: `REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`.
+- **AT**: Generate (or update) E2E test spec → save to `.docs/tests/test-{name}.md` → cover happy paths and key edge cases → documentation only, do not run or implement code.
+- **ET**: Run E2E tests → if a path is provided after `ET`, run that file; otherwise run the story's canonical test (`.docs/tests/test-{name}.md`).
+- **!!**: Update all relevant docs with new requirements, clarifications, and changes → update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`, `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`, and `.docs/tests/test-{name}.md` in place → documentation only, no code changes.
+- **RPD**: Run the full end-to-end workflow. Sequence: `REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`.
 
 ## Automatic Triggers
 
@@ -27,7 +30,8 @@ Use the following keywords:
 - `AP` → AR loop (auto)
 - `SS` → CR loop (auto)
 - `GC` → CR (auto)
-- `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC`).
+- `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`).
+- `{name}` must be short kebab-case and unique within the project to avoid doc conflicts.
 
 ### What `loop` Means
 

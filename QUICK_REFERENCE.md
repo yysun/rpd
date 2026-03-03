@@ -7,7 +7,7 @@ Quick reference guide for the Requirements, Planning, and Development workflow c
 
 ### Full end-to-end
 ```
-RPD = REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC
+RPD = REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC
 ```
 
 ### Bug Fix (Quick)
@@ -22,7 +22,7 @@ CC → TT → GC
 
 ### End-to-End (One Command)
 ```
-RPD (runs: REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC)
+RPD (runs: REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC)
 ```
 
 ### What `loop` Means
@@ -46,6 +46,9 @@ RPD (runs: REQ → AP → AR (loop) → SS → TT → CR (loop) → DD → GC)
 | `CR` | Review changes; auto-fix high priority issues |
 | `DD` | Document completed work |
 | `GC` | Commit with conventional message |
+| `AT` | Generate/update E2E test spec doc (`.docs/tests/test-{name}.md`) |
+| `ET` | Run E2E tests (path optional; defaults to story canonical test) |
+| `!!` | Update all relevant docs with new requirements, clarifications, and changes |
 
 ## Automatic Triggers
 
@@ -54,7 +57,7 @@ REQ → AR loop (auto)
 AP → AR loop (auto)
 SS → CR loop (auto)
 GC → CR (auto)
-RPD orchestrates full flow
+RPD orchestrates: REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC
 In RPD, prefer one AR pass that reviews REQ + AP together unless user asks for separate reviews
 ```
 
@@ -62,9 +65,12 @@ In RPD, prefer one AR pass that reviews REQ + AP together unless user asks for s
 
 ```
 REQ creates/updates only: .docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md
-AP creates:  .docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md
-SS updates:  checkboxes in plan
-DD creates:  .docs/done/{yyyy}/{mm}/{dd}/{name}.md
+AP  creates:             .docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md
+SS  updates:             checkboxes in plan
+AT  creates/updates:     .docs/tests/test-{name}.md
+DD  creates:             .docs/done/{yyyy}/{mm}/{dd}/{name}.md
+
+{name} must be unique within the project to avoid doc conflicts.
 ```
 
 ## Decision Matrix
@@ -78,6 +84,7 @@ DD creates:  .docs/done/{yyyy}/{mm}/{dd}/{name}.md
 | UI feature | SS → TT → GC |
 | Refactoring | AP → SS → TT → GC |
 | Full delivery | RPD |
+| New feature + E2E | RPD (AT runs before SS; ET runs after CR) |
 
 ## Rules
 

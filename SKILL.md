@@ -1,6 +1,6 @@
 ---
 name: rpd
-description: Use this skill when (1) the user’s intent is to architect, design, or develop software, and (2) the message contains any RPD command keyword anywhere (case-insensitive), such as RPD, REQ, AP, AR, AT, SS, CC, DF, DD, ET, TT, CR, GC, !!. The detected keyword(s) trigger the corresponding workflow rules/stage behavior below. Ignore keywords that appear only inside fenced code blocks or inline code unless the user explicitly says they are invoking the keyword.
+description: Use this skill when (1) the user’s intent is to architect, design, or develop software, and (2) the message contains any RPD command keyword anywhere (case-insensitive), such as RPD, REQ, AP, AR, AT, SS, CC, DF, DD, ET, TT, CR, GC, WT, !!. The detected keyword(s) trigger the corresponding workflow rules/stage behavior below. Ignore keywords that appear only inside fenced code blocks or inline code unless the user explicitly says they are invoking the keyword.
 ---
 
 # RPD - Requirements, Planning, and Development Workflow
@@ -54,6 +54,11 @@ A concise software development workflow for with automatic triggers and loops fo
 - **ET**: Run E2E tests.
   - If a path is provided after `ET`, run that single test file.
   - If no path is provided, run the canonical test for the current story (`.docs/tests/test-{name}.md`).
+- **WT**: Create a new git worktree for the current story.
+  - Move the matching REQ and AP docs into the new worktree.
+  - Move files instead of copying them.
+  - Canonical command: `git worktree add ../{project folder}.worktrees/feature-{name} -b feature/{name} {base}`.
+  - Use this when planning is done in one checkout but implementation should continue in another.
 - **!!**: Update all relevant docs with new requirements, clarifications, and changes.
   - Update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`, `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`, and `.docs/tests/test-{name}.md` in place.
   - Do not implement code; documentation only.

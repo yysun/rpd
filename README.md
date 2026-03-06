@@ -4,7 +4,7 @@ An AI agent skill that provides a structured workflow for software development, 
 
 ## What It Does
 
-RPD gives you 14 command keywords you can use in conversation to drive a systematic development process:
+RPD gives you 15 command keywords you can use in conversation to drive a systematic development process:
 
 | Command | Purpose |
 |---------|----------|
@@ -21,6 +21,7 @@ RPD gives you 14 command keywords you can use in conversation to drive a systema
 | `CR` | Code review |
 | `DD` | Document completed work |
 | `GC` | Git commit with review |
+| `WT` | Create a new git worktree under `../{project folder}.worktrees/` and move the REQ/AP docs into it |
 | `!!` | Update all relevant docs with new requirements, clarifications, and changes |
 
 ## Canonical Flow
@@ -45,6 +46,8 @@ Default trigger behavior:
 - In `RPD`, use one AR pass that reviews REQ + AP together unless the user asks for separate reviews.
 - `AT` generates the E2E test spec after architecture review, before implementation.
 - `ET (if any)` runs E2E tests after code review when a test spec or test runner is available.
+- `WT` creates a separate git worktree for the current story and moves the matching REQ/AP docs into that worktree instead of leaving copies behind.
+  - Canonical command: `git worktree add ../{project folder}.worktrees/feature-{name} -b feature/{name} {base}`
 
 ## Installation
 
@@ -83,6 +86,7 @@ AP - Plan the implementation
 SS - Implement the plan
 TT - Run tests
 GC - Commit changes
+WT - Create a worktree for this story and move the req/plan docs there
 ```
 
 Or run everything at once:
@@ -97,6 +101,7 @@ Recommended workflow by task:
 - Small feature/UI: `SS → TT → GC`
 - Bug fix: `DF → TT → GC`
 - Cleanup/refactor: `CC/AP → SS/TT → GC`
+- Split implementation into another checkout: `REQ → AP → WT → SS → TT → GC`
 - Sync docs after scope change: `!!` (updates req, plan, and E2E test spec with new requirements, clarifications, and changes)
 
 Natural-language examples (also valid):

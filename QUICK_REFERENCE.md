@@ -48,6 +48,7 @@ RPD (runs: REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (i
 | `GC` | Commit with conventional message |
 | `AT` | Generate/update E2E test spec doc (`.docs/tests/test-{name}.md`) |
 | `ET` | Run E2E tests (path optional; defaults to story canonical test) |
+| `WT` | Create a new git worktree under `../{project folder}.worktrees/` and move the REQ/AP docs into it |
 | `!!` | Update all relevant docs with new requirements, clarifications, and changes |
 
 ## Automatic Triggers
@@ -66,6 +67,7 @@ In RPD, prefer one AR pass that reviews REQ + AP together unless user asks for s
 ```
 REQ creates/updates only: .docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md
 AP  creates:             .docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md
+WT  moves:               matching req/plan docs into ../{project folder}.worktrees/feature-{name} (do not copy)
 SS  updates:             checkboxes in plan
 AT  creates/updates:     .docs/tests/test-{name}.md
 DD  creates:             .docs/done/{yyyy}/{mm}/{dd}/{name}.md
@@ -85,6 +87,7 @@ DD  creates:             .docs/done/{yyyy}/{mm}/{dd}/{name}.md
 | Refactoring | AP → SS → TT → GC |
 | Full delivery | RPD |
 | New feature + E2E | RPD (AT runs before SS; ET runs after CR) |
+| Continue work in separate checkout | WT |
 
 ## Rules
 

@@ -21,6 +21,8 @@ Use the following keywords:
 - **GC**: Commit changes with clear message → use git to commit all changes with a clear, concise message.
 - **AT**: Generate (or update) E2E test spec → save to `.docs/tests/test-{name}.md` → cover happy paths and key edge cases → documentation only, do not run or implement code.
 - **ET**: Run E2E tests → if a path is provided after `ET`, run that file; otherwise run the story's canonical test (`.docs/tests/test-{name}.md`).
+- **WT**: Worktree → create a new git worktree for the current story and move the matching requirement and plan docs into that worktree → move files, do not copy them.
+	- Canonical command: `git worktree add ../{project folder}.worktrees/feature-{name} -b feature/{name} {base}`
 - **!!**: Update all relevant docs with new requirements, clarifications, and changes → update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`, `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`, and `.docs/tests/test-{name}.md` in place → documentation only, no code changes.
 - **RPD**: Run the full end-to-end workflow. Sequence: `REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`.
 

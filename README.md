@@ -51,30 +51,46 @@ Default trigger behavior:
 
 ## Installation
 
-### Claude Code
+### Install with npx skills
 
-Add to project or user settings (`.claude/settings.json` or `~/.claude/settings.json`):
+If your coding agent supports the open Agent Skills format, you can install RPD directly from GitHub:
 
-```json
-{
-  "skills": ["/path/to/rpd"]
-}
+```bash
+# Install into the current project for detected agent(s)
+npx skills add yysun/rpd
+
+# Install for a specific agent
+npx skills add yysun/rpd -a github-copilot -y
+npx skills add yysun/rpd -a claude-code -y
+npx skills add yysun/rpd -a cursor -y
+
+# Install globally instead of in the current project
+npx skills add yysun/rpd -g -a github-copilot -y
 ```
 
-### Other Platforms
+This repository exposes a root `SKILL.md`, so `npx skills` can discover and install it without any extra flags.
 
-Copy the content of `SKILL.md` into your platform's instruction file:
+### Manual installation
 
-| Platform | Instruction File |
-|----------|-----------------|
-| Cursor | `.cursor/rules/rpd.mdc` or `.cursorrules` |
-| GitHub Copilot | `.github/copilot-instructions.md` |
-| Windsurf | `.windsurfrules` |
-| Cline | `.clinerules` |
-| OpenAI Codex | `AGENTS.md` |
+If you do not want to use `npx skills`, create a folder named `rpd` in the agent's skills directory and place this repository, or at minimum `SKILL.md`, inside it.
+
+| Agent | Project folder | Global folder |
+|-------|----------------|---------------|
+| Claude Code | `.claude/skills/rpd/` | `~/.claude/skills/rpd/` |
+| GitHub Copilot | `.agents/skills/rpd/` | `~/.copilot/skills/rpd/` |
+| Cursor | `.agents/skills/rpd/` | `~/.cursor/skills/rpd/` |
+| Codex | `.agents/skills/rpd/` | `~/.codex/skills/rpd/` |
+| Cline | `.agents/skills/rpd/` | `~/.agents/skills/rpd/` |
+| Windsurf | `.windsurf/skills/rpd/` | `~/.codeium/windsurf/skills/rpd/` |
+| OpenCode | `.agents/skills/rpd/` | `~/.config/opencode/skills/rpd/` |
+
+For agents that do not support native skill folders, use their instruction file instead:
+
+| Agent | Instruction file |
+|-------|------------------|
 | Aider | `CONVENTIONS.md` |
 
-You can also append it to a project-level `CLAUDE.md`, `AGENTS.md`, or any markdown file your agent reads.
+As a generic fallback, you can also append the contents of `SKILL.md` to a project-level `CLAUDE.md`, `AGENTS.md`, or another markdown instruction file your agent reads.
 
 ## Usage
 

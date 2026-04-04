@@ -19,7 +19,7 @@ A concise software development workflow for with automatic triggers and loops fo
 
 - **RPD**: Run the full end-to-end workflow.
   - Sequence: `REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`.
-  - Stop for approval after `REQ/AP/AR` before continuing to implementation/testing/commit steps.
+  - In the full `RPD` flow, do not stop for approval between `AP` and `AR`; stop for approval after `AR` completes and no major flaws remain before continuing to implementation/testing/commit steps.
 - **REQ**: Create or update requirements in `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`.
   - Focus on WHAT, not HOW, not optimization.
   - REQ is documentation-only: create/update the requirement doc and do not implement code.
@@ -27,14 +27,18 @@ A concise software development workflow for with automatic triggers and loops fo
 - **AP**: Create architecture/implementation plan in `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`.
   - Use markdown checkboxes for phased tasks.
   - Use Mermaid for complex structures or flows.
+  - Automatically run `AR` after updating the plan.
+  - If `AP` is requested standalone, stop for approval after `AR` completes and no major flaws remain.
 - **AR**: Review architecture and assumptions.
   - Ensure no major flaws.
   - Provide options and tradeoffs.
   - Update existing REQ/AP docs in place (no separate review doc).
   - Automatically fix high priority issues before reporting.
+  - Block progress until major flaws are resolved.
 - **SS**: Implement step-by-step from the plan.
   - Update plan progress (`- [x]`) as tasks complete.
   - Wait for approval gate before starting.
+  - Automatically run `CR` after implementation changes.
 - **CC**: Consolidate code/comments and remove redundancy.
 - **DF**: Debug and fix root cause.
   - Explain the issue clearly.
@@ -63,27 +67,12 @@ A concise software development workflow for with automatic triggers and loops fo
   - Update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`, `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`, and `.docs/tests/test-{name}.md` in place.
   - Do not implement code; documentation only.
 
-## Automatic Triggers
-
-- `REQ` → AR loop (auto)
-- `AP` → AR loop (auto)
-- `SS` → CR loop (auto)
-- `GC` → CR (auto)
-- `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`).
-
-### What `loop` Means
-
-- `AR (loop)`: Repeat architecture review/update until no major flaws remain or explicit user approval is given.
-- `CR (loop)`: Repeat code review/fixes until no high-priority issues remain.
-- A `loop` is not infinite: stop when the exit condition is met, then continue to the next step.
-
 ## Core Rules
 
-- Requirements work (REQ/AR) must focus on WHAT, not HOW.
-- REQ must only create/update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md` and then stop for approval.
-- For large changes or AP requests, create/update plan first and get approval before implementation.
-- Be truthful about execution: only claim tests/build/lint ran if actually run.
+- For large changes, auto run `REQ` and `AP` before implementation.
 - If blocked by ambiguity or tradeoffs, ask targeted clarification questions.
+- Be truthful about execution: only claim tests/build/lint ran if actually run.
+
 
 ## Naming and Paths
 

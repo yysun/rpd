@@ -26,22 +26,24 @@ Use the following keywords:
 - **!!**: Update all relevant docs with new requirements, clarifications, and changes → update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`, `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`, and `.docs/tests/test-{name}.md` in place → documentation only, no code changes.
 - **RPD**: Run the full end-to-end workflow. Sequence: `REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`.
 
-## Automatic Triggers
+## Core Rules
 
-- `REQ` → AR loop (auto)
-- `AP` → AR loop (auto)
-- `SS` → CR loop (auto)
-- `GC` → CR (auto)
-- `RPD` orchestrates the full flow (`REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`).
-- `{name}` must be short kebab-case and unique within the project to avoid doc conflicts.
+- For large changes, auto run `REQ` and `AP` before implementation.
+- If blocked by ambiguity or tradeoffs, ask targeted clarification questions.
+- Be truthful about execution: only claim tests/build/lint ran if actually run.
 
-### What `loop` Means
 
-- A `loop` is not infinite: stop when the exit condition is met, then continue to the next step.
-- `AR (loop)`: Repeat architecture review/update until no major flaws remain or explicit user approval is given.
-- `CR (loop)`: Repeat code review/fixes until no high-priority issues remain.
+## Naming and Paths
 
-## Requirement and Planning Rules
-- Requirement creation or analysis → focus on `what`, not `how`, not optimization.
-- Large changes or "AP" → always create a plan first → get confirmation.
-- Use mermaid diagrams for complex structures or flows.
+- `{name}` must be short kebab-case (for example: `user-auth`, `offline-sync`).
+- Choose names that are unique within the project to avoid conflicts between req, plan, test, and done docs that share the same `{name}`.
+
+## Documentation Structure
+
+```
+.docs/
+├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
+├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
+├── tests/test-{name}.md
+└── done/{yyyy}/{mm}/{dd}/{name}.md
+```

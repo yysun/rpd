@@ -25,17 +25,28 @@ npx skills add yysun/rpd
 
 ## Workflow
 
-Start with `RPD` unless you intentionally want to enter at a specific stage:
+### 1. Quick workflow 
+
+Start with `REQ` unless to describe a new requirement, then use the other commands as needed to create the plan, review architecture, implement step-by-step, review code, document completion, and commit.
 
 ```
-REQ - Implement JWT authentication end-to-end
+REQ Implement JWT authentication
 ```
 
-Then, use the individual commands for focused actions:
+Then follow up with `AP` to create the architecture plan, `AR` to review the architecture, `SS` to implement step-by-step, `CR` to review code, `DD` to document completed work, and `GC` to commit with a clear message.
 
-**(REQ) → AP → AR → SS → CR → DD → GC**
+Sequence: `REQ → AP → AR → SS → CR → DD → GC`
 
-Artifacts created by the workflow:
+### 2. Full end-to-end workflow: `RPD` (experimental)
+
+Use `RPD` to run the full end-to-end workflow with automatic triggers and loops for architecture review and code review. Sequence: `REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`.
+
+```
+RPD Implement JWT authentication
+```
+
+
+## Artifacts created by the RPDworkflow
 
 ```
 .docs/
@@ -44,7 +55,6 @@ Artifacts created by the workflow:
 └── done/{yyyy}/{mm}/{dd}/{name}.md
 ```
 `{name}` is short kebab-case (for example: `user-auth`, `offline-sync`).
-
 
 ## Commands Reference
 

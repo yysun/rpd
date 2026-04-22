@@ -87,3 +87,7 @@ A concise software development workflow for with automatic gates for architectur
 ├── tests/test-{name}.md
 └── done/{yyyy}/{mm}/{dd}/{name}.md
 ```
+
+## File Comment Blocks
+- Add/update comment blocks at the top of each source file summarizing features, implementation, and changes.
+- Create before editing, if missing update after changes.

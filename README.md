@@ -1,10 +1,10 @@
 # RPD - Requirements, Planning, and Development Workflow
 
-An AI agent skill that provides a structured workflow for requirements, planning, implementation, testing, review, documentation, and commit. Works with Claude Code, Cursor, Copilot, Codex, Windsurf, Cline, Aider, and other AI coding tools.
+An AI agent skill that provides a structured workflow for requirements, planning, architecture review, test-spec creation, implementation, verification, review, documentation, and commit. Works with Claude Code, Cursor, Copilot, Codex, Windsurf, Cline, Aider, and other AI coding tools.
 
 ![Infographic illustrating the RPD loop.](rpd-loop.png)
 
-RPD gives you 15 command keywords you can use in conversation to drive a systematic development process.
+RPD gives you 14 command keywords you can use in conversation to drive a systematic development process.
 
 ## Why RPD
 
@@ -25,56 +25,70 @@ npx skills add yysun/rpd
 
 ## Workflow
 
-### 1. Quick workflow 
+### 1. Targeted command workflow
 
-Start with `REQ` unless to describe a new requirement, then use the other commands as needed to create the plan, review architecture, implement step-by-step, review code, document completion, and commit.
+Start with `REQ` to describe a new requirement, then use the other commands as needed to create the plan, review architecture, generate or update the E2E test spec, implement step-by-step, run tests, review code, document completion, and commit.
 
 ```
 REQ Implement JWT authentication
 ```
 
-Then follow up with `AP` to create the architecture plan, `AR` to review the architecture, `SS` to implement step-by-step, `CR` to review code, `DD` to document completed work, and `GC` to commit with a clear message.
+Then follow up with `AP` to create the architecture plan and trigger architecture review, `AT` to generate or update the E2E test spec, another `AR` pass when you want to review the full req/plan/test package together, `SS` to implement step-by-step, `TT` to run tests and fix failures, `CR` to review code, `ET` to execute the current story's E2E scenarios when applicable, `DD` to document completed work, and `GC` to commit with a clear message.
 
-Sequence: `REQ → AP → AR → SS → CR → DD → GC`
+Typical sequence: `REQ → AP → AR → AT → AR → SS → TT → CR → ET? → DD → GC`
 
-### 2. Full end-to-end workflow: `RPD` (experimental)
+### 2. Full end-to-end workflow: `RPD`
 
-Use `RPD` to run the full end-to-end workflow with automatic triggers and loops for architecture review and code review. Sequence: `REQ → AP → AR (loop) → AT → SS → TT → CR (loop) → ET (if any) → DD → GC`.
+Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review and code review. Sequence: `REQ → AP → AR* → AT → AR* → SS → TT → CR* → ET? → DD → GC`.
 
 ```
 RPD Implement JWT authentication
 ```
 
+`*` means the review stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. The first `AR` reviews REQ + AP; the second `AR` reviews REQ + AP + AT together.
 
-## Artifacts created by the RPDworkflow
+
+## Artifacts created by the RPD workflow
 
 ```
 .docs/
 ├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
 ├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
+├── tests/test-{name}.md
 └── done/{yyyy}/{mm}/{dd}/{name}.md
 ```
-`{name}` is short kebab-case (for example: `user-auth`, `offline-sync`).
+`{name}` is a short kebab-case story slug (for example: `user-auth`, `offline-sync`) reused across related docs and commands. If omitted, the skill derives one from the requirement or task description and states it in the response.
+
+REQ, AP, and DD keep the date from when the doc was first created; later updates modify the existing doc in place. AT is long-lived and is not date-scoped.
 
 ## Commands Reference
 
 | Command | Purpose |
 |---------|----------|
 | `REQ` | Document requirements |
-| `AP` | Create architecture plan |
+| `AP` | Create architecture plan and trigger AR |
 | `AR` | Review architecture |
 | `AT` | Generate/update E2E test spec doc |
 | `SS` | Step-by-step implementation |
-| `DF` | Debug and fix |
-| `CC` | Code consolidation |
+| `DF` | Diagnose and fix root cause, then run TT and CR |
 | `TT` | Run tests and fix |
 | `ET` | Run E2E tests |
 | `CR` | Code review |
 | `DD` | Document completed work |
-| `GC` | Git commit with review |
-| `WT` | Create a new git worktree under `../{project folder}.worktrees/` and move the REQ/AP docs into it |
+| `GC` | Run CR and commit with review |
+| `WT` | Create a new git worktree under `../{project folder}.worktrees/` and move the REQ/AP/AT docs into it |
 | `!!` | Update all relevant docs with new requirements, clarifications, and changes |
-| `RPD` | Full end-to-end flow (Experimental) |
+| `RPD` | Full end-to-end flow with two AR review passes |
+
+## Notes
+
+- `REQ`, `AP`, `AT`, `DD`, and `!!` are documentation-only commands.
+- `SS` and `DF` are code-modifying commands. `SS` requires a clean architecture review and explicit approval unless it is being run inside `RPD`.
+- `SS` auto-runs `CR` after implementation changes, while `DF` auto-runs `TT` and then `CR`.
+- `CR` applies a review loop and re-runs tests after each fix pass.
+- `WT` and `!!` are out-of-band commands and are not auto-chained from other stages.
+- Messages can invoke commands case-insensitively; keywords inside fenced code blocks or inline code are ignored unless the surrounding prose explicitly invokes them.
+- Commands that modify source files add or update a short file comment block at the top of the file, following the skill convention.
 
 
 ## License

@@ -156,6 +156,8 @@ A concise software development workflow with automatic architecture and code rev
 - **RPD**: Run the full end-to-end workflow from a requirement input.
   - Accept a requirement description as input.
   - Example: `RPD add OAuth login`.
+  - Treat `RPD` as approval to run the full sequence without human approval between stages.
+  - Pause only for clarification, blockers, destructive actions, or external writes.
   - Derive `{name}` when missing.
   - Confirm `{name}` before proceeding.
   - Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`.
@@ -169,6 +171,7 @@ A concise software development workflow with automatic architecture and code rev
   - RPD continues to TT after SS completes.
   - May be entered mid-sequence.
   - Example: `RPD from SS`.
+  - Mid-sequence entry uses RPD skip rules, not standalone command rules.
   - Skip a stage only when its artifact exists.
   - Skip a gated stage only when its gate passed.
 

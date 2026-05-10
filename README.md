@@ -39,7 +39,7 @@ Typical sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`
 
 ### 2. Full end-to-end workflow: `RPD`
 
-Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review and code review. Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`.
+Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review and code review. `RPD` is approval to run the sequence without human approval between stages, except for clarification, blockers, destructive actions, or external writes. Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`.
 
 ```
 RPD Implement JWT authentication
@@ -87,6 +87,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - `SS` and `DF` are code-modifying commands. The user's `SS` command is approval to implement.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`; `DF` auto-runs `TT` and then `CR*`.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.
+- `RPD from SS` uses full-flow skip rules; standalone `SS` does not.
 - `AR` and `CR` can also be manually triggered.
 - `DD` can be invoked as a single-word message.
 - `TT` and `ET` stop at the first failure when possible, fix root cause, rerun, and repeat until targeted tests pass.

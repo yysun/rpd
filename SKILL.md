@@ -1,5 +1,6 @@
 ---
 name: rpd
+version: 2.0.0
 description: >
   Trigger when any RPD keyword appears anywhere in the message with command-like intent.
   Keywords must be surrounded by message boundaries, punctuation, or whitespace:
@@ -13,7 +14,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-A concise software development workflow for with automatic gates for architecture review and code review.
+A concise software development workflow with automatic architecture and code review loops.
 
 ## Core Principles
 
@@ -67,13 +68,20 @@ A concise software development workflow for with automatic gates for architectur
   - Use markdown checkboxes for phased tasks.
   - Use Mermaid for complex structures or flows.
   - Decide whether the story needs E2E coverage.
+  - Create E2E specs for user-facing flows.
+  - Create E2E specs for auth, routing, payments, or data entry.
+  - Create E2E specs for cross-system integrations.
+  - Create E2E specs for regression-prone critical paths.
+  - Skip E2E specs for pure internals unless requested.
   - If needed, create or update `.docs/tests/test-{name}.md`.
   - Write E2E specs as human-readable scenarios.
   - Do not run tests during AP.
   - Automatically run `AR` after updating the plan.
 - **AR**: Review architecture and assumptions.
+  - Can be manually triggered.
   - Ensure no major flaws.
   - Provide options and tradeoffs.
+  - Review REQ, AP, and any E2E spec together.
   - Update existing docs in place.
   - Do not create a separate review doc.
   - Apply the review loop.
@@ -97,6 +105,7 @@ A concise software development workflow for with automatic gates for architectur
   - Rerun unit tests after each fix.
   - Repeat until all unit tests pass.
 - **CR**: Review uncommitted changes with git.
+  - Can be manually triggered.
   - Check architecture, quality, performance, maintainability, and security.
   - Fix high-priority findings.
   - Rerun CR after fixes.
@@ -105,9 +114,7 @@ A concise software development workflow for with automatic gates for architectur
   - Report unrelated or pre-existing failures.
   - Do not convert CR into TT.
 - **GC**: Commit changes with a clear conventional commit message.
-  - Always run CR before committing.
-  - Commit only after CR passes.
-  - Require no major unresolved issues.
+  - Do not run CR automatically.
   - Use the latest relevant verification for intended changes.
   - If verification is unknown, ask or run scoped verification.
   - If verification is stale, ask or run scoped verification.
@@ -131,6 +138,7 @@ A concise software development workflow for with automatic gates for architectur
   - Rerun E2E tests after each fix.
   - Repeat until all targeted E2E tests pass.
 - **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
+  - Can be invoked as a single-word `DD` message.
   - Run after work is committed or a feature is complete; do not fire mid-stream.
 - **WT**: Create a new git worktree for the current story.
   - Move matching REQ and AP docs into the new worktree.
@@ -141,14 +149,16 @@ A concise software development workflow for with automatic gates for architectur
 - **!!**: Update relevant docs from the latest user message.
   - Update current REQ docs in place.
   - Update current AP docs in place.
-  - Update the existing test spec when present.
+  - Apply the AP E2E criteria to new requirement changes.
+  - Create `.docs/tests/test-{name}.md` if E2E coverage is now needed.
+  - Update the current test spec when present.
   - Do not implement code; documentation only.
 - **RPD**: Run the full end-to-end workflow from a requirement input.
   - Accept a requirement description as input.
   - Example: `RPD add OAuth login`.
   - Derive `{name}` when missing.
   - Confirm `{name}` before proceeding.
-  - Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → CR* → ET? → DD → GC`.
+  - Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`.
   - `*` means review loop.
   - `?` means only if test spec exists.
   - AP creates E2E specs when needed.

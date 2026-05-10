@@ -27,25 +27,27 @@ npx skills add yysun/rpd
 
 ### 1. Targeted command workflow
 
-Start with `REQ` to describe a new requirement, then use the other commands as needed to create the plan, review architecture, implement step-by-step, run tests, review code, execute existing E2E specs, document completion, and commit.
+Start with `REQ` to describe a new requirement, then use the other commands as needed to create the plan, review architecture, implement step-by-step, run tests, review code, execute story E2E specs, document completion, and commit.
 
 ```
 REQ Implement JWT authentication
 ```
 
-Then follow up with `AP` to create the architecture plan and trigger architecture review, `SS` to implement step-by-step, `TT` to run unit tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's existing E2E scenarios when applicable, `DD` to document completed work, and `GC` to commit with a clear message.
+Then follow up with `AP` to create the architecture plan, create needed E2E specs, and trigger architecture review, `SS` to implement step-by-step, `TT` to run unit tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's E2E scenarios when applicable, `DD` to document completed work, and `GC` to commit with a clear message.
 
-Typical sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → CR* → ET? → DD → GC`
+Typical sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`
 
 ### 2. Full end-to-end workflow: `RPD`
 
-Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review and code review. Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → CR* → ET? → DD → GC`.
+Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review and code review. Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`.
 
 ```
 RPD Implement JWT authentication
 ```
 
-`*` means the review stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching existing E2E test spec. `AP` creates or updates the E2E spec when the story needs one.
+`*` means the review stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. `AP` creates or updates the E2E spec when the story needs one.
+
+Create E2E specs for user-facing flows, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested.
 
 
 ## Artifact paths used by the RPD workflow
@@ -74,7 +76,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 | `ET` | Run E2E tests and fix failures |
 | `CR` | Code review |
 | `DD` | Document completed work |
-| `GC` | Run CR and commit with review |
+| `GC` | Commit changes with clear scope |
 | `WT` | Create a new git worktree under `../{project folder}.worktrees/` and move the REQ/AP docs and existing test spec into it |
 | `!!` | Update all relevant docs with new requirements, clarifications, and changes |
 | `RPD` | Full end-to-end flow with AR and CR review loops |
@@ -85,10 +87,12 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - `SS` and `DF` are code-modifying commands. The user's `SS` command is approval to implement.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`; `DF` auto-runs `TT` and then `CR*`.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.
+- `AR` and `CR` can also be manually triggered.
+- `DD` can be invoked as a single-word message.
 - `TT` and `ET` stop at the first failure when possible, fix root cause, rerun, and repeat until targeted tests pass.
 - `CR` applies a review-fix-review loop until no major flaws remain; scoped verification may run after CR changes code, but CR does not become TT.
 - Loops stop and report a blocker when failures are unrelated, pre-existing, flaky, ambiguous, or outside the current command's responsibility.
-- `GC` commits only after `CR` passes, required verification status is known, and the intended file scope is clear.
+- `GC` does not run `CR`; it commits only when verification status and intended file scope are clear.
 - `WT` and `!!` are out-of-band commands and are not auto-chained from other stages.
 - Commands trigger when a keyword appears anywhere in the message with command-like intent.
 - Keywords must be surrounded by message boundaries, punctuation, or whitespace.

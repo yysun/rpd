@@ -2,10 +2,12 @@
 name: rpd
 version: 2.0.0
 description: >
-  Trigger when any RPD keyword appears anywhere in the message with command-like intent.
-  Keywords must be surrounded by message boundaries, punctuation, or whitespace:
-  RPD, REQ, AP, AR, SS, DF, DD,
-  ET, TT, CR, GC, WT, !!.
+  Use this skill for software development tasks that should follow the RPD workflow:
+  requirements, architecture planning, implementation, debugging, tests, E2E checks,
+  code review, commits, done docs, or worktrees. Trigger on natural-language requests
+  for those workflow stages, or when any of these keywords appears with command-like
+  intent: RPD, REQ, AP, AR, SS, DF, DD, ET, TT, CR, GC, WT, !!. The keyword must be
+  surrounded by message boundaries, punctuation, or whitespace.
   Match examples like `REQ`, `REQ:`, `REQ-`, `REQ,`, `REQ -`, and `'REQ'`.
   Match middle or end forms like `please REQ: add login` or `ship it SS`.
   Do not match when a letter, digit, or underscore touches the keyword.

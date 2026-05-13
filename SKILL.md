@@ -65,7 +65,13 @@ A concise software development workflow with automatic architecture and code rev
   - Do not implement code.
   - Do not modify tests, configs, or non-REQ docs.
 - **AP**: Create architecture/implementation plan in `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`.
-  - Use markdown checkboxes for phased tasks.
+  - Plans must use markdown checkboxes for phased tasks.
+  - Required task format:
+    - [ ] Inspect relevant files
+    - [ ] Make focused changes
+    - [ ] Run validation
+    - [ ] Update docs/status
+  - Do not use prose-only task lists.
   - Use Mermaid for complex structures or flows.
   - Decide whether the story needs E2E coverage.
   - Create E2E specs for user-facing flows.

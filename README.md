@@ -76,7 +76,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 | `ET` | Run E2E tests and fix failures |
 | `CR` | Code review |
 | `VR` | Verify the requirement is fully implemented in code and docs; if not, refine AP, run SS, CR, TT, ET when applicable, update docs, then verify again |
-| `DD` | Document completed work |
+| `DD` | Document completed work as a short PR-style summary |
 | `GC` | Commit changes with clear scope |
 | `WT` | Create a new git worktree under `../{project folder}.worktrees/` and move the REQ/AP docs and existing test spec into it |
 | `!!` | Update all relevant docs with new requirements, clarifications, and changes |
@@ -98,6 +98,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - `RPD from SS` uses full-flow skip rules; standalone `SS` does not.
 - `AR` and `CR` can also be manually triggered.
 - `DD` can be invoked as a single-word message.
+- `DD` writes a short PR-style completion summary with `Summary`, `Verification`, and `Notes`; it should not duplicate the full requirement, plan, test spec, or changelog.
 - `TT` and `ET` stop at the first failure when possible, fix root cause, rerun, and repeat until targeted tests pass.
 - `CR` applies a review-fix-review loop until no major flaws remain; scoped verification may run after CR changes code, but CR does not become TT.
 - Loops stop and report a blocker when failures are unrelated, pre-existing, flaky, ambiguous, or outside the current command's responsibility.

@@ -1,6 +1,6 @@
 ---
 name: rpd
-version: 2.1.1
+version: 2.1.2
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
   requirements, architecture planning, implementation, debugging, tests, E2E checks,
@@ -177,6 +177,14 @@ RPD command keywords are authoritative execution gates.
 - **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
   - Can be invoked as a single-word `DD` message.
   - Run after work is committed or a feature is complete; do not fire mid-stream.
+  - Write a short PR-style completion summary.
+  - Keep it concise: roughly 5-12 bullets total.
+  - Required sections:
+    - `## Summary`: what changed and why it matters.
+    - `## Verification`: commands, tests, E2E checks, and reviews actually run.
+    - `## Notes`: follow-ups, risks, non-goals, skipped checks, or unrelated failures when real.
+  - Do not duplicate the full REQ, AP, test spec, or changelog.
+  - Do not claim verification that did not run.
 - **WT**: Create a new git worktree for the current story.
   - Move matching REQ and AP docs into the new worktree.
   - Move the existing test spec when present.

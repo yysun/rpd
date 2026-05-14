@@ -1,12 +1,12 @@
 ---
 name: rpd
-version: 2.0.0
+version: 2.1.1
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
   requirements, architecture planning, implementation, debugging, tests, E2E checks,
   code review, commits, done docs, or worktrees. Trigger on natural-language requests
   for those workflow stages, or when any of these keywords appears with command-like
-  intent: RPD, REQ, AP, AR, SS, DF, DD, ET, TT, CR, GC, WT, !!. The keyword must be
+  intent: RPD, REQ, AP, AR, SS, DF, DD, ET, TT, CR, VR, GC, WT, !!. The keyword must be
   surrounded by message boundaries, punctuation, or whitespace.
   Match examples like `REQ`, `REQ:`, `REQ-`, `REQ,`, `REQ -`, and `'REQ'`.
   Match middle or end forms like `please REQ: add login` or `ship it SS`.
@@ -27,17 +27,29 @@ A concise software development workflow with automatic architecture and code rev
 - **Goal-directed**: define success criteria for each task and verify the code meets them.
 - **Ask when blocked**: ask targeted questions.
 
+## Command Gate
+
+RPD command keywords are authoritative execution gates.
+
+- Finding or loading this skill is not approval to code.
+- When the user invokes `REQ`, `AP`, `AR`, `DD`, `WT`, or `!!`, do only that command's allowed work.
+- Documentation-only commands must not edit source code, tests, configs, dependencies, generated artifacts, or build files.
+- Implement code only when the active command is `SS`, `DF`, `VR`, or `RPD` has reached its `SS` stage.
+- For natural-language development requests without an explicit implementation command, create or update `REQ` and `AP` first, then stop unless the user has invoked `SS`, `DF`, `VR`, or `RPD`.
+- If a command gate conflicts with the default agent behavior to keep working autonomously, the command gate wins.
+
 ## Conventions
 
 - **`{name}`**: short kebab-case story slug.
 - Derive `{name}` from the requirement when missing.
 - Keep `{name}` short, descriptive, and unique.
 - State `{name}` so the user can correct it.
-- Reuse `{name}` across REQ, AP, SS, DD, ET, !!, WT, and RPD.
+- Reuse `{name}` across REQ, AP, SS, DD, ET, VR, !!, WT, and RPD.
 - **`{yyyy}/{mm}/{dd}`**: the doc creation date.
 - Later updates edit the existing dated doc.
 - **Current story**: the most recently created or modified REQ doc, unless the user specifies otherwise.
 - **Auto-chaining**: SS and DF run required verification, then auto-run CR.
+- **Completion loop**: VR verifies the requirement against code behavior, tests, and docs. If incomplete, refine AP, run SS, CR, TT, ET when applicable, update docs, then rerun VR.
 - REQ, AP, DD, and !! are documentation-only.
 - WT and !! are out-of-band.
 - Never auto-chain WT or !! from another command.
@@ -56,7 +68,7 @@ A concise software development workflow with automatic architecture and code rev
 - Summarize features, implementation notes, and recent changes.
 - Create the block before editing when missing.
 - Update the block after changing the file.
-- Applies to SS, DF, and ad-hoc source edits.
+- Applies to `SS`, `DF`, `VR`, and `RPD` once it reaches its `SS` stage.
 - Does not apply to docs under `.docs/`.
 
 ## Command Keywords
@@ -121,6 +133,23 @@ A concise software development workflow with automatic architecture and code rev
   - After CR changes code, run scoped verification when clear.
   - Report unrelated or pre-existing failures.
   - Do not convert CR into TT.
+- **VR**: Verify the requirement is fully implemented in both code and docs.
+  - Compare the current REQ doc, AP doc, optional E2E spec, implementation code, user-facing behavior, and latest verification results.
+  - Decide whether each requirement acceptance point is implemented in code, covered by appropriate tests or E2E checks, reflected in the relevant RPD docs, and free of known blocking review issues.
+  - Treat stale, contradictory, or incomplete REQ/AP/test/done docs as incomplete work, not as a documentation-only cleanup.
+  - Do not treat passing tests as proof of completion when requirements are visibly unmet.
+  - If complete, report the evidence and either stop for standalone `VR` or continue the parent `RPD` sequence.
+  - If incomplete, update the existing AP doc with the missing code, test, and documentation work.
+  - If missing work changes E2E coverage, update or create `.docs/tests/test-{name}.md`.
+  - If requirement text is stale or contradictory, update the existing REQ doc before continuing.
+  - Run `SS` to implement the refined plan.
+  - Run `CR*` after implementation.
+  - Run `TT`.
+  - Run `ET` when a matching E2E spec exists or when the refined plan adds one.
+  - Update plan progress and any affected RPD docs after code/test changes.
+  - Rerun `VR` after TT and ET complete.
+  - Repeat until the requirement is complete or a loop blocker is reached.
+  - Apply loop blocker rules when progress stalls, failures are unrelated, or the requirement is ambiguous.
 - **GC**: Commit changes with a clear conventional commit message.
   - Do not run CR automatically.
   - Use the latest relevant verification for intended changes.
@@ -168,8 +197,9 @@ A concise software development workflow with automatic architecture and code rev
   - Pause only for clarification, blockers, destructive actions, or external writes.
   - Derive `{name}` when missing.
   - Confirm `{name}` before proceeding.
-  - Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`.
+  - Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → VR* → DD → GC`.
   - `*` means review loop.
+  - For `VR*`, `*` means completion loop.
   - `?` means only if test spec exists.
   - AP creates E2E specs when needed.
   - AR reviews REQ, AP, and any E2E spec before implementation.
@@ -177,6 +207,7 @@ A concise software development workflow with automatic architecture and code rev
   - Inside RPD, SS still fixes verification failures.
   - Inside RPD, SS still auto-runs CR*.
   - RPD continues to TT after SS completes.
+  - RPD runs VR before DD so completion is checked against the original requirement, not only tests.
   - May be entered mid-sequence.
   - Example: `RPD from SS`.
   - Mid-sequence entry uses RPD skip rules, not standalone command rules.

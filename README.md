@@ -4,7 +4,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 ![Infographic illustrating the RPD loop.](rpd-loop.png)
 
-RPD gives you 13 command keywords you can use in conversation to drive a systematic development process.
+RPD gives you 14 command keywords you can use in conversation to drive a systematic development process.
 
 ## Why RPD
 
@@ -27,25 +27,25 @@ npx skills add yysun/rpd
 
 ### 1. Targeted command workflow
 
-Start with `REQ` to describe a new requirement, then use the other commands as needed to create the plan, review architecture, implement step-by-step, run tests, review code, execute story E2E specs, document completion, and commit.
+Start with `REQ` to describe a new requirement, then use the other commands as needed to create the plan, review architecture, implement step-by-step, run tests, review code, execute story E2E specs, verify requirement completion, document completion, and commit.
 
 ```
 REQ Implement JWT authentication
 ```
 
-Then follow up with `AP` to create the architecture plan, create needed E2E specs, and trigger architecture review, `SS` to implement step-by-step, `TT` to run unit tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's E2E scenarios when applicable, `DD` to document completed work, and `GC` to commit with a clear message.
+Then follow up with `AP` to create the architecture plan, create needed E2E specs, and trigger architecture review, `SS` to implement step-by-step, `TT` to run unit tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's E2E scenarios when applicable, `VR` to verify the original requirement is fully implemented, `DD` to document completed work, and `GC` to commit with a clear message.
 
-Typical sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`
+Typical sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → VR* → DD → GC`
 
 ### 2. Full end-to-end workflow: `RPD`
 
-Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review and code review. `RPD` is approval to run the sequence without human approval between stages, except for clarification, blockers, destructive actions, or external writes. Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → DD → GC`.
+Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review, code review, and requirement completion. `RPD` is approval to run the sequence without human approval between stages, except for clarification, blockers, destructive actions, or external writes. Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → VR* → DD → GC`.
 
 ```
 RPD Implement JWT authentication
 ```
 
-`*` means the review stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. `AP` creates or updates the E2E spec when the story needs one.
+`*` means the review or completion stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. `AP` creates or updates the E2E spec when the story needs one.
 
 Create E2E specs for user-facing flows, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested.
 
@@ -75,18 +75,26 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 | `TT` | Run unit tests and fix failures |
 | `ET` | Run E2E tests and fix failures |
 | `CR` | Code review |
+| `VR` | Verify the requirement is fully implemented in code and docs; if not, refine AP, run SS, CR, TT, ET when applicable, update docs, then verify again |
 | `DD` | Document completed work |
 | `GC` | Commit changes with clear scope |
 | `WT` | Create a new git worktree under `../{project folder}.worktrees/` and move the REQ/AP docs and existing test spec into it |
 | `!!` | Update all relevant docs with new requirements, clarifications, and changes |
-| `RPD` | Full end-to-end flow with AR and CR review loops |
+| `RPD` | Full end-to-end flow with AR, CR, and VR loops |
 
 ## Notes
 
+- RPD command keywords are execution gates, not loose suggestions.
+- Finding or loading the skill is not approval to code.
 - `REQ`, `AP`, `DD`, and `!!` are documentation-only commands.
-- `SS` and `DF` are code-modifying commands. The user's `SS` command is approval to implement.
+- Documentation-only commands must not edit source code, tests, configs, dependencies, generated artifacts, or build files.
+- `SS`, `DF`, and `VR` are code-modifying commands. The user's `SS` or `VR` command is approval to implement the relevant scope.
+- Natural-language development requests without an explicit implementation command should create or update `REQ` and `AP` first, then stop unless the user invokes `SS`, `DF`, `VR`, or `RPD`.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`; `DF` auto-runs `TT` and then `CR*`.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.
+- `VR` checks the original requirement against code behavior, implementation, tests, E2E spec, RPD docs, and review state; passing tests alone are not proof of completion.
+- Stale, contradictory, or incomplete REQ/AP/test/done docs make `VR` incomplete even when the code works.
+- When `VR` finds missing work, it updates the existing plan, test spec, and requirement docs when needed, runs `SS → CR* → TT → ET?`, updates affected docs, then reruns `VR` until complete or blocked.
 - `RPD from SS` uses full-flow skip rules; standalone `SS` does not.
 - `AR` and `CR` can also be manually triggered.
 - `DD` can be invoked as a single-word message.

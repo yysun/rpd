@@ -1,6 +1,6 @@
 ---
 name: rpd
-version: 2.1.2
+version: 2.1.3
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
   requirements, architecture planning, implementation, debugging, tests, E2E checks,
@@ -54,8 +54,9 @@ RPD command keywords are authoritative execution gates.
 - WT and !! are out-of-band.
 - Never auto-chain WT or !! from another command.
 - **Large changes**: auto-run REQ then AP when either is missing.
-- **Review loop**: AR and CR fix high-priority issues.
+- **Review loop**: AR fixes high-priority requirement, plan, and E2E spec issues before implementation; CR fixes high-priority code issues after implementation.
 - Rerun review until no major flaws remain.
+- **Architecture gate**: AP and RPD must not enter SS until AR has explicitly passed.
 - **Loop blockers**: stop when scoped progress stalls.
 - Report unrelated, pre-existing, flaky, or ambiguous failures.
 - Ask before switching to another workflow.
@@ -97,13 +98,15 @@ RPD command keywords are authoritative execution gates.
   - Write E2E specs as human-readable scenarios.
   - Do not run tests during AP.
   - Automatically run `AR` after updating the plan.
+  - Do not enter `SS` until `AR` has explicitly passed.
 - **AR**: Review architecture and assumptions.
   - Can be manually triggered.
   - Ensure no major flaws.
   - Provide options and tradeoffs.
   - Review REQ, AP, and any E2E spec together.
-  - Update existing docs in place.
+  - Fix blocking requirement, plan, or E2E spec flaws by updating existing docs in place.
   - Do not create a separate review doc.
+  - Report either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
   - Apply the review loop.
 - **SS**: Implement step-by-step from the plan.
   - Update plan progress (`- [x]`) as tasks complete.
@@ -205,12 +208,13 @@ RPD command keywords are authoritative execution gates.
   - Pause only for clarification, blockers, destructive actions, or external writes.
   - Derive `{name}` when missing.
   - Confirm `{name}` before proceeding.
-  - Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → VR* → DD → GC`.
+  - Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
   - `*` means review loop.
   - For `VR*`, `*` means completion loop.
   - `?` means only if test spec exists.
   - AP creates E2E specs when needed.
   - AR reviews REQ, AP, and any E2E spec before implementation.
+  - RPD must not enter `SS` until AR has fixed blocking doc/spec flaws and explicitly passed.
   - Inside RPD, SS still runs compile/build/typecheck.
   - Inside RPD, SS still fixes verification failures.
   - Inside RPD, SS still auto-runs CR*.

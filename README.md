@@ -33,19 +33,19 @@ Start with `REQ` to describe a new requirement, then use the other commands as n
 REQ Implement JWT authentication
 ```
 
-Then follow up with `AP` to create the architecture plan, create needed E2E specs, and trigger architecture review, `SS` to implement step-by-step, `TT` to run unit tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's E2E scenarios when applicable, `VR` to verify the original requirement is fully implemented, `DD` to document completed work, and `GC` to commit with a clear message.
+Then follow up with `AP` to create the architecture plan and needed E2E specs, `AR` to review and fix blocking requirement, plan, or E2E spec flaws before implementation, `SS` to implement step-by-step, `TT` to run unit tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's E2E scenarios when applicable, `VR` to verify the original requirement is fully implemented, `DD` to document completed work, and `GC` to commit with a clear message.
 
-Typical sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → VR* → DD → GC`
+Typical sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
 
 ### 2. Full end-to-end workflow: `RPD`
 
-Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review, code review, and requirement completion. `RPD` is approval to run the sequence without human approval between stages, except for clarification, blockers, destructive actions, or external writes. Sequence: `REQ → AP(+AR*) → SS(+CR*) → TT → ET? → VR* → DD → GC`.
+Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review, code review, and requirement completion. `RPD` is approval to run the sequence without human approval between stages, except for clarification, blockers, destructive actions, or external writes. Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
 
 ```
 RPD Implement JWT authentication
 ```
 
-`*` means the review or completion stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. `AP` creates or updates the E2E spec when the story needs one.
+`*` means the review or completion stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. `AP` creates or updates the E2E spec when the story needs one. `RPD` must not enter `SS` until `AR` has reviewed REQ, AP, and any E2E spec, fixed blocking doc/spec flaws in place, and explicitly reported an AR pass.
 
 Create E2E specs for user-facing flows, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested.
 
@@ -68,8 +68,8 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 | Command | Purpose |
 |---------|----------|
 | `REQ` | Document requirements |
-| `AP` | Create architecture plan, create needed E2E specs, and trigger AR |
-| `AR` | Review architecture |
+| `AP` | Create architecture plan and needed E2E specs; then trigger the required AR gate |
+| `AR` | Review architecture and fix blocking requirement, plan, or E2E spec flaws before implementation |
 | `SS` | Step-by-step implementation |
 | `DF` | Diagnose and fix root cause, then run TT and CR* |
 | `TT` | Run unit tests and fix failures |
@@ -90,6 +90,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - Documentation-only commands must not edit source code, tests, configs, dependencies, generated artifacts, or build files.
 - `SS`, `DF`, and `VR` are code-modifying commands. The user's `SS` or `VR` command is approval to implement the relevant scope.
 - Natural-language development requests without an explicit implementation command should create or update `REQ` and `AP` first, then stop unless the user invokes `SS`, `DF`, `VR`, or `RPD`.
+- `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`; `DF` auto-runs `TT` and then `CR*`.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.
 - `VR` checks the original requirement against code behavior, implementation, tests, E2E spec, RPD docs, and review state; passing tests alone are not proof of completion.

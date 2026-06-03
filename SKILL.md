@@ -1,6 +1,7 @@
 ---
 name: rpd
-version: 2.1.6
+version: 2.1.7
+repository: https://github.com/yysun/rpd
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
   requirements, architecture planning, implementation, debugging, tests, E2E checks,
@@ -43,7 +44,8 @@ RPD command keywords are authoritative execution gates.
 - **`{name}`**: short kebab-case story slug.
 - Derive `{name}` from the requirement when missing.
 - Keep `{name}` short, descriptive, and unique.
-- State `{name}` so the user can correct it.
+- Announce derived `{name}` and continue without asking for confirmation unless multiple plausible slugs exist, the slug would collide with an unrelated existing story, or the requirement is too ambiguous to name safely.
+- Ask for slug clarification only when ambiguity would create the wrong doc path or attach work to the wrong story.
 - Reuse `{name}` across REQ, AP, SS, DD, ET, VR, !!, WT, and RPD.
 - **`{yyyy}/{mm}/{dd}`**: the doc creation date.
 - Later updates edit the existing dated doc.
@@ -60,8 +62,9 @@ RPD command keywords are authoritative execution gates.
 - **Loop blockers**: stop when scoped progress stalls.
 - Report unrelated, pre-existing, flaky, or ambiguous failures.
 - Ask before switching to another workflow.
-- **Verification detection**: detect compile/build/typecheck/test commands from the project.
-- Ask before running verification when unclear.
+- **Verification detection**: inspect project scripts, task runners, lockfiles, build/test configs, CI workflows, Makefiles, existing docs, and nearby package manifests before asking the user.
+- Prefer the narrowest unambiguous verification command that matches the command stage and changed files.
+- Ask before running verification only after local inspection cannot identify a command or finds multiple plausible commands with materially different scope or side effects.
 
 ## File Comment Blocks
 
@@ -131,7 +134,8 @@ RPD command keywords are authoritative execution gates.
   - Every phase must have enough tasks that `SS` can execute without rediscovering the whole design.
   - Call out dependencies between phases when order is not obvious.
   - Do not use prose-only task lists.
-  - Use Mermaid for complex structures or flows.
+  - Mermaid is optional and usually unnecessary; use it only when a diagram makes dependencies, data flow, state transitions, or system boundaries clearer than concise text.
+  - Do not add Mermaid for simple task sequences, prose decoration, or plans that are already clear as phased checkboxes.
   - Decide whether the story needs E2E coverage.
   - Create E2E specs for user-facing flows.
   - Create E2E specs for auth, routing, payments, or data entry.
@@ -279,7 +283,7 @@ RPD command keywords are authoritative execution gates.
   - Treat `RPD` as approval to run the full sequence without human approval between stages.
   - Pause only for clarification, blockers, destructive actions, or external writes.
   - Derive `{name}` when missing.
-  - Confirm `{name}` before proceeding.
+  - Announce derived `{name}` and continue unless slug ambiguity would attach work to the wrong story.
   - Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
   - `*` means review loop.
   - For `VR*`, `*` means completion loop.
@@ -295,8 +299,11 @@ RPD command keywords are authoritative execution gates.
   - May be entered mid-sequence.
   - Example: `RPD from SS`.
   - Mid-sequence entry uses RPD skip rules, not standalone command rules.
-  - Skip a stage only when its artifact exists.
-  - Skip a gated stage only when its gate passed.
+  - Skip a stage only when its artifact is fresh, matches the current `{name}` and requirement, and is not contradicted by newer user messages, code changes, or docs.
+  - Do not skip `REQ` when acceptance criteria are missing, stale, ambiguous, or tied to a different story.
+  - Do not skip `AP` when the plan lacks current phased tasks, validation evidence, E2E coverage decision, or risk/non-goal handling.
+  - Skip a gated stage only when its gate passed after the latest matching artifact update.
+  - If freshness or matching is uncertain, update or rerun the stage instead of skipping it.
 
 
 ## Documentation Structure

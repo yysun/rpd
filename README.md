@@ -37,7 +37,7 @@ Then follow up with `AP` to create the architecture plan and needed E2E specs, `
 
 Typical sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
 
-`AP` should produce a detailed phased plan, not a generic four-item checklist. A useful plan starts with goal, context, decisions, and risks, then breaks implementation into dependency-ordered checkbox phases that name concrete files, modules, behaviors, tests, commands, cleanup/removal checks, and validation evidence. The tasks are for the AI agent to execute, so each checkbox should describe an observable change or verification result specific enough for `SS` to run without rediscovering the architecture.
+`AP` should produce a detailed phased plan, not a generic four-item checklist. A useful plan starts with goal, context, decisions, and risks, then breaks implementation into dependency-ordered checkbox phases that name concrete files, modules, behaviors, tests, commands, cleanup/removal checks, and validation evidence. The tasks are for the AI agent to execute, so each checkbox should describe an observable change or verification result specific enough for `SS` to run without rediscovering the architecture. Mermaid diagrams are optional and should be used only when they clarify dependencies, data flow, state transitions, or system boundaries better than text.
 
 ### 2. Full end-to-end workflow: `RPD`
 
@@ -61,7 +61,7 @@ Create E2E specs for user-facing flows, auth, routing, payments, data entry, cro
 ├── tests/test-{name}.md  # optional existing E2E spec
 └── done/{yyyy}/{mm}/{dd}/{name}.md
 ```
-`{name}` is a short kebab-case story slug (for example: `user-auth`, `offline-sync`) reused across related docs and commands. If omitted, the skill derives one from the requirement or task description and states it in the response.
+`{name}` is a short kebab-case story slug (for example: `user-auth`, `offline-sync`) reused across related docs and commands. If omitted, the skill derives one from the requirement or task description, announces it, and continues unless the slug is ambiguous, collides with an unrelated story, or could attach work to the wrong docs.
 
 REQ, AP, and DD keep the date from when the doc was first created; later updates modify the existing doc in place. E2E test specs are created during AP when needed, then reused by ET.
 
@@ -97,11 +97,12 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`; `DF` auto-runs `TT` and then `CR*`.
 - `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.
+- Before asking which verification to run, inspect project scripts, task runners, lockfiles, build/test configs, CI workflows, Makefiles, docs, and nearby manifests; ask only when no unambiguous command exists or choices have materially different scope or side effects.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.
 - `VR` checks the original requirement against code behavior, implementation, tests, E2E spec, RPD docs, and review state; passing tests alone are not proof of completion.
 - Stale, contradictory, or incomplete REQ/AP/test/done docs make `VR` incomplete even when the code works.
 - When `VR` finds missing work, it updates the existing plan, test spec, and requirement docs when needed, runs `SS → CR* → TT → ET?`, updates affected docs, then reruns `VR` until complete or blocked.
-- `RPD from SS` uses full-flow skip rules; standalone `SS` does not.
+- `RPD from SS` uses full-flow skip rules; standalone `SS` does not. Skip stages only when artifacts are fresh, match the current story and requirement, and were gated after the latest relevant update.
 - `AR` and `CR` can also be manually triggered.
 - `DD` can be invoked as a single-word message.
 - `DD` writes a short PR-style completion summary with `Summary`, `Verification`, and `Notes`; it should not duplicate the full requirement, plan, test spec, or changelog.

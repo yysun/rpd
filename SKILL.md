@@ -1,6 +1,6 @@
 ---
 name: rpd
-version: 2.1.3
+version: 2.1.5
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
   requirements, architecture planning, implementation, debugging, tests, E2E checks,
@@ -80,12 +80,47 @@ RPD command keywords are authoritative execution gates.
   - Do not implement code.
   - Do not modify tests, configs, or non-REQ docs.
 - **AP**: Create architecture/implementation plan in `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`.
-  - Plans must use markdown checkboxes for phased tasks.
-  - Required task format:
-    - [ ] Inspect relevant files
-    - [ ] Make focused changes
-    - [ ] Run validation
-    - [ ] Update docs/status
+  - Plans must be detailed, phased, and ordered by dependency.
+  - Do not create a shallow four-item checklist; expand the work into the real implementation sequence.
+  - Required sections:
+    - `## Goal`: one or two sentences tying the plan back to the REQ. State what must become true, not what the agent intends to try.
+    - `## Current Context`: relevant files, entry points, constraints, existing behavior, and known unknowns discovered during AP inspection.
+    - `## Decisions`: architecture choices, rejected alternatives, tradeoffs, compatibility decisions, and non-goals. Explicitly reject unnecessary feature flags, environment variables, fallback modes, and compatibility layers unless required by the REQ.
+    - `## Phased Tasks`: markdown checkbox tasks grouped under numbered phase headings. These tasks are for the AI agent to execute, not for a human project tracker.
+    - `## Validation`: build, typecheck, unit, integration, E2E, manual checks, and expected evidence. Include exact commands or observable outputs the agent must report.
+    - `## Rollback / Risk`: risky areas, migration/data concerns, compatibility concerns, cleanup concerns, and rollback strategy when relevant.
+  - Phased task template:
+    - `### Phase 1 - Discovery and scope lock`
+    - `- [ ] Inspect <specific files/modules> to confirm <specific assumption, dependency, boundary, or current behavior>.`
+    - `- [ ] Identify <specific legacy path/fallback/flag/compatibility behavior> that must be preserved, changed, or removed according to the REQ.`
+    - `- [ ] Record <specific non-goals/rejected alternatives> so the implementation does not introduce out-of-scope behavior.`
+    - `### Phase 2 - Foundation changes`
+    - `- [ ] Update <specific component/module/API/schema/type/config> so <required behavior or contract> is represented directly.`
+    - `- [ ] Remove or simplify <specific obsolete path/option/env var/fallback> so the new behavior is not hidden behind unnecessary compatibility.`
+    - `- [ ] Update <specific validation/error handling/loading path> so invalid or unsupported states fail clearly.`
+    - `### Phase 3 - Feature implementation`
+    - `- [ ] Implement <specific behavior> in <specific place>, preserving <specific constraint or invariant>.`
+    - `- [ ] Wire <specific integration point/call path/artifact generation step> so <expected end-to-end behavior>.`
+    - `- [ ] Confirm <specific rejected alternative or non-goal> was not introduced during implementation.`
+    - `### Phase 4 - Tests and verification wiring`
+    - `- [ ] Add or update <specific tests/specs/evals> for <acceptance point, edge case, or failure mode>.`
+    - `- [ ] Run <specific command> and record <expected evidence/output>.`
+    - `- [ ] Verify <specific cleanup/removal/absence condition> so stale behavior cannot silently remain.`
+    - `### Phase 5 - Documentation and status`
+    - `- [ ] Update <specific docs/examples/status artifacts> with <exact new behavior, command, or contract>.`
+    - `- [ ] Record final evidence showing <REQ requirement> is satisfied.`
+    - `- [ ] Mark completed tasks complete only after the corresponding change or evidence exists.`
+  - Add, remove, rename, or split phases to match the story; keep the sequence logical from investigation through validation.
+  - `## Phased Tasks` rules:
+    - Every task must start with `- [ ]`.
+    - Every task must name a specific file, module, API, schema, command, test, artifact, or behavior.
+    - Every task must describe an observable state change or verification action.
+    - Do not use vague tasks such as `- [ ] Improve implementation`, `- [ ] Update tests`, or `- [ ] Clean up code`.
+    - Do not mark a task complete unless the agent has performed the work and, where applicable, recorded evidence.
+    - Prefer tasks that produce a durable repository change or a concrete verification result.
+    - Keep phases in logical execution order: discover, decide, change foundation, implement, verify, document.
+  - Every phase must have enough tasks that `SS` can execute without rediscovering the whole design.
+  - Call out dependencies between phases when order is not obvious.
   - Do not use prose-only task lists.
   - Use Mermaid for complex structures or flows.
   - Decide whether the story needs E2E coverage.

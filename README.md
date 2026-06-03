@@ -37,6 +37,8 @@ Then follow up with `AP` to create the architecture plan and needed E2E specs, `
 
 Typical sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
 
+`AP` should produce a detailed phased plan, not a generic four-item checklist. A useful plan starts with goal, context, decisions, and risks, then breaks implementation into dependency-ordered checkbox phases that name concrete files, modules, behaviors, tests, commands, cleanup/removal checks, and validation evidence. The tasks are for the AI agent to execute, so each checkbox should describe an observable change or verification result specific enough for `SS` to run without rediscovering the architecture.
+
 ### 2. Full end-to-end workflow: `RPD`
 
 Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review, code review, and requirement completion. `RPD` is approval to run the sequence without human approval between stages, except for clarification, blockers, destructive actions, or external writes. Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.

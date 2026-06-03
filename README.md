@@ -92,8 +92,11 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - Documentation-only commands must not edit source code, tests, configs, dependencies, generated artifacts, or build files.
 - `SS`, `DF`, and `VR` are code-modifying commands. The user's `SS` or `VR` command is approval to implement the relevant scope.
 - Natural-language development requests without an explicit implementation command should create or update `REQ` and `AP` first, then stop unless the user invokes `SS`, `DF`, `VR`, or `RPD`.
+- `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
 - `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
+- `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`; `DF` auto-runs `TT` and then `CR*`.
+- `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.
 - `VR` checks the original requirement against code behavior, implementation, tests, E2E spec, RPD docs, and review state; passing tests alone are not proof of completion.
 - Stale, contradictory, or incomplete REQ/AP/test/done docs make `VR` incomplete even when the code works.

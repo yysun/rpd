@@ -1,6 +1,6 @@
 ---
 name: rpd
-version: 2.1.5
+version: 2.1.6
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
   requirements, architecture planning, implementation, debugging, tests, E2E checks,
@@ -76,6 +76,15 @@ RPD command keywords are authoritative execution gates.
 
 - **REQ**: Create or update requirements in `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`.
   - Focus on WHAT, not HOW, not optimization.
+  - Required sections:
+    - `## Problem`: the user-visible or system-visible problem and why it matters.
+    - `## Requirement`: the behavior, contract, or outcome that must become true.
+    - `## Acceptance Criteria`: checkbox criteria that can be verified by code behavior, tests, docs, or observable output.
+    - `## Constraints`: compatibility, data, UX, performance, security, migration, or operational constraints.
+    - `## Non-Goals`: tempting but out-of-scope work, including unnecessary feature flags, fallback modes, and compatibility layers.
+    - `## Open Questions`: only questions that block correct planning; omit the section when none exist.
+  - Acceptance criteria must be specific enough for `VR` to judge complete or incomplete.
+  - Do not include implementation steps, file-level plans, or speculative architecture.
   - Create or update only the requirement doc.
   - Do not implement code.
   - Do not modify tests, configs, or non-REQ docs.
@@ -136,35 +145,51 @@ RPD command keywords are authoritative execution gates.
   - Do not enter `SS` until `AR` has explicitly passed.
 - **AR**: Review architecture and assumptions.
   - Can be manually triggered.
-  - Ensure no major flaws.
-  - Provide options and tradeoffs.
+  - Review for blocking flaws before implementation, not style preferences.
+  - Check that the REQ is testable, the AP covers every acceptance criterion, phases are dependency-ordered, validation evidence is explicit, E2E coverage is correctly included or excluded, and risks/non-goals are handled.
+  - Challenge unnecessary feature flags, environment variables, fallback modes, compatibility layers, broad refactors, and vague validation.
+  - Provide options and tradeoffs only when a real architecture choice remains.
   - Review REQ, AP, and any E2E spec together.
   - Fix blocking requirement, plan, or E2E spec flaws by updating existing docs in place.
+  - Do not pass AR with unresolved blocking questions, missing validation, or a plan that `SS` cannot execute directly.
   - Do not create a separate review doc.
   - Report either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
   - Apply the review loop.
 - **SS**: Implement step-by-step from the plan.
+  - Read the current REQ, AP, and optional E2E spec before editing code.
+  - Execute AP tasks in order unless a discovered constraint makes the order wrong.
+  - If implementation requires a material plan change, update the AP task list before or alongside the code change and keep the scope tied to the REQ.
   - Update plan progress (`- [x]`) as tasks complete.
+  - Mark a task complete only after the code/docs/test change or verification evidence exists.
+  - Do not silently add unplanned features, compatibility layers, fallback modes, environment variables, or broad refactors.
   - Treat `SS` as approval to implement.
   - Do not ask for a second approval.
   - Run relevant compile/build/typecheck after changes.
+  - Report the exact verification command and result.
   - Fix compile/build/typecheck failures before review.
   - Auto-run `CR*` after verification passes.
 - **DF**: Diagnose and fix root cause.
   - Think harder to find the root cause.
-  - Explain the issue clearly.
+  - Reproduce or localize the failure before changing code when practical.
+  - Explain the issue clearly: symptom, root cause, affected path, and why the fix addresses it.
   - Provide fix options when useful.
+  - Prefer the smallest fix that removes the cause instead of masking the symptom.
+  - Add or update a regression test when the project has a clear test location.
   - Automatically run `TT` to confirm the fix, then `CR*`.
 - **TT**: Run unit tests and fix failures.
   - Detect the unit test command from the project.
   - Ask before running tests when unclear.
   - Stop at the first failure when the runner supports it.
+  - Record the exact failing test, error, suspected cause, fix, and rerun result.
   - Fix the root cause of that failure.
+  - Do not skip, delete, weaken, or rename tests to force a pass unless the REQ explicitly changes the expected behavior.
   - Rerun unit tests after each fix.
   - Repeat until all unit tests pass.
 - **CR**: Review uncommitted changes with git.
   - Can be manually triggered.
-  - Check architecture, quality, performance, maintainability, and security.
+  - Review the diff against the REQ, AP, and E2E spec, not just local code style.
+  - Check scope control, architecture, correctness, edge cases, performance, maintainability, security, migrations, compatibility, test coverage, and stale docs.
+  - Prioritize findings by impact; ignore cosmetic churn unless it hides a real defect.
   - Fix high-priority findings.
   - Rerun CR after fixes.
   - Continue until no major flaws remain.
@@ -174,8 +199,10 @@ RPD command keywords are authoritative execution gates.
 - **VR**: Verify the requirement is fully implemented in both code and docs.
   - Compare the current REQ doc, AP doc, optional E2E spec, implementation code, user-facing behavior, and latest verification results.
   - Decide whether each requirement acceptance point is implemented in code, covered by appropriate tests or E2E checks, reflected in the relevant RPD docs, and free of known blocking review issues.
+  - Produce an acceptance-criteria matrix with `complete`, `incomplete`, or `blocked` status and concrete evidence for each item.
   - Treat stale, contradictory, or incomplete REQ/AP/test/done docs as incomplete work, not as a documentation-only cleanup.
   - Do not treat passing tests as proof of completion when requirements are visibly unmet.
+  - Do not pass VR when planned cleanup/removal work, E2E coverage, docs, or review fixes are missing.
   - If complete, report the evidence and either stop for standalone `VR` or continue the parent `RPD` sequence.
   - If incomplete, update the existing AP doc with the missing code, test, and documentation work.
   - If missing work changes E2E coverage, update or create `.docs/tests/test-{name}.md`.
@@ -199,7 +226,9 @@ RPD command keywords are authoritative execution gates.
   - Ask before committing with unrelated or pre-existing failures.
   - Inspect git status before staging.
   - Stop when unrelated or ambiguous changes are present.
-  - Stage only the intended files and report the final commit hash.
+  - Stage only files that belong to the current story; never sweep in unrelated work because it is convenient.
+  - Commit message must reflect the user-visible or system-visible change, not the workflow stage.
+  - Report the final commit hash.
 - **ET**: Run E2E tests.
   - If a path is provided after `ET`, run that single test file.
   - Otherwise use `.docs/tests/test-{name}.md`.
@@ -209,7 +238,9 @@ RPD command keywords are authoritative execution gates.
   - For executable specs, detect the E2E test command.
   - Ask before running E2E tests when unclear.
   - Stop at the first E2E failure when possible.
+  - Record the scenario, step, observed result, expected result, fix, and rerun evidence.
   - Fix the root cause of that failure.
+  - Do not rewrite the E2E spec during ET except to correct stale wording after behavior is verified.
   - Rerun E2E tests after each fix.
   - Repeat until all targeted E2E tests pass.
 - **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
@@ -223,18 +254,24 @@ RPD command keywords are authoritative execution gates.
     - `## Notes`: follow-ups, risks, non-goals, skipped checks, or unrelated failures when real.
   - Do not duplicate the full REQ, AP, test spec, or changelog.
   - Do not claim verification that did not run.
+  - Mention unresolved risks, skipped checks, or unrelated failures only when they are real and specific.
 - **WT**: Create a new git worktree for the current story.
+  - Inspect git status before moving docs.
+  - Do not move unrelated docs or untracked artifacts into the worktree.
   - Move matching REQ and AP docs into the new worktree.
   - Move the existing test spec when present.
   - Move files instead of copying them.
   - Canonical command: `git worktree add ../{project folder}.worktrees/feature-{name} -b feature/{name} {base}`.
   - Use this when planning is done in one checkout but implementation should continue in another.
 - **!!**: Update relevant docs from the latest user message.
+  - Treat the latest user message as a requirement change, clarification, or scope correction.
+  - Reconcile contradictions across REQ, AP, and test specs instead of appending stale text.
   - Update current REQ docs in place.
   - Update current AP docs in place.
   - Apply the AP E2E criteria to new requirement changes.
   - Create `.docs/tests/test-{name}.md` if E2E coverage is now needed.
   - Update the current test spec when present.
+  - Record new non-goals, removed scope, changed validation, and affected phases when the clarification changes implementation direction.
   - Do not implement code; documentation only.
 - **RPD**: Run the full end-to-end workflow from a requirement input.
   - Accept a requirement description as input.

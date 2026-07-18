@@ -95,11 +95,14 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
 - `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
 - `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.
+- When the runtime supports subagents, `AR`, `CR`, and `VR` use a read-only independent reviewer with no inherited authoring conversation, or the smallest task-local context available. Full-history inheritance is not used for independent review.
+- Independent reviewers receive only raw artifacts and the command checklist. The primary agent owns fixes, tests, documentation updates, completion loops, and final pass decisions; when subagents are unavailable, the primary agent runs the same checklist.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`; `DF` auto-runs `TT` and then `CR*`.
 - `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.
 - Before asking which verification to run, inspect project scripts, task runners, lockfiles, build/test configs, CI workflows, Makefiles, docs, and nearby manifests; ask only when no unambiguous command exists or choices have materially different scope or side effects.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.
 - `VR` checks the original requirement against code behavior, implementation, tests, E2E spec, RPD docs, and review state; passing tests alone are not proof of completion.
+- During `VR`, each REQ acceptance criterion is checked off only when concrete evidence proves it complete. Incomplete or blocked criteria remain unchecked, and `VR` cannot pass until every criterion is checked and evidenced.
 - Stale, contradictory, or incomplete REQ/AP/test/done docs make `VR` incomplete even when the code works.
 - When `VR` finds missing work, it updates the existing plan, test spec, and requirement docs when needed, runs `SS → CR* → TT → ET?`, updates affected docs, then reruns `VR` until complete or blocked.
 - `RPD from SS` uses full-flow skip rules; standalone `SS` does not. Skip stages only when artifacts are fresh, match the current story and requirement, and were gated after the latest relevant update.

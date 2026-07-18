@@ -1,6 +1,6 @@
 ---
 name: rpd
-version: 2.1.7
+version: 2.1.8
 repository: https://github.com/yysun/rpd
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
@@ -27,6 +27,7 @@ A concise software development workflow with automatic architecture and code rev
 - **Surgical changes**: avoid refactors or additions unrelated to the task.
 - **Goal-directed**: define success criteria for each task and verify the code meets them.
 - **Ask when blocked**: ask targeted questions.
+- **Independent review**: use a clean-context independent subagent for AR, CR, and VR when the runtime supports it; preserve the same review contract when it does not.
 
 ## Command Gate
 
@@ -74,6 +75,16 @@ RPD command keywords are authoritative execution gates.
 - Update the block after changing the file.
 - Applies to `SS`, `DF`, `VR`, and `RPD` once it reaches its `SS` stage.
 - Does not apply to docs under `.docs/`.
+
+## Independent Review Delegation
+
+- Before AR, CR, or VR, check whether the current runtime exposes subagent spawning, has capacity, and permits delegation. Do not infer support from the model name.
+- When available, use an independent subagent that did not author the artifacts under review. Start it with no inherited authoring conversation when the runtime supports that option; otherwise pass the smallest task-local context the runtime permits. Do not use full-history inheritance for an independent review.
+- Give the reviewer only the raw artifacts needed for its command: the applicable REQ, AP, E2E spec, stable diff or implementation paths, verification evidence, and command-specific checklist. Do not pass the author's conclusions, suspected flaws, intended fixes, or claims that the work should pass.
+- Require the reviewer to reconstruct its judgment from those artifacts, work read-only, and return prioritized findings or an evidence matrix. Run the review only after the relevant artifacts form a stable snapshot.
+- Keep AR, CR, and VR as serial gates. Do not let a reviewer inspect files while another agent is mutating them.
+- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Rerun the independent review after material fixes; prefer fresh reviewer context when capacity permits.
+- If subagents are unavailable, run the same checklist in the primary agent and produce the same required output. Delegation changes review independence, not the pass criteria.
 
 ## Command Keywords
 
@@ -149,6 +160,7 @@ RPD command keywords are authoritative execution gates.
   - Do not enter `SS` until `AR` has explicitly passed.
 - **AR**: Review architecture and assumptions.
   - Can be manually triggered.
+  - Use the Independent Review Delegation rules; when available, have a read-only independent subagent perform the review and return blocking findings to the primary agent.
   - Review for blocking flaws before implementation, not style preferences.
   - Check that the REQ is testable, the AP covers every acceptance criterion, phases are dependency-ordered, validation evidence is explicit, E2E coverage is correctly included or excluded, and risks/non-goals are handled.
   - Challenge unnecessary feature flags, environment variables, fallback modes, compatibility layers, broad refactors, and vague validation.
@@ -191,6 +203,7 @@ RPD command keywords are authoritative execution gates.
   - Repeat until all unit tests pass.
 - **CR**: Review uncommitted changes with git.
   - Can be manually triggered.
+  - Use the Independent Review Delegation rules; when available, have a read-only independent subagent review the stable diff and return prioritized findings to the primary agent.
   - Review the diff against the REQ, AP, and E2E spec, not just local code style.
   - Check scope control, architecture, correctness, edge cases, performance, maintainability, security, migrations, compatibility, test coverage, and stale docs.
   - Prioritize findings by impact; ignore cosmetic churn unless it hides a real defect.
@@ -201,9 +214,13 @@ RPD command keywords are authoritative execution gates.
   - Report unrelated or pre-existing failures.
   - Do not convert CR into TT.
 - **VR**: Verify the requirement is fully implemented in both code and docs.
+  - Use the Independent Review Delegation rules; when available, have a read-only independent subagent build the acceptance-criteria evidence matrix. The primary agent owns all follow-up edits and the completion loop.
   - Compare the current REQ doc, AP doc, optional E2E spec, implementation code, user-facing behavior, and latest verification results.
   - Decide whether each requirement acceptance point is implemented in code, covered by appropriate tests or E2E checks, reflected in the relevant RPD docs, and free of known blocking review issues.
   - Produce an acceptance-criteria matrix with `complete`, `incomplete`, or `blocked` status and concrete evidence for each item.
+  - Update the REQ acceptance-criteria checkboxes during VR. Change `- [ ]` to `- [x]` only when concrete evidence proves that criterion complete; leave incomplete or blocked criteria unchecked.
+  - Treat the checkbox as recorded status, not proof. Keep the evidence in the VR matrix and do not weaken or rewrite a criterion merely to check it off.
+  - Do not pass VR until every acceptance criterion in the REQ is checked and supported by evidence appropriate to that criterion.
   - Treat stale, contradictory, or incomplete REQ/AP/test/done docs as incomplete work, not as a documentation-only cleanup.
   - Do not treat passing tests as proof of completion when requirements are visibly unmet.
   - Do not pass VR when planned cleanup/removal work, E2E coverage, docs, or review fixes are missing.
@@ -216,6 +233,7 @@ RPD command keywords are authoritative execution gates.
   - Run `TT`.
   - Run `ET` when a matching E2E spec exists or when the refined plan adds one.
   - Update plan progress and any affected RPD docs after code/test changes.
+  - After completion-loop fixes, update the REQ checkboxes from the new evidence before rerunning the final VR decision.
   - Rerun `VR` after TT and ET complete.
   - Repeat until the requirement is complete or a loop blocker is reached.
   - Apply loop blocker rules when progress stalls, failures are unrelated, or the requirement is ambiguous.

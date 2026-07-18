@@ -1,7 +1,8 @@
 ---
 name: rpd
-version: 2.1.8
-repository: https://github.com/yysun/rpd
+metadata:
+  version: "2.1.9"
+  repository: "https://github.com/yysun/rpd"
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
   requirements, architecture planning, implementation, debugging, tests, E2E checks,
@@ -80,8 +81,10 @@ RPD command keywords are authoritative execution gates.
 
 - Before AR, CR, or VR, check whether the current runtime exposes subagent spawning, has capacity, and permits delegation. Do not infer support from the model name.
 - When available, use an independent subagent that did not author the artifacts under review. Start it with no inherited authoring conversation when the runtime supports that option; otherwise pass the smallest task-local context the runtime permits. Do not use full-history inheritance for an independent review.
+- If the runtime cannot start a reviewer with either no inherited authoring history or a minimal task-local context, treat independent delegation as unavailable and run the primary-agent fallback.
 - Give the reviewer only the raw artifacts needed for its command: the applicable REQ, AP, E2E spec, stable diff or implementation paths, verification evidence, and command-specific checklist. Do not pass the author's conclusions, suspected flaws, intended fixes, or claims that the work should pass.
 - Require the reviewer to reconstruct its judgment from those artifacts, work read-only, and return prioritized findings or an evidence matrix. Run the review only after the relevant artifacts form a stable snapshot.
+- Use runtime-enforced read-only tools when supported. Otherwise record the reviewed snapshot and Git-visible worktree state, instruct the reviewer not to edit, and verify both are unchanged afterward. If they changed, invalidate the review and stop for safe primary-agent recovery before rerunning it.
 - Keep AR, CR, and VR as serial gates. Do not let a reviewer inspect files while another agent is mutating them.
 - The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Rerun the independent review after material fixes; prefer fresh reviewer context when capacity permits.
 - If subagents are unavailable, run the same checklist in the primary agent and produce the same required output. Delegation changes review independence, not the pass criteria.
@@ -219,6 +222,7 @@ RPD command keywords are authoritative execution gates.
   - Decide whether each requirement acceptance point is implemented in code, covered by appropriate tests or E2E checks, reflected in the relevant RPD docs, and free of known blocking review issues.
   - Produce an acceptance-criteria matrix with `complete`, `incomplete`, or `blocked` status and concrete evidence for each item.
   - Update the REQ acceptance-criteria checkboxes during VR. Change `- [ ]` to `- [x]` only when concrete evidence proves that criterion complete; leave incomplete or blocked criteria unchecked.
+  - Change `- [x]` back to `- [ ]` whenever current implementation, test, documentation, or review evidence no longer supports the criterion. Never preserve a stale checkmark.
   - Treat the checkbox as recorded status, not proof. Keep the evidence in the VR matrix and do not weaken or rewrite a criterion merely to check it off.
   - Do not pass VR until every acceptance criterion in the REQ is checked and supported by evidence appropriate to that criterion.
   - Treat stale, contradictory, or incomplete REQ/AP/test/done docs as incomplete work, not as a documentation-only cleanup.

@@ -1,7 +1,7 @@
 ---
 name: rpd
 metadata:
-  version: "2.1.9"
+  version: "2.1.10"
   repository: "https://github.com/yysun/rpd"
 description: >
   Use this skill for software development tasks that should follow the RPD workflow:
@@ -28,7 +28,7 @@ A concise software development workflow with automatic architecture and code rev
 - **Surgical changes**: avoid refactors or additions unrelated to the task.
 - **Goal-directed**: define success criteria for each task and verify the code meets them.
 - **Ask when blocked**: ask targeted questions.
-- **Independent review**: use a clean-context independent subagent for AR, CR, and VR when the runtime supports it; preserve the same review contract when it does not.
+- **Independent review**: use clean-context independent subagents for CR and VR, and for AR when architecture risk requires it; preserve the same review contract when delegation is unavailable.
 
 ## Command Gate
 
@@ -80,13 +80,17 @@ RPD command keywords are authoritative execution gates.
 ## Independent Review Delegation
 
 - Before AR, CR, or VR, check whether the current runtime exposes subagent spawning, has capacity, and permits delegation. Do not infer support from the model name.
-- When available, use an independent subagent that did not author the artifacts under review. Start it with no inherited authoring conversation when the runtime supports that option; otherwise pass the smallest task-local context the runtime permits. Do not use full-history inheritance for an independent review.
+- Before deciding how to run AR, have the primary agent perform the AR checklist as a preflight and fix obvious requirement, plan, and E2E spec flaws.
+- Treat AR as low-risk only when all of these are true: the plan follows an existing architecture pattern; stays within one component or subsystem; changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior; is readily reversible; and has unambiguous acceptance criteria and implementation boundaries.
+- Record the low-risk classification criterion by criterion with concrete repository evidence in the AR result. If any criterion lacks evidence or is uncertain or debatable, treat AR as non-low-risk.
+- The primary agent may complete low-risk AR itself. Otherwise, require independent AR when delegation is available. Require independent CR and VR whenever delegation is available.
+- For an independent review, use a subagent that did not author the artifacts under review. Start it with no inherited authoring conversation when the runtime supports that option; otherwise pass the smallest task-local context the runtime permits. Do not use full-history inheritance.
 - If the runtime cannot start a reviewer with either no inherited authoring history or a minimal task-local context, treat independent delegation as unavailable and run the primary-agent fallback.
 - Give the reviewer only the raw artifacts needed for its command: the applicable REQ, AP, E2E spec, stable diff or implementation paths, verification evidence, and command-specific checklist. Do not pass the author's conclusions, suspected flaws, intended fixes, or claims that the work should pass.
-- Require the reviewer to reconstruct its judgment from those artifacts, work read-only, and return prioritized findings or an evidence matrix. Run the review only after the relevant artifacts form a stable snapshot.
+- Require the reviewer to reconstruct its judgment from those artifacts, work read-only, and return every material finding in priority order without a findings cap. For VR, require the acceptance-criteria evidence matrix in addition to the findings. Run the review only after the relevant artifacts form a stable snapshot.
 - Use runtime-enforced read-only tools when supported. Otherwise record the reviewed snapshot and Git-visible worktree state, instruct the reviewer not to edit, and verify both are unchanged afterward. If they changed, invalidate the review and stop for safe primary-agent recovery before rerunning it.
 - Keep AR, CR, and VR as serial gates. Do not let a reviewer inspect files while another agent is mutating them.
-- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Rerun the independent review after material fixes; prefer fresh reviewer context when capacity permits.
+- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Rerun the independent review after material changes, including fixes for blocking findings, but not solely for editorial corrections. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again. Prefer fresh reviewer context when capacity permits.
 - If subagents are unavailable, run the same checklist in the primary agent and produce the same required output. Delegation changes review independence, not the pass criteria.
 
 ## Command Keywords
@@ -163,7 +167,7 @@ RPD command keywords are authoritative execution gates.
   - Do not enter `SS` until `AR` has explicitly passed.
 - **AR**: Review architecture and assumptions.
   - Can be manually triggered.
-  - Use the Independent Review Delegation rules; when available, have a read-only independent subagent perform the review and return blocking findings to the primary agent.
+  - Run the primary-agent preflight, classify the plan using the low-risk criteria, and follow the Independent Review Delegation rules. Use a read-only independent subagent unless every low-risk condition is satisfied or delegation is unavailable.
   - Review for blocking flaws before implementation, not style preferences.
   - Check that the REQ is testable, the AP covers every acceptance criterion, phases are dependency-ordered, validation evidence is explicit, E2E coverage is correctly included or excluded, and risks/non-goals are handled.
   - Challenge unnecessary feature flags, environment variables, fallback modes, compatibility layers, broad refactors, and vague validation.

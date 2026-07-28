@@ -18,7 +18,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.2.1`
+**Version:** `3.2.2`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.

@@ -7,13 +7,40 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.2.2] - 2026-07-28
+
+No change to workflow behavior. Repository layout and test-suite portability only.
+
+### Fixed
+
+- `.gitignore` matched `.docs/` at any depth, so the `bang-restart` fixture's seeded story docs
+  (`req-`, `plan-`, and `test-public-status.md`) were silently excluded from the 3.2.1 commit. A
+  fresh clone had no current story for `!!` to reconcile, making Scenario 12 unrunnable. Those
+  three files are now tracked.
+- Scenario 12 still asserted the pre-3.2.0 completion-doc name. Both the `find` check and the
+  committed-path allowlist now expect `done-public-status.md`.
+
+### Changed
+
+- Reverted the 3.2.1 test relocation: the intent-routing suite moves back from root `tests/` to
+  `.docs/tests/`, restoring the artifact path the skill documents. `ET` resolves
+  `.docs/tests/test-{name}.md`, so the suite was previously unreachable from this repository's own
+  workflow. Moving the spec and its fixtures together keeps every relative fixture reference valid.
+  The 3.2.1 packaging split is unaffected: client installs still copy only `skills/rpd/`.
+- `.docs/` is now tracked in git rather than ignored, so this repository's requirements, plans, and
+  E2E specs are versioned the way the skill claims they should be.
+- Replaced hardcoded machine paths in the E2E suite. The temporary base is
+  `RPD_TMP_ROOT="${RPD_TMP_ROOT:-${TMPDIR:-/tmp}}"`, the validator path is `RPD_SKILL_VALIDATOR`
+  with a `$HOME` default and a skip when absent, and the validator target is repo-relative.
+  Scenario 15 previously referenced `/Users/esun/...` and could only run on one machine.
+
 ## [3.2.1] - 2026-07-28
 
 ### Changed
 
 - Moved the installable skill to `skills/rpd/` so client installations contain runtime files
   without repository-only docs, the workflow diagram, or evals.
-- Moved the intent-routing suite from `.docs/tests/` to root `tests/`.
+- Moved the intent-routing suite from `.docs/tests/` to root `tests/` (reverted in 3.2.2).
 - Kept `rpd-loop.png` at the repository root and updated the install command and validation
   paths for the nested skill layout.
 
@@ -60,7 +87,7 @@ Consistency pass over the command contracts. No command was added or removed.
 
 ### Fixed
 
-- Scenario 15 of `tests/test-intent-based-routing.md` asserted that no line may say
+- Scenario 15 of `.docs/tests/test-intent-based-routing.md` asserted that no line may say
   ``` `!!` is documentation-only ```, which incorrectly matched the accurate line "The
   reconciliation step of `!!` is documentation-only". The assertion was already failing before
   this release; the regex now excludes the reconciliation wording.

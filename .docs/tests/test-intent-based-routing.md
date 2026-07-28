@@ -7,7 +7,7 @@ Prove that ordinary natural-language requests route by implementation intent and
 ## Common Execution Procedure
 
 1. Run setup and every assertion block with Bash fail-fast semantics: `set -euo pipefail`.
-2. Create one unique temporary root with `E2E_ROOT="$(mktemp -d /private/tmp/rpd-intent-routing-e2e.XXXXXX)"`, export it, and record the absolute value.
+2. Resolve the temporary base with `RPD_TMP_ROOT="${RPD_TMP_ROOT:-${TMPDIR:-/tmp}}"`, then create one unique temporary root with `E2E_ROOT="$(mktemp -d "${RPD_TMP_ROOT%/}/rpd-intent-routing-e2e.XXXXXX")"`, export it, and record the absolute value. Set `RPD_TMP_ROOT` explicitly to override the default base.
 3. For each case below, create `E2E_ROOT/<case>`, copy the named fixture with `cp -R "FIXTURE_ROOT/." "E2E_ROOT/<case>/"` so dotfiles such as `.gitignore` are preserved, and copy the revised repository `skills/rpd/SKILL.md` to `E2E_ROOT/<case>/SKILL.md`. Replace `FIXTURE_ROOT` and the destination with their absolute paths before running the command.
 4. Initialize an isolated Git repository in each case, configure the synthetic identity `RPD Test <rpd@example.invalid>`, add every seeded file, and commit with message `seed routing fixture`. Save `git -C "E2E_ROOT/<case>" rev-parse HEAD` as `E2E_ROOT/<case>-seed-sha.txt`.
 5. Replace the literals `CASE_ROOT`, `EVIDENCE_ROOT`, `CASE_NAME`, and `COMMIT_POLICY` in the case prompt and fixed evidence suffix with that case's absolute path, the absolute `E2E_ROOT`, the case name, and the case's commit policy before dispatch. Use `Do not commit.` for every case except `bang-restart`; use `Complete GC after VR and DD; make exactly one scoped commit and do not push.` for `bang-restart`. Append the resolved evidence suffix and save the fully resolved prompt with exactly one terminal file-storage LF as `E2E_ROOT/<case>-prompt.txt`. Start one fresh execution agent per case with no inherited conversation when supported, otherwise with the runtime's smallest task-local context. Give it only the resolved prompt, isolated case root, copied skill, and evidence contract; never reuse an execution agent across cases. Dispatch the bytes before the storage LF as its exact user message.
@@ -531,9 +531,9 @@ rg -i '\bhealth\b' "${E2E_ROOT}/bang-restart/src/status-api.js"
 ! rg -i '\bstate\b' "${E2E_ROOT}/bang-restart/src/status-api.js"
 rg -i '\bhealth\b' "${E2E_ROOT}/bang-restart/test/status-api.test.js"
 ! rg -i '\bstate\b' "${E2E_ROOT}/bang-restart/test/status-api.test.js"
-test "$(find "${E2E_ROOT}/bang-restart/.docs/done" -type f -name 'public-status.md' | wc -l | tr -d ' ')" = 1
+test "$(find "${E2E_ROOT}/bang-restart/.docs/done" -type f -name 'done-public-status.md' | wc -l | tr -d ' ')" = 1
 
-test -z "$(git -C "${E2E_ROOT}/bang-restart" diff --name-only "${seed_sha}..HEAD" | rg -v '^(src/status-api\.js|test/status-api\.test\.js|\.docs/reqs/2026/07/27/req-public-status\.md|\.docs/plans/2026/07/27/plan-public-status\.md|\.docs/tests/test-public-status\.md|\.docs/done/.*/public-status\.md)$')"
+test -z "$(git -C "${E2E_ROOT}/bang-restart" diff --name-only "${seed_sha}..HEAD" | rg -v '^(src/status-api\.js|test/status-api\.test\.js|\.docs/reqs/2026/07/27/req-public-status\.md|\.docs/plans/2026/07/27/plan-public-status\.md|\.docs/tests/test-public-status\.md|\.docs/done/.*/done-public-status\.md)$')"
 test -f "${E2E_ROOT}/bang-restart/.verification-ran"
 npm --prefix "${E2E_ROOT}/bang-restart" test
 assert_ar_before_code bang-restart
@@ -623,18 +623,25 @@ test -s rpd-loop.png
 file rpd-loop.png | rg -F 'PNG image data'
 test ! -e SKILL.md
 test ! -e skills/rpd/rpd-loop.png
-test -d tests
-test "$(rg -c '^/\.docs/$' .gitignore)" = 1
-test -f tests/fixtures/intent-based-routing/bang-restart/.docs/reqs/2026/07/27/req-public-status.md
-if git check-ignore -q tests/fixtures/intent-based-routing/bang-restart/.docs/reqs/2026/07/27/req-public-status.md
-then
-  echo "nested test fixture is incorrectly ignored" >&2
-  exit 1
-fi
+test -d .docs/tests
+test ! -e tests
+test -z "$(rg -n '^/?\.docs/?$' .gitignore || true)"
+test -f .docs/tests/fixtures/intent-based-routing/bang-restart/.docs/reqs/2026/07/27/req-public-status.md
+for tracked_path in .docs/reqs .docs/plans .docs/tests \
+  .docs/tests/fixtures/intent-based-routing/bang-restart/.docs/reqs/2026/07/27/req-public-status.md
+do
+  if git check-ignore -q "${tracked_path}"
+  then
+    echo "${tracked_path} is incorrectly ignored" >&2
+    exit 1
+  fi
+  test -n "$(git ls-files "${tracked_path}")"
+done
 test -z "$(find skills/rpd -type d -name tests -print)"
 test -z "$(find skills/rpd -path '*/.docs/tests*' -print)"
+RPD_TMP_ROOT="${RPD_TMP_ROOT:-${TMPDIR:-/tmp}}"
 RPD_SOURCE_ROOT="$(pwd)"
-RPD_INSTALL_ROOT="$(mktemp -d /private/tmp/rpd-client-install.XXXXXX)"
+RPD_INSTALL_ROOT="$(mktemp -d "${RPD_TMP_ROOT%/}/rpd-client-install.XXXXXX")"
 (
   cd "${RPD_INSTALL_ROOT}"
   npx --yes skills@latest add "${RPD_SOURCE_ROOT}" --skill rpd --agent codex --copy --yes
@@ -644,10 +651,16 @@ test ! -e "${RPD_INSTALL_ROOT}/.agents/skills/rpd/rpd-loop.png"
 test ! -e "${RPD_INSTALL_ROOT}/.agents/skills/rpd/README.md"
 test -z "$(find "${RPD_INSTALL_ROOT}/.agents/skills/rpd" -type d -name tests -print)"
 test -z "$(find "${RPD_INSTALL_ROOT}/.agents/skills/rpd" -path '*/.docs/tests*' -print)"
-python3 /Users/esun/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/esun/Documents/Projects/rpd/skills/rpd
+RPD_SKILL_VALIDATOR="${RPD_SKILL_VALIDATOR:-${HOME}/.codex/skills/.system/skill-creator/scripts/quick_validate.py}"
+if [ -f "${RPD_SKILL_VALIDATOR}" ]
+then
+  python3 "${RPD_SKILL_VALIDATOR}" skills/rpd
+else
+  echo "skipping frontmatter validation: set RPD_SKILL_VALIDATOR to a skill-creator quick_validate.py path" >&2
+fi
 perl -0777 -ne 'if (/\A---\n(.*?)\n---\n/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/frontmatter.txt"
 test -z "$(rg -n '^(metadata:|[[:space:]]*version:|[[:space:]]*repository:)' "${E2E_ROOT}/frontmatter.txt" || true)"
-test "$(rg -c '^\*\*Version:\*\* `3\.2\.1`$' skills/rpd/SKILL.md)" = 1
+test "$(rg -c '^\*\*Version:\*\* `3\.2\.2`$' skills/rpd/SKILL.md)" = 1
 perl -0777 -ne 'if (/intent: (.*?)\. A command token/s) { $value = $1; $value =~ s/\s+/ /g; print $value; exit 0 } exit 1' \
   "${E2E_ROOT}/frontmatter.txt" > "${E2E_ROOT}/trigger-commands.txt"
 test "$(cat "${E2E_ROOT}/trigger-commands.txt")" = 'RPD, REQ, AP, AR, SS, TT, ET, CR, VR, DD, GC, or !!'

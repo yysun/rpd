@@ -1,0 +1,94 @@
+# Plan: Intent-Based RPD Routing
+
+## Goal
+
+Make RPD respect explicit natural-language implementation intent, send only genuinely risky or uncertain changes through REQ/AP/AR, and remove DF without losing disciplined root-cause diagnosis or regression verification.
+
+## Current Context
+
+- `SKILL.md` frontmatter currently lists `DF` as a trigger keyword and describes natural-language development requests as skill triggers.
+- `SKILL.md` has a `Command Gate` rule that sends every natural-language development request through REQ and AP, then stops unless the user invokes `SS`, `DF`, `VR`, or `RPD`.
+- `AP` always auto-runs AR, so the broad natural-language rule is the direct reason simple fixes receive REQ/AP/AR.
+- The existing `Large changes` convention does not define “large” and does not prevent the broader command-gate rule from catching small fixes first.
+- `SS` assumes a current REQ and AP, while `DF` holds the direct bug-fix duties: localization, root-cause explanation, minimal causal repair, regression coverage, TT, and CR.
+- `README.md` mirrors the command gate, DF command, and workflow summaries.
+- `README.md` leads with `rpd-loop.png`, whose claim that requirements are defined before any code contradicts the new direct path. Remove the embed from README; retain the image file as an unmodified historical asset.
+- The repository has no application build or unit-test runner. Validation is skill-schema validation, contract searches, isolated routing scenarios, Git diff inspection, and review.
+
+## Decisions
+
+- Replace the rigid `Command Gate` with intent-and-risk routing. Explicit workflow keywords remain authoritative stage selectors; ordinary language is interpreted by requested outcome.
+- Define a direct path using the existing low-risk architecture criteria because they already name the material boundaries. Require concrete repository evidence for every condition; uncertainty selects planned routing.
+- Keep explicit stage behavior precise: `REQ` runs REQ only, `AP` runs AP and its existing AR gate, `AR` reviews existing artifacts, and full `RPD` runs its complete sequence. Automatically run the REQ/AP/AR trio only for implementation work that fails any direct-path condition.
+- Continue automatically from AR to implementation only when RPD auto-entered REQ/AP/AR from an ordinary natural-language implementation request or is running full `RPD`. Explicit standalone REQ/AP/AR remains stage-scoped even if its argument mentions later implementation.
+- Remove DF completely without a compatibility alias. Merge its causal-debugging duties into direct bug-fix routing and the SS contract for planned bug fixes.
+- Keep standalone SS as implementation from an existing approved plan. Natural-language direct execution is a routing path, not a renamed SS mode.
+- Give every direct implementation one shared execution contract: make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing delegation rules. Add failure localization, causal diagnosis, minimal root-cause repair, added, updated, or confirmed existing regression coverage, relevant regression or unit verification before CR, and cause reporting when the direct or planned change is a bug fix.
+- Do not use file count, estimated effort, or diff size as the routing rule. Those are weak proxies for contract and operational risk.
+- Treat this as a breaking workflow change and advance the skill's major version.
+- Do not add feature flags, environment variables, fallback modes, or deprecated DF behavior.
+- Keep the routing E2E spec host-orchestrated and human-readable, as required by the existing AP contract. Use the current runtime's collaboration/subagent results plus isolated repository state: have each execution agent save nested reviewer responses verbatim to a supplied evidence root, validate exactly one terminal evidence block, require stable snapshot hashes and unchanged reviewer state, bind the post-test marker to the tested package/source/test digest, and compare the terminal CR snapshot with final repository state. Do not depend on a host event exporter that the runtime does not expose.
+
+## Phased Tasks
+
+### Phase 1 - Discovery and scope lock
+
+- [x] Inspect every `DF`, `Command Gate`, natural-language routing, `Large changes`, SS-entry, AP-auto-AR, and full-RPD reference in `SKILL.md` and `README.md` so no contradictory execution path remains.
+- [x] Confirm `agents/openai.yaml` is absent and therefore needs no stale interface update.
+
+### Phase 2 - Replace the routing contract
+
+- [x] Update the `SKILL.md` frontmatter trigger description and major version so `DF` is removed and the breaking routing behavior is discoverable.
+- [x] Replace `Command Gate` in `SKILL.md` with intent routing that distinguishes read-only requests, explicit stage commands, direct implementation, and planned implementation.
+- [x] Use the same `## Intent Routing` contract text in `SKILL.md` and `README.md`, including explicit stage scoping for REQ, AP, AR, DD, WT, and `!!` and preservation of explicit CR/VR behavior.
+- [x] Define every direct-path condition in `SKILL.md` with repository-evidence requirements and route any false or uncertain condition through REQ, AP, and AR.
+- [x] State in `SKILL.md` that file count and diff size are not routing conditions.
+- [x] Make planned natural-language implementation continue from a passed AR into implementation without requesting a second approval.
+
+### Phase 3 - Remove DF and consolidate bug execution
+
+- [x] Remove the DF command definition and every DF reference from `SKILL.md` conventions, file-comment rules, implementation gates, trigger keywords, and workflow summaries.
+- [x] Add a shared direct-implementation contract to `SKILL.md` requiring surgical scope, relevant verification, truthful evidence, and CR for every direct change.
+- [x] Add bug-specific duties to direct execution and planned SS in `SKILL.md`: failure localization, root-cause explanation, minimal causal repair, added, updated, or confirmed existing regression coverage when a clear test location exists, relevant regression or unit verification before CR, and cause/result reporting.
+- [x] Preserve standalone SS in `SKILL.md` as implementation from an existing approved plan; do not use SS as the natural-language direct-routing mechanism.
+- [x] Add explicit non-implementation/source-safety wording to the REQ, AP, AR, DD, WT, and `!!` command sections so each retained stage contract is independently testable.
+- [x] Confirm full `RPD` continues to use `REQ → AP → AR → SS → TT → ET? → VR → DD → GC` without introducing a replacement DF stage.
+
+### Phase 4 - Align public documentation and scenarios
+
+- [x] Update `README.md` to explain intent-and-risk routing, the exact direct-path conditions, and when REQ/AP/AR run.
+- [x] Remove the `rpd-loop.png` embed from `README.md` so the old universal pre-code REQ/AP/AR visual does not contradict direct routing; do not modify the image asset.
+- [x] Remove DF from the `README.md` command table and every workflow note, change the public command count from 14 to 13, and preserve the remaining command descriptions.
+- [x] Add deterministic fixtures and an execution procedure to `.docs/tests/test-intent-based-routing.md` for a low-risk localized fix, a low-risk non-bug change, a materially uncertain fix, public API or schema work, security-sensitive work, external-integration or dependency-contract work, explicit REQ/AP/AR stop behavior, planned implementation continuation after AR, read-only diagnosis, and absence of DF semantics.
+- [x] Add read-only verification-digest helpers to the executable fixtures so terminal CR can prove the reviewed package/source/test inputs are the same inputs that passed `npm test`.
+- [x] Confirm the routing docs do not add a compatibility alias, feature flag, fallback, numeric size threshold, or automatic commit for ordinary fixes.
+
+### Phase 5 - Validate and review
+
+- [x] Run the skill-creator `quick_validate.py` command against the repository skill and record a successful result.
+- [x] Run targeted `rg` assertions proving `DF` and the old natural-language stop rule are absent from `SKILL.md` and `README.md`, while every remaining command is still documented.
+- [ ] Run `ET` to execute the complete intent-routing scenario matrix from its dotfile-safe fixture-copy, resolved-prompt, seed-SHA, full-repository change allowlist, section-bounded artifact-content, saved terminal-review evidence, final-result, stable-snapshot, digest-bound verification marker, and fail-fast assertion procedure in isolated temporary workspaces with clean-context agents.
+- [x] Inspect `git diff --check`, the complete `git diff -- SKILL.md README.md`, and direct contents of the new or updated `.docs/` files.
+- [x] Run CR on the stable diff and fix all major workflow contradictions before reporting completion.
+- [x] Mark tasks complete only when the corresponding edit or evidence exists.
+
+## Validation
+
+- Skill schema and version: run `python3 /Users/esun/.codex/skills/.system/skill-creator/scripts/quick_validate.py /Users/esun/Documents/Projects/rpd` and require a successful result; run `rg -n 'version: \"3\\.0\\.0\"' SKILL.md` and require exactly one match.
+- Removed command: run `rg -n '\\bDF\\b|Diagnose and fix root cause' SKILL.md README.md` and require no matches.
+- Removed rigid gate: run `rg -n 'without an explicit implementation command|then stop unless|approval to code|approval to implement' SKILL.md README.md` and inspect every remaining match; none may require a special keyword for a clear natural-language implementation request.
+- Routing contract: isolate the intent-routing sections and require explicit coverage of localized scope, existing pattern, public API, schema, persistence, migration, authentication, security, privacy, external integration, dependency contract, infrastructure, deployment, concurrency, performance, availability, reliability, reversibility, expected behavior, and verification; confirm `SKILL.md` and `README.md` agree that any false, uncertain, or unsupported condition selects planned routing.
+- Command preservation: confirm `REQ`, `AP`, `AR`, `SS`, `TT`, `ET`, `CR`, `VR`, `DD`, `GC`, `WT`, `!!`, and `RPD` remain in the command reference.
+- Explicit scope and full-flow preservation: inspect the revised REQ/AP/AR/DD/WT/`!!`/SS and RPD command sections; require every named non-implementing or out-of-band stage to state its source boundary, standalone SS to name an existing approved plan, and the exact full sequence `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC` to remain present in both SKILL and README.
+- README visual: require `rg -n 'rpd-loop\\.png' README.md` to return no matches and require `git diff HEAD --exit-code -- rpd-loop.png` to pass.
+- Intent contract identity and read-only scope: extract `## Intent Routing` from SKILL and README and require byte equality; require both copies to name explanation, diagnosis, review, requirements, planning, and architecture-review requests as non-implementing absent change intent, while preserving explicit CR and VR behavior.
+- README command count: within the Commands Reference table, require exactly 13 command rows and exactly one row for each of `REQ`, `AP`, `AR`, `SS`, `TT`, `ET`, `CR`, `VR`, `DD`, `GC`, `WT`, `!!`, and `RPD`.
+- Scenario evidence: isolated direct runs must modify only the expected source/test artifacts, create no REQ/AP/AR docs, leave post-success pre-operator verification markers bound to the current package/source/test digest, and show terminal CR reviewed the final stable snapshot; planned bug runs must create exactly one expected REQ/AP pair, show terminal AR reviewed a source/test-clean snapshot, include a matching digest-bound verification marker in the terminal CR snapshot, implement only allowlisted files, and report non-empty symptom/cause/path/fix/result evidence; explicit REQ/AP/AR runs must stop without source edits, and explicit AP must preserve its seeded REQ byte-for-byte; external-integration cases must select planned routing.
+- Diff integrity: `git diff --check` must pass, and every `SKILL.md` and `README.md` hunk must belong to the routing and DF-removal scope.
+
+## Rollback / Risk
+
+- The main risk is replacing a clear but cumbersome authorization gate with ambiguous intent inference. Requiring explicit change intent and concrete evidence for every direct-path condition keeps non-implementing requests read-only and sends uncertainty to planning.
+- Removing DF and replacing the natural-language authorization gate are breaking command-contract changes. A major version makes that break explicit; rollback is restoring the complete baseline routing contract, including the former gate, DF trigger and command section, README workflow text and visual, and affected routing tests.
+- The direct-path criteria could still over-route simple fixes if evidence gathering is shallow. The contract must require a focused repository inspection but must not equate unfamiliarity with architectural risk after the evidence is available.
+- The direct path could under-route deceptively small security, schema, or public-contract changes. Any affected risk boundary must force planned routing regardless of diff size.

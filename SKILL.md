@@ -16,7 +16,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.0.0`
+**Version:** `3.1.0`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
@@ -34,7 +34,8 @@ A concise software development workflow with automatic architecture and code rev
 ## Intent Routing
 
 - Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
-- Treat explicit REQ, AP, AR, DD, and `!!` invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes.
+- Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes.
+- Treat explicit `!!` as a current-story correction and full-flow restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through the RPD sequence without asking for a second implementation approval.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
@@ -55,8 +56,9 @@ A concise software development workflow with automatic architecture and code rev
 - **Current story**: the most recently created or modified REQ doc, unless the user specifies otherwise.
 - **Auto-chaining**: direct implementation and SS run required verification, then auto-run CR.
 - **Completion loop**: VR verifies the requirement against code behavior, tests, and docs. If incomplete, refine AP, run SS, CR, TT, ET when applicable, update docs, then rerun VR.
-- REQ, AP, AR, DD, and !! are documentation-only.
-- `!!` is out-of-band.
+- REQ, AP, AR, and DD are documentation-only.
+- The reconciliation step of `!!` is documentation-only; after reconciliation, `!!` restarts the current story through the normal RPD architecture, implementation, verification, completion, and commit stages.
+- `!!` is an out-of-band restart trigger.
 - Never auto-chain `!!` from another command.
 - **Planned routing**: auto-run REQ then AP when any direct-path condition is false, uncertain, or unsupported.
 - **Review loop**: AR fixes high-priority requirement, plan, and E2E spec issues before implementation; CR fixes high-priority code issues after implementation.
@@ -284,16 +286,23 @@ A concise software development workflow with automatic architecture and code rev
   - Do not claim verification that did not run.
   - Mention unresolved risks, skipped checks, or unrelated failures only when they are real and specific.
   - Do not implement code or edit source files during DD.
-- **!!**: Update relevant docs from the latest user message.
+- **!!**: Reconcile the current story from the latest user message and restart the RPD flow.
+  - Treat `!!` as approval to reconcile the current story and continue the full workflow without approval between stages.
+  - Resolve the current story from an explicitly named story or the most recently created or modified REQ doc.
+  - Stop for clarification when no current story exists or the target story is ambiguous; do not create an unrelated story from the correction alone.
   - Treat the latest user message as a requirement change, clarification, or scope correction.
   - Reconcile contradictions across REQ, AP, and test specs instead of appending stale text.
   - Update current REQ docs in place.
-  - Update current AP docs in place.
+  - Update the matching AP docs in place, or create the matching AP when the current story does not have one.
   - Apply the AP E2E criteria to new requirement changes.
   - Create `.docs/tests/test-{name}.md` if E2E coverage is now needed.
   - Update the current test spec when present.
   - Record new non-goals, removed scope, changed validation, and affected phases when the clarification changes implementation direction.
-  - Do not implement code or edit source files; `!!` is documentation-only.
+  - Uncheck acceptance criteria and reopen plan tasks when the correction invalidates their existing completion evidence.
+  - Treat the reconciled REQ, AP, and optional test spec as materially updated; any earlier AR pass is stale.
+  - After reconciliation, run `AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
+  - Do not edit source files during reconciliation or before AR explicitly passes.
+  - Apply the same pause conditions, review loops, completion loop, E2E decision, and truthful verification rules as `RPD`.
 - **RPD**: Run the full end-to-end workflow from a requirement input.
   - Accept a requirement description as input.
   - Example: `RPD add OAuth login`.

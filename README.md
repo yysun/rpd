@@ -8,7 +8,8 @@ RPD gives you 12 workflow commands you can use in conversation to drive a system
 ## Intent Routing
 
 - Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
-- Treat explicit REQ, AP, AR, DD, and `!!` invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes.
+- Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes.
+- Treat explicit `!!` as a current-story correction and full-flow restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through the RPD sequence without asking for a second implementation approval.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
@@ -61,6 +62,18 @@ RPD Implement JWT authentication
 
 Create E2E specs for user-facing flows, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested.
 
+### 3. Correct and restart the current story: `!!`
+
+Use `!!` when a requirement changes after a story already exists:
+
+```
+!! SSO is enterprise-only; remove the fallback login flow
+```
+
+The command reconciles the latest correction across the current story's REQ, AP, and E2E spec. It removes contradictions, reopens acceptance criteria and plan tasks whose evidence is stale, invalidates the previous AR pass, and then runs `AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
+
+`!!` is approval to continue through implementation after AR passes. It stops when no current story can be identified, when the target story is ambiguous, or for the same blockers, destructive actions, and external writes that pause `RPD`.
+
 
 ## Artifact paths used by the RPD workflow
 
@@ -89,12 +102,12 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 | `VR` | Verify the requirement is fully implemented in code and docs; if not, refine AP, run SS, CR, TT, ET when applicable, update docs, then verify again |
 | `DD` | Document completed work as a short PR-style summary |
 | `GC` | Commit changes with clear scope |
-| `!!` | Update all relevant docs with new requirements, clarifications, and changes |
+| `!!` | Reconcile the current story with a correction, then restart the RPD flow |
 | `RPD` | Full end-to-end flow with AR, CR, and VR loops |
 
 ## Notes
 
-- Explicit commands select their documented stage. `REQ`, `AP`, `AR`, `DD`, and `!!` do not authorize source changes.
+- Explicit commands select their documented stage. `REQ`, `AP`, `AR`, and `DD` do not authorize source changes. `!!` is the exception: its reconciliation step is documentation-only, then it authorizes the remaining RPD flow after AR passes.
 - A clear natural-language request to implement or fix repository behavior is implementation authorization. Direct-path work starts immediately; planned-path work continues automatically after AR passes.
 - Direct implementation requires concrete repository evidence for every condition in Intent Routing. Any false, uncertain, or unsupported condition selects REQ, AP, and AR first.
 - Every direct implementation runs relevant verification and CR. Bug fixes also localize the failure, identify and fix the root cause, confirm regression coverage, and report symptom, cause, affected path, fix, and result.
@@ -125,7 +138,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - `CR` applies a review-fix-review loop until no major flaws remain; scoped verification may run after CR changes code, but CR does not become TT.
 - Loops stop and report a blocker when failures are unrelated, pre-existing, flaky, ambiguous, or outside the current command's responsibility.
 - `GC` does not run `CR`; it commits only when verification status and intended file scope are clear.
-- `!!` is an out-of-band command and is not auto-chained from other stages.
+- `!!` is an out-of-band restart command and is not auto-chained from other stages. It reconciles the current story, invalidates stale completion and AR evidence, then continues through the remaining RPD stages.
 - Commands trigger when a keyword appears anywhere in the message with command-like intent.
 - Keywords must be surrounded by message boundaries, punctuation, or whitespace.
 - Supported forms include `REQ`, `REQ:`, `REQ-`, `REQ,`, `REQ -`, and `'REQ'`.

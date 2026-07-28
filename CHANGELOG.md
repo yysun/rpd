@@ -7,6 +7,21 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.3.0] - 2026-07-28
+
+### Added
+
+- `REQ` now directs authors to write each acceptance criterion against the property it depends on
+  rather than a literal value a later release invalidates. Because `VR` may not relax a criterion
+  to check it off, a criterion pinned to a literal version, count, or path can become permanently
+  unsatisfiable while the work itself is complete. Both version-pinned criteria found in this
+  repository's own stories had failed exactly this way.
+- Scenario 15 now asserts every contract introduced in `3.2.0`: the `AR blocked` result and its
+  not-a-pass clause, the planned-routing terminus with its stage sequence, the direct-path
+  terminus, the sequence-notation legend, the command-like-intent rules, the `SS` no-plan
+  fallback, and the `done-{name}.md` completion-doc path in both documents. Each assertion was
+  negative-tested against a mutated copy to confirm it fails when its contract text is removed.
+
 ## [3.2.2] - 2026-07-28
 
 No change to workflow behavior. Repository layout, test-suite portability, and the first pass of

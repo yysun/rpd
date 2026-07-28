@@ -660,7 +660,7 @@ else
 fi
 perl -0777 -ne 'if (/\A---\n(.*?)\n---\n/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/frontmatter.txt"
 test -z "$(rg -n '^(metadata:|[[:space:]]*version:|[[:space:]]*repository:)' "${E2E_ROOT}/frontmatter.txt" || true)"
-test "$(rg -c '^\*\*Version:\*\* `3\.2\.2`$' skills/rpd/SKILL.md)" = 1
+test "$(rg -c '^\*\*Version:\*\* `3\.3\.0`$' skills/rpd/SKILL.md)" = 1
 perl -0777 -ne 'if (/intent: (.*?)\. A command token/s) { $value = $1; $value =~ s/\s+/ /g; print $value; exit 0 } exit 1' \
   "${E2E_ROOT}/frontmatter.txt" > "${E2E_ROOT}/trigger-commands.txt"
 test "$(cat "${E2E_ROOT}/trigger-commands.txt")" = 'RPD, REQ, AP, AR, SS, TT, ET, CR, VR, DD, GC, or !!'
@@ -693,6 +693,16 @@ do
     skills/rpd/SKILL.md > "${E2E_ROOT}/${command}-section.txt"
   rg -i -e 'do not (implement|edit source)|documentation-only|only.*documented|only.*worktree' "${E2E_ROOT}/${command}-section.txt"
 done
+rg -F 'AR blocked: <flaw and why it cannot be resolved in place>' "${E2E_ROOT}/AR-section.txt"
+rg -F '`AR blocked` is not a pass' "${E2E_ROOT}/AR-section.txt"
+rg -Fi 'not a literal value a later release invalidates' "${E2E_ROOT}/REQ-section.txt"
+rg -F 'Planned-routing terminus' "${E2E_ROOT}/skill-intent-routing.txt"
+rg -F 'SS(+CR*) → TT → ET? → VR*' "${E2E_ROOT}/skill-intent-routing.txt"
+rg -F 'Direct-path terminus' "${E2E_ROOT}/skill-intent-routing.txt"
+perl -0777 -ne 'if (/(?:\A|\n)## Conventions\n(.*?)(?=\n## )/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/conventions.txt"
+rg -F 'Sequence notation' "${E2E_ROOT}/conventions.txt"
+rg -F 'Command-like intent' "${E2E_ROOT}/conventions.txt"
+rg -F 'Current story' "${E2E_ROOT}/conventions.txt"
 perl -0777 -ne 'if (/(?:\A|\n)- \*\*!!\*\*:(.*?)(?=\n- \*\*[A-Z!]+\*\*:)/s) { print $1; exit 0 } exit 1' \
   skills/rpd/SKILL.md > "${E2E_ROOT}/bang-section.txt"
 for contract in \
@@ -707,7 +717,10 @@ done
 test -z "$(rg -n '`!!` is documentation-only|!!.*do not authorize source changes|REQ, AP, AR, DD, and `!!`' skills/rpd/SKILL.md README.md | rg -v 'reconciliation step of `!!` is documentation-only' || true)"
 perl -0777 -ne 'if (/(?:\A|\n)- \*\*SS\*\*:(.*?)(?=\n- \*\*[A-Z!]+\*\*:)/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/ss-section.txt"
 rg -Fi 'approved plan' "${E2E_ROOT}/ss-section.txt"
+rg -Fi 'switch to planned routing' "${E2E_ROOT}/ss-section.txt"
 ! rg -Fi 'direct path' "${E2E_ROOT}/ss-section.txt"
+rg -F '.docs/done/{yyyy}/{mm}/{dd}/done-{name}.md' skills/rpd/SKILL.md
+rg -F 'done/{yyyy}/{mm}/{dd}/done-{name}.md' README.md
 rg -F 'Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`' skills/rpd/SKILL.md
 rg -F 'Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`' README.md
 perl -0777 -ne 'if (/(?:\A|\n)## Command Keywords\n(.*?)(?=\n## Documentation Structure)/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/command-keywords.txt"

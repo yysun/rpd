@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.2.2`
+**Version:** `3.3.0`
 
 ## Intent Routing
 
@@ -137,6 +137,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - Every direct implementation runs relevant verification and CR. Bug fixes also localize the failure, identify and fix the root cause, confirm regression coverage, and report symptom, cause, affected path, fix, and result.
 - Standalone `SS` implements an existing approved plan; it is not the natural-language direct-routing mechanism. When the current story has no plan, or its plan has not passed `AR` since its latest material update, `SS` switches to planned routing instead of improvising an implementation.
 - A new `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
+- Acceptance criteria should name the property they depend on rather than a literal value a later release invalidates. Because `VR` may not relax a criterion to check it off, a criterion pinned to a literal version, count, or path can become permanently unsatisfiable while the work itself is complete. Prefer `a major version bump accompanies the breaking change` over `the version is 3.0.0`.
 - `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
 - `AR blocked: <flaw and why it cannot be resolved in place>` is the third possible `AR` result. It is not a pass: the flow stops and reports the blocker instead of entering `SS`.
 - `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.

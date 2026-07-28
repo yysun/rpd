@@ -18,7 +18,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.2.2`
+**Version:** `3.3.0`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
@@ -120,6 +120,8 @@ A concise software development workflow with automatic architecture and code rev
     - `## Non-Goals`: tempting but out-of-scope work, including unnecessary feature flags, fallback modes, and compatibility layers.
     - `## Open Questions`: only questions that block correct planning; omit the section when none exist.
   - Acceptance criteria must be specific enough for `VR` to judge complete or incomplete.
+  - Write each criterion against the property it depends on, not a literal value a later release invalidates. `VR` may not relax a criterion to check it off, so a pinned literal can become permanently unsatisfiable while the work is complete.
+  - Prefer `a major version bump accompanies the breaking change` over `the version is 3.0.0`, and apply the same rule to counts, dates, paths, and identifiers that routine work changes.
   - Do not include implementation steps, file-level plans, or speculative architecture.
   - Create or update only the requirement doc.
   - Do not implement code.

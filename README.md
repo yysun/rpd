@@ -5,15 +5,20 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
+**Version:** `3.2.0`
+
 ## Intent Routing
 
 - Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
-- Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes.
+- Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage, including any gate that stage owns; they do not implicitly authorize source changes.
+- Treat explicit SS, TT, ET, CR, VR, and GC as stage selectors that may change source, tests, docs, or history within their documented scope, including the stages they auto-chain.
 - Treat explicit `!!` as a current-story correction and full-flow restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through the RPD sequence without asking for a second implementation approval.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
-- If any direct-path condition is false, uncertain, or unsupported, create or update REQ and AP, run AR, and continue into implementation after AR passes when RPD auto-entered planning from the natural-language implementation request. Explicit standalone REQ, AP, or AR still stops after its documented stage.
+- If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
+- **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR*` after AR passes, then stop. Run DD and GC only when the user asks for them. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
+- **Direct-path terminus**: direct implementation ends after CR and creates no `.docs` artifacts. Run REQ first when the work needs a requirement doc, a plan, a completion doc, or a story that `!!` can later correct.
 - For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
 - For direct or planned bug fixes, additionally reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
 
@@ -82,11 +87,13 @@ The command reconciles the latest correction across the current story's REQ, AP,
 ├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
 ├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
 ├── tests/test-{name}.md  # optional existing E2E spec
-└── done/{yyyy}/{mm}/{dd}/{name}.md
+└── done/{yyyy}/{mm}/{dd}/done-{name}.md
 ```
 `{name}` is a short kebab-case story slug (for example: `user-auth`, `offline-sync`) reused across related docs and commands. If omitted, the skill derives one from the requirement or task description, announces it, and continues unless the slug is ambiguous, collides with an unrelated story, or could attach work to the wrong docs.
 
 REQ, AP, and DD keep the date from when the doc was first created; later updates modify the existing doc in place. E2E test specs are created during AP when needed, then reused by ET.
+
+The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on — is the story you name, otherwise the one already worked on in the session, otherwise the REQ doc with the most recent creation or substantive content change. Checkbox-only edits, such as `VR` acceptance updates, do not make an older story current, and the skill asks when two stories are equally plausible.
 
 ## Commands Reference
 
@@ -111,9 +118,10 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - A clear natural-language request to implement or fix repository behavior is implementation authorization. Direct-path work starts immediately; planned-path work continues automatically after AR passes.
 - Direct implementation requires concrete repository evidence for every condition in Intent Routing. Any false, uncertain, or unsupported condition selects REQ, AP, and AR first.
 - Every direct implementation runs relevant verification and CR. Bug fixes also localize the failure, identify and fix the root cause, confirm regression coverage, and report symptom, cause, affected path, fix, and result.
-- Standalone `SS` implements an existing approved plan; it is not the natural-language direct-routing mechanism.
+- Standalone `SS` implements an existing approved plan; it is not the natural-language direct-routing mechanism. When the current story has no plan, or its plan has not passed `AR` since its latest material update, `SS` switches to planned routing instead of improvising an implementation.
 - A new `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
 - `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
+- `AR blocked: <flaw and why it cannot be resolved in place>` is the third possible `AR` result. It is not a pass: the flow stops and reports the blocker instead of entering `SS`.
 - `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.
 - `AR` starts with a primary-agent preflight. Treat AR as low-risk only when the plan follows an existing architecture pattern; stays within one component or subsystem; changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior; is readily reversible; and has unambiguous acceptance criteria and implementation boundaries. Record each criterion with repository evidence; uncertainty makes AR non-low-risk. The primary agent may complete only low-risk AR itself. Otherwise, AR uses an independent reviewer when available.
 - When the runtime supports subagents, `CR`, `VR`, and non-low-risk `AR` use a read-only independent reviewer with no inherited authoring conversation, or the smallest task-local context available. Full-history inheritance is not used for independent review.
@@ -133,6 +141,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - `RPD from SS` uses full-flow skip rules; standalone `SS` does not. Skip stages only when artifacts are fresh, match the current story and requirement, and were gated after the latest relevant update.
 - `AR` and `CR` can also be manually triggered.
 - `DD` can be invoked as a single-word message.
+- `DD` runs once implementation, verification, and reviews are complete, whether or not the work is committed. Inside `RPD` and `!!` it runs before `GC` so the commit can reference the completion summary.
 - `DD` writes a short PR-style completion summary with `Summary`, `Verification`, and `Notes`; it should not duplicate the full requirement, plan, test spec, or changelog.
 - `TT` and `ET` stop at the first failure when possible, fix root cause, rerun, and repeat until targeted tests pass.
 - `CR` applies a review-fix-review loop until no major flaws remain; scoped verification may run after CR changes code, but CR does not become TT.
@@ -144,6 +153,8 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - Supported forms include `REQ`, `REQ:`, `REQ-`, `REQ,`, `REQ -`, and `'REQ'`.
 - Supported middle/end forms include `please REQ: add login` and `ship it SS`.
 - Keywords do not match when a letter, digit, or underscore touches them.
+- `AR`, `CR`, `DD`, `ET`, `GC`, `SS`, and `TT` are also common technical initialisms. They match only when the token reads as an instruction, and are treated as mentions when prose uses them as nouns, as in `the GC pauses are long` or `that CR was rejected`.
+- `!!` matches only when it introduces the correction text or stands alone as the request; trailing `!!` used for emphasis is not an invocation.
 - Keywords inside fenced code blocks or inline code are ignored unless surrounding prose invokes them.
 - Commands that modify source files add or update a short file comment block at the top of the file, following the skill convention.
 

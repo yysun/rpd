@@ -9,14 +9,16 @@ description: >
   AP, AR, SS, TT, ET, CR, VR, DD, GC, or !!. A command token must be bounded by
   message boundaries, punctuation, or whitespace; do not match when a letter, digit,
   or underscore touches it. Recognize forms such as `RPD`, `RPD:`, `RPD-`, `RPD,`,
-  `RPD -`, and `'RPD'`, including tokens in the middle or at the end of a message.
-  Tokens inside fenced code or inline code are mentions rather than invocations
-  unless the surrounding request explicitly asks to execute them.
+  and `'RPD'`, anywhere in the message. Several tokens are also common initialisms,
+  so match only when the token reads as an instruction, not when prose uses it as a
+  noun such as "the GC pauses" or "that CR was rejected". Trailing `!!` is emphasis,
+  not an invocation. Tokens inside fenced or inline code are mentions unless the
+  request asks to execute them.
 ---
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.1.0`
+**Version:** `3.2.0`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
@@ -34,12 +36,15 @@ A concise software development workflow with automatic architecture and code rev
 ## Intent Routing
 
 - Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
-- Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes.
+- Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage, including any gate that stage owns; they do not implicitly authorize source changes.
+- Treat explicit SS, TT, ET, CR, VR, and GC as stage selectors that may change source, tests, docs, or history within their documented scope, including the stages they auto-chain.
 - Treat explicit `!!` as a current-story correction and full-flow restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through the RPD sequence without asking for a second implementation approval.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
-- If any direct-path condition is false, uncertain, or unsupported, create or update REQ and AP, run AR, and continue into implementation after AR passes when RPD auto-entered planning from the natural-language implementation request. Explicit standalone REQ, AP, or AR still stops after its documented stage.
+- If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
+- **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR*` after AR passes, then stop. Run DD and GC only when the user asks for them. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
+- **Direct-path terminus**: direct implementation ends after CR and creates no `.docs` artifacts. Run REQ first when the work needs a requirement doc, a plan, a completion doc, or a story that `!!` can later correct.
 - For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
 - For direct or planned bug fixes, additionally reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
 
@@ -53,7 +58,14 @@ A concise software development workflow with automatic architecture and code rev
 - Reuse `{name}` across REQ, AP, SS, DD, ET, VR, !!, and RPD.
 - **`{yyyy}/{mm}/{dd}`**: the doc creation date.
 - Later updates edit the existing dated doc.
-- **Current story**: the most recently created or modified REQ doc, unless the user specifies otherwise.
+- **Current story**: the story the user names; otherwise the story already worked on in this session; otherwise the REQ doc with the most recent creation or substantive content change.
+- Checkbox-only edits, such as `VR` acceptance updates or `!!` uncheck operations, do not make an older story current.
+- Stop and ask when two stories remain equally plausible.
+- **Sequence notation**: `*` marks a review or completion loop, and `?` marks a stage that runs only when the current story has a matching E2E spec. `CR*` means run CR and loop until no major flaws remain.
+- **Command-like intent**: `AR`, `CR`, `DD`, `ET`, `GC`, `SS`, and `TT` are also common technical initialisms.
+- Treat such a token as a command only when it reads as an instruction: alone, leading the request, or attached to its argument.
+- Treat it as a mention when surrounding prose uses it as a noun, such as `the GC pauses are long` or `that CR was rejected`.
+- Treat `!!` as a command only when it introduces the correction text or stands alone as the request. Trailing `!!` used for emphasis is not an invocation.
 - **Auto-chaining**: direct implementation and SS run required verification, then auto-run CR.
 - **Completion loop**: VR verifies the requirement against code behavior, tests, and docs. If incomplete, refine AP, run SS, CR, TT, ET when applicable, update docs, then rerun VR.
 - REQ, AP, AR, and DD are documentation-only.
@@ -77,7 +89,7 @@ A concise software development workflow with automatic architecture and code rev
 - Summarize features, implementation notes, and recent changes.
 - Create the block before editing when missing.
 - Update the block after changing the file.
-- Applies to direct implementation, `SS`, `VR`, and `RPD` once it reaches its `SS` stage.
+- Applies to any command that edits a source file, including direct implementation, `SS`, `TT`, `ET`, `CR`, `VR`, and `RPD` once it reaches its `SS` stage.
 - Does not apply to docs under `.docs/`.
 
 ## Independent Review Delegation
@@ -167,7 +179,7 @@ A concise software development workflow with automatic architecture and code rev
   - If needed, create or update `.docs/tests/test-{name}.md`.
   - Write E2E specs as human-readable scenarios.
   - Do not run tests during AP.
-  - Automatically run `AR` after updating the plan.
+  - Automatically run `AR` after updating the plan. The AR gate belongs to AP's documented stage, and both stay documentation-only.
   - Do not enter `SS` until `AR` has explicitly passed.
   - Do not implement code or edit source files during AP or its AR review.
 - **AR**: Review architecture and assumptions.
@@ -181,12 +193,14 @@ A concise software development workflow with automatic architecture and code rev
   - Fix blocking requirement, plan, or E2E spec flaws by updating existing docs in place.
   - Do not pass AR with unresolved blocking questions, missing validation, or a plan that `SS` cannot execute directly.
   - Do not create a separate review doc.
-  - Report either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
+  - Report exactly one of `AR passed: no blocking architecture flaws`, `AR fixed: <summary>; rerun result passed`, or `AR blocked: <flaw and why it cannot be resolved in place>`.
+  - `AR blocked` is not a pass. Stop the flow, apply the loop blocker rules, and report the blocker instead of entering `SS`.
   - Apply the review loop.
   - Do not implement code or edit source files during standalone AR.
 - **SS**: Implement step-by-step from an approved plan.
   - Read the current REQ, AP, and optional E2E spec before editing code.
   - Require the current AP to have passed AR after its latest material update.
+  - If the current story has no AP, or its AP has not passed AR since its latest material update, do not improvise an implementation. Switch to planned routing, create or update REQ and AP, run AR, then implement.
   - Execute AP tasks in order unless a discovered constraint makes the order wrong.
   - If implementation requires a material plan change, update the AP task list before or alongside the code change and keep the scope tied to the REQ.
   - Update plan progress (`- [x]`) as tasks complete.
@@ -200,8 +214,8 @@ A concise software development workflow with automatic architecture and code rev
   - For a bug fix, reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
   - Auto-run `CR*` after verification passes.
 - **TT**: Run unit tests and fix failures.
-  - Detect the unit test command from the project.
-  - Ask before running tests when unclear.
+  - Detect the unit test command using the Verification detection rules.
+  - Ask only after local inspection cannot identify one unambiguous command.
   - Stop at the first failure when the runner supports it.
   - Record the exact failing test, error, suspected cause, fix, and rerun result.
   - Fix the root cause of that failure.
@@ -265,17 +279,18 @@ A concise software development workflow with automatic architecture and code rev
   - Ask for a path when no matching spec exists.
   - Do not generate a new spec during ET.
   - For markdown specs, execute the scenarios with available tools.
-  - For executable specs, detect the E2E test command.
-  - Ask before running E2E tests when unclear.
+  - For executable specs, detect the E2E test command using the Verification detection rules.
+  - Ask only after local inspection cannot identify one unambiguous command.
   - Stop at the first E2E failure when possible.
   - Record the scenario, step, observed result, expected result, fix, and rerun evidence.
   - Fix the root cause of that failure.
   - Do not rewrite the E2E spec during ET except to correct stale wording after behavior is verified.
   - Rerun E2E tests after each fix.
   - Repeat until all targeted E2E tests pass.
-- **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
+- **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/done-{name}.md`.
   - Can be invoked as a single-word `DD` message.
-  - Run after work is committed or a feature is complete; do not fire mid-stream.
+  - Run once the story's implementation, verification, and reviews are complete, whether or not it is committed; do not fire mid-stream.
+  - Inside `RPD` and `!!`, DD runs before `GC` so the commit can reference the completion summary.
   - Write a short PR-style completion summary.
   - Keep it concise: roughly 5-12 bullets total.
   - Required sections:
@@ -288,7 +303,7 @@ A concise software development workflow with automatic architecture and code rev
   - Do not implement code or edit source files during DD.
 - **!!**: Reconcile the current story from the latest user message and restart the RPD flow.
   - Treat `!!` as approval to reconcile the current story and continue the full workflow without approval between stages.
-  - Resolve the current story from an explicitly named story or the most recently created or modified REQ doc.
+  - Resolve the current story using the Current story rules in Conventions.
   - Stop for clarification when no current story exists or the target story is ambiguous; do not create an unrelated story from the correction alone.
   - Treat the latest user message as a requirement change, clarification, or scope correction.
   - Reconcile contradictions across REQ, AP, and test specs instead of appending stale text.
@@ -311,9 +326,7 @@ A concise software development workflow with automatic architecture and code rev
   - Derive `{name}` when missing.
   - Announce derived `{name}` and continue unless slug ambiguity would attach work to the wrong story.
   - Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
-  - `*` means review loop.
-  - For `VR*`, `*` means completion loop.
-  - `?` means only if test spec exists.
+  - Read `*` and `?` under Sequence notation in Conventions. For `VR*`, `*` is the completion loop.
   - AP creates E2E specs when needed.
   - AR reviews REQ, AP, and any E2E spec before implementation.
   - RPD must not enter `SS` until AR has fixed blocking doc/spec flaws and explicitly passed.
@@ -339,5 +352,5 @@ A concise software development workflow with automatic architecture and code rev
 ├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
 ├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
 ├── tests/test-{name}.md  # optional existing E2E spec
-└── done/{yyyy}/{mm}/{dd}/{name}.md
+└── done/{yyyy}/{mm}/{dd}/done-{name}.md
 ```

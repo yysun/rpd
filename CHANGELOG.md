@@ -9,7 +9,18 @@ The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL
 
 ## [3.2.2] - 2026-07-28
 
-No change to workflow behavior. Repository layout and test-suite portability only.
+No change to workflow behavior. Repository layout, test-suite portability, and the first pass of
+RPD artifacts for this repository's own stories.
+
+### Added
+
+- `.docs/done/` and the project's first completion documents. `remove-wt-command` shipped in
+  `3.0.0` with its acceptance-criteria task never run, so all six criteria sat unchecked against
+  released work; they are now verified and the story is closed. `separate-runtime-tests` and
+  `restore-docs-layout` also have completion documents.
+- Requirement and plan documents for `restore-docs-layout`, covering the changes in this release.
+  Both state that they were written after the implementation, which was directed conversationally,
+  and that no `AR` gate ran for the story.
 
 ### Fixed
 

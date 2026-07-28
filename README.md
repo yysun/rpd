@@ -43,6 +43,19 @@ The installable skill lives in `skills/rpd/`. Repository documentation, the work
 
 This repository uses RPD on itself: its requirements, plans, and E2E specs are tracked in git under `.docs/`, following the same artifact paths the skill writes in any project. The intent-routing suite lives at `.docs/tests/test-intent-based-routing.md` with its fixtures in `.docs/tests/fixtures/`.
 
+## Running the test suite
+
+`.docs/tests/test-intent-based-routing.md` is an executable specification. Its scenarios are Markdown, and each carries a fenced `sh` block of assertions. Scenario 15 is the static contract check and is the fastest way to confirm a change to `SKILL.md` or `README.md` did not break a documented contract; every other scenario dispatches a fresh execution agent against an isolated fixture repository and needs an agent host.
+
+Two environment variables control the parts that are machine-specific. Both have working defaults, so neither is required:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `RPD_TMP_ROOT` | `${TMPDIR:-/tmp}` | Base directory for isolated case repositories. Set it if you need runs on a specific volume or a canonical path. |
+| `RPD_SKILL_VALIDATOR` | `$HOME/.codex/skills/.system/skill-creator/scripts/quick_validate.py` | Skill frontmatter validator. When the file is absent the check prints a notice and is skipped rather than failing. |
+
+Scenario 15 also runs `npx skills add` against a temporary directory to prove that an install contains only the runtime skill. That step reaches the network.
+
 ## Workflow
 
 ### 1. Targeted command workflow

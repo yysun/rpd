@@ -1,22 +1,23 @@
 ---
 name: rpd
-metadata:
-  version: "2.1.10"
-  repository: "https://github.com/yysun/rpd"
 description: >
-  Use this skill for software development tasks that should follow the RPD workflow:
-  requirements, architecture planning, implementation, debugging, tests, E2E checks,
-  code review, commits, done docs, or worktrees. Trigger on natural-language requests
-  for those workflow stages, or when any of these keywords appears with command-like
-  intent: RPD, REQ, AP, AR, SS, DF, DD, ET, TT, CR, VR, GC, WT, !!. The keyword must be
-  surrounded by message boundaries, punctuation, or whitespace.
-  Match examples like `REQ`, `REQ:`, `REQ-`, `REQ,`, `REQ -`, and `'REQ'`.
-  Match middle or end forms like `please REQ: add login` or `ship it SS`.
-  Do not match when a letter, digit, or underscore touches the keyword.
-  Ignore keywords inside fenced code blocks or inline code spans.
+  Run or explain the RPD workflow for repository software work, including codebase
+  explanation and diagnosis, requirements, architecture planning and review,
+  implementation, debugging, unit and E2E testing, code review, acceptance
+  verification, completion documentation, scoped commits, and story worktrees.
+  Also use when the user invokes an RPD command with command-like intent: RPD, REQ,
+  AP, AR, SS, TT, ET, CR, VR, DD, GC, WT, or !!. A command token must be bounded by
+  message boundaries, punctuation, or whitespace; do not match when a letter, digit,
+  or underscore touches it. Recognize forms such as `RPD`, `RPD:`, `RPD-`, `RPD,`,
+  `RPD -`, and `'RPD'`, including tokens in the middle or at the end of a message.
+  Tokens inside fenced code or inline code are mentions rather than invocations
+  unless the surrounding request explicitly asks to execute them.
 ---
 
 # RPD - Requirements, Planning, and Development Workflow
+
+**Version:** `2.2.0`
+**Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
 
@@ -30,16 +31,16 @@ A concise software development workflow with automatic architecture and code rev
 - **Ask when blocked**: ask targeted questions.
 - **Independent review**: use clean-context independent subagents for CR and VR, and for AR when architecture risk requires it; preserve the same review contract when delegation is unavailable.
 
-## Command Gate
+## Intent Routing
 
-RPD command keywords are authoritative execution gates.
-
-- Finding or loading this skill is not approval to code.
-- When the user invokes `REQ`, `AP`, `AR`, `DD`, `WT`, or `!!`, do only that command's allowed work.
-- Documentation-only commands must not edit source code, tests, configs, dependencies, generated artifacts, or build files.
-- Implement code only when the active command is `SS`, `DF`, `VR`, or `RPD` has reached its `SS` stage.
-- For natural-language development requests without an explicit implementation command, create or update `REQ` and `AP` first, then stop unless the user has invoked `SS`, `DF`, `VR`, or `RPD`.
-- If a command gate conflicts with the default agent behavior to keep working autonomously, the command gate wins.
+- Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
+- Treat explicit REQ, AP, AR, DD, WT, and `!!` invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes. WT may create a worktree and move matching RPD docs, but it must not edit source code.
+- Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
+- Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
+- File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
+- If any direct-path condition is false, uncertain, or unsupported, create or update REQ and AP, run AR, and continue into implementation after AR passes when RPD auto-entered planning from the natural-language implementation request. Explicit standalone REQ, AP, or AR still stops after its documented stage.
+- For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
+- For direct or planned bug fixes, additionally reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
 
 ## Conventions
 
@@ -52,12 +53,12 @@ RPD command keywords are authoritative execution gates.
 - **`{yyyy}/{mm}/{dd}`**: the doc creation date.
 - Later updates edit the existing dated doc.
 - **Current story**: the most recently created or modified REQ doc, unless the user specifies otherwise.
-- **Auto-chaining**: SS and DF run required verification, then auto-run CR.
+- **Auto-chaining**: direct implementation and SS run required verification, then auto-run CR.
 - **Completion loop**: VR verifies the requirement against code behavior, tests, and docs. If incomplete, refine AP, run SS, CR, TT, ET when applicable, update docs, then rerun VR.
-- REQ, AP, DD, and !! are documentation-only.
+- REQ, AP, AR, DD, and !! are documentation-only.
 - WT and !! are out-of-band.
 - Never auto-chain WT or !! from another command.
-- **Large changes**: auto-run REQ then AP when either is missing.
+- **Planned routing**: auto-run REQ then AP when any direct-path condition is false, uncertain, or unsupported.
 - **Review loop**: AR fixes high-priority requirement, plan, and E2E spec issues before implementation; CR fixes high-priority code issues after implementation.
 - Rerun review until no major flaws remain.
 - **Architecture gate**: AP and RPD must not enter SS until AR has explicitly passed.
@@ -74,7 +75,7 @@ RPD command keywords are authoritative execution gates.
 - Summarize features, implementation notes, and recent changes.
 - Create the block before editing when missing.
 - Update the block after changing the file.
-- Applies to `SS`, `DF`, `VR`, and `RPD` once it reaches its `SS` stage.
+- Applies to direct implementation, `SS`, `VR`, and `RPD` once it reaches its `SS` stage.
 - Does not apply to docs under `.docs/`.
 
 ## Independent Review Delegation
@@ -109,6 +110,7 @@ RPD command keywords are authoritative execution gates.
   - Create or update only the requirement doc.
   - Do not implement code.
   - Do not modify tests, configs, or non-REQ docs.
+  - Do not edit source code, dependencies, generated artifacts, or build files.
 - **AP**: Create architecture/implementation plan in `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`.
   - Plans must be detailed, phased, and ordered by dependency.
   - Do not create a shallow four-item checklist; expand the work into the real implementation sequence.
@@ -165,6 +167,7 @@ RPD command keywords are authoritative execution gates.
   - Do not run tests during AP.
   - Automatically run `AR` after updating the plan.
   - Do not enter `SS` until `AR` has explicitly passed.
+  - Do not implement code or edit source files during AP or its AR review.
 - **AR**: Review architecture and assumptions.
   - Can be manually triggered.
   - Run the primary-agent preflight, classify the plan using the low-risk criteria, and follow the Independent Review Delegation rules. Use a read-only independent subagent unless every low-risk condition is satisfied or delegation is unavailable.
@@ -178,8 +181,10 @@ RPD command keywords are authoritative execution gates.
   - Do not create a separate review doc.
   - Report either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
   - Apply the review loop.
-- **SS**: Implement step-by-step from the plan.
+  - Do not implement code or edit source files during standalone AR.
+- **SS**: Implement step-by-step from an approved plan.
   - Read the current REQ, AP, and optional E2E spec before editing code.
+  - Require the current AP to have passed AR after its latest material update.
   - Execute AP tasks in order unless a discovered constraint makes the order wrong.
   - If implementation requires a material plan change, update the AP task list before or alongside the code change and keep the scope tied to the REQ.
   - Update plan progress (`- [x]`) as tasks complete.
@@ -189,16 +194,9 @@ RPD command keywords are authoritative execution gates.
   - Do not ask for a second approval.
   - Run relevant compile/build/typecheck after changes.
   - Report the exact verification command and result.
-  - Fix compile/build/typecheck failures before review.
+  - Fix relevant verification failures before review.
+  - For a bug fix, reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
   - Auto-run `CR*` after verification passes.
-- **DF**: Diagnose and fix root cause.
-  - Think harder to find the root cause.
-  - Reproduce or localize the failure before changing code when practical.
-  - Explain the issue clearly: symptom, root cause, affected path, and why the fix addresses it.
-  - Provide fix options when useful.
-  - Prefer the smallest fix that removes the cause instead of masking the symptom.
-  - Add or update a regression test when the project has a clear test location.
-  - Automatically run `TT` to confirm the fix, then `CR*`.
 - **TT**: Run unit tests and fix failures.
   - Detect the unit test command from the project.
   - Ask before running tests when unclear.
@@ -285,6 +283,7 @@ RPD command keywords are authoritative execution gates.
   - Do not duplicate the full REQ, AP, test spec, or changelog.
   - Do not claim verification that did not run.
   - Mention unresolved risks, skipped checks, or unrelated failures only when they are real and specific.
+  - Do not implement code or edit source files during DD.
 - **WT**: Create a new git worktree for the current story.
   - Inspect git status before moving docs.
   - Do not move unrelated docs or untracked artifacts into the worktree.
@@ -293,6 +292,7 @@ RPD command keywords are authoritative execution gates.
   - Move files instead of copying them.
   - Canonical command: `git worktree add ../{project folder}.worktrees/feature-{name} -b feature/{name} {base}`.
   - Use this when planning is done in one checkout but implementation should continue in another.
+  - Do not edit source code; WT may only create the worktree and move matching RPD docs.
 - **!!**: Update relevant docs from the latest user message.
   - Treat the latest user message as a requirement change, clarification, or scope correction.
   - Reconcile contradictions across REQ, AP, and test specs instead of appending stale text.
@@ -302,7 +302,7 @@ RPD command keywords are authoritative execution gates.
   - Create `.docs/tests/test-{name}.md` if E2E coverage is now needed.
   - Update the current test spec when present.
   - Record new non-goals, removed scope, changed validation, and affected phases when the clarification changes implementation direction.
-  - Do not implement code; documentation only.
+  - Do not implement code or edit source files; `!!` is documentation-only.
 - **RPD**: Run the full end-to-end workflow from a requirement input.
   - Accept a requirement description as input.
   - Example: `RPD add OAuth login`.

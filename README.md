@@ -1,10 +1,20 @@
 # RPD - Requirements, Planning, and Development Workflow
 
 An AI agent skill that provides a structured workflow for requirements, planning, architecture review, implementation, verification, review, documentation, E2E execution, and commit. Works with Claude Code, Cursor, Copilot, Codex, Windsurf, Cline, Aider, and other AI coding tools.
-
 ![Infographic illustrating the RPD loop.](rpd-loop.png)
 
-RPD gives you 14 command keywords you can use in conversation to drive a systematic development process.
+RPD gives you 13 workflow commands you can use in conversation to drive a systematic development process.
+
+## Intent Routing
+
+- Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
+- Treat explicit REQ, AP, AR, DD, WT, and `!!` invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes. WT may create a worktree and move matching RPD docs, but it must not edit source code.
+- Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
+- Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
+- File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
+- If any direct-path condition is false, uncertain, or unsupported, create or update REQ and AP, run AR, and continue into implementation after AR passes when RPD auto-entered planning from the natural-language implementation request. Explicit standalone REQ, AP, or AR still stops after its documented stage.
+- For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
+- For direct or planned bug fixes, additionally reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
 
 ## Why RPD
 
@@ -73,7 +83,6 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 | `AP` | Create architecture plan and needed E2E specs; then trigger the required AR gate |
 | `AR` | Review architecture and fix blocking requirement, plan, or E2E spec flaws before implementation |
 | `SS` | Step-by-step implementation |
-| `DF` | Diagnose and fix root cause, then run TT and CR* |
 | `TT` | Run unit tests and fix failures |
 | `ET` | Run E2E tests and fix failures |
 | `CR` | Code review |
@@ -86,13 +95,12 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 
 ## Notes
 
-- RPD command keywords are execution gates, not loose suggestions.
-- Finding or loading the skill is not approval to code.
-- `REQ`, `AP`, `DD`, and `!!` are documentation-only commands.
-- Documentation-only commands must not edit source code, tests, configs, dependencies, generated artifacts, or build files.
-- `SS`, `DF`, and `VR` are code-modifying commands. The user's `SS` or `VR` command is approval to implement the relevant scope.
-- Natural-language development requests without an explicit implementation command should create or update `REQ` and `AP` first, then stop unless the user invokes `SS`, `DF`, `VR`, or `RPD`.
-- `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
+- Explicit commands select their documented stage. `REQ`, `AP`, `AR`, `DD`, and `!!` do not authorize source changes; `WT` may create a worktree and move matching RPD docs but does not edit source.
+- A clear natural-language request to implement or fix repository behavior is implementation authorization. Direct-path work starts immediately; planned-path work continues automatically after AR passes.
+- Direct implementation requires concrete repository evidence for every condition in Intent Routing. Any false, uncertain, or unsupported condition selects REQ, AP, and AR first.
+- Every direct implementation runs relevant verification and CR. Bug fixes also localize the failure, identify and fix the root cause, confirm regression coverage, and report symptom, cause, affected path, fix, and result.
+- Standalone `SS` implements an existing approved plan; it is not the natural-language direct-routing mechanism.
+- A new `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
 - `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
 - `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.
 - `AR` starts with a primary-agent preflight. Treat AR as low-risk only when the plan follows an existing architecture pattern; stays within one component or subsystem; changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior; is readily reversible; and has unambiguous acceptance criteria and implementation boundaries. Record each criterion with repository evidence; uncertainty makes AR non-low-risk. The primary agent may complete only low-risk AR itself. Otherwise, AR uses an independent reviewer when available.
@@ -101,7 +109,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - Independent reviewers receive only raw artifacts and the command checklist, and report every material issue in priority order without a findings cap. VR also returns its acceptance-criteria evidence matrix. The primary agent owns fixes, tests, documentation updates, completion loops, and final pass decisions; when subagents are unavailable, the primary agent runs the same checklist.
 - Independent review reruns after material changes, including fixes for blocking findings, not solely for editorial corrections. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
 - RPD uses runtime-enforced read-only review when supported; otherwise it verifies the reviewed snapshot and Git-visible worktree state did not change. Reviewer mutations invalidate the review.
-- `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`; `DF` auto-runs `TT` and then `CR*`.
+- `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`.
 - `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.
 - Before asking which verification to run, inspect project scripts, task runners, lockfiles, build/test configs, CI workflows, Makefiles, docs, and nearby manifests; ask only when no unambiguous command exists or choices have materially different scope or side effects.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.

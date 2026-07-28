@@ -30,6 +30,10 @@ RPD artifacts for this repository's own stories.
   three files are now tracked.
 - Scenario 12 still asserted the pre-3.2.0 completion-doc name. Both the `find` check and the
   committed-path allowlist now expect `done-public-status.md`.
+- `req-intent-based-routing` carried five acceptance criteria that current evidence does not
+  support: three superseded by the `WT` removal, one whose proof depends on an `ET` run that has
+  never happened, and one requiring version `3.0.0` when the story shipped as `2.2.0`, which was
+  never true. All five are unchecked with the reasons recorded in the requirement.
 
 ### Changed
 

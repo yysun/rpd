@@ -4,9 +4,9 @@ description: >
   Run or explain the RPD workflow for repository software work, including codebase
   explanation and diagnosis, requirements, architecture planning and review,
   implementation, debugging, unit and E2E testing, code review, acceptance
-  verification, completion documentation, scoped commits, and story worktrees.
+  verification, completion documentation, and scoped commits.
   Also use when the user invokes an RPD command with command-like intent: RPD, REQ,
-  AP, AR, SS, TT, ET, CR, VR, DD, GC, WT, or !!. A command token must be bounded by
+  AP, AR, SS, TT, ET, CR, VR, DD, GC, or !!. A command token must be bounded by
   message boundaries, punctuation, or whitespace; do not match when a letter, digit,
   or underscore touches it. Recognize forms such as `RPD`, `RPD:`, `RPD-`, `RPD,`,
   `RPD -`, and `'RPD'`, including tokens in the middle or at the end of a message.
@@ -16,7 +16,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `2.2.0`
+**Version:** `3.0.0`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
@@ -34,7 +34,7 @@ A concise software development workflow with automatic architecture and code rev
 ## Intent Routing
 
 - Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
-- Treat explicit REQ, AP, AR, DD, WT, and `!!` invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes. WT may create a worktree and move matching RPD docs, but it must not edit source code.
+- Treat explicit REQ, AP, AR, DD, and `!!` invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
@@ -49,15 +49,15 @@ A concise software development workflow with automatic architecture and code rev
 - Keep `{name}` short, descriptive, and unique.
 - Announce derived `{name}` and continue without asking for confirmation unless multiple plausible slugs exist, the slug would collide with an unrelated existing story, or the requirement is too ambiguous to name safely.
 - Ask for slug clarification only when ambiguity would create the wrong doc path or attach work to the wrong story.
-- Reuse `{name}` across REQ, AP, SS, DD, ET, VR, !!, WT, and RPD.
+- Reuse `{name}` across REQ, AP, SS, DD, ET, VR, !!, and RPD.
 - **`{yyyy}/{mm}/{dd}`**: the doc creation date.
 - Later updates edit the existing dated doc.
 - **Current story**: the most recently created or modified REQ doc, unless the user specifies otherwise.
 - **Auto-chaining**: direct implementation and SS run required verification, then auto-run CR.
 - **Completion loop**: VR verifies the requirement against code behavior, tests, and docs. If incomplete, refine AP, run SS, CR, TT, ET when applicable, update docs, then rerun VR.
 - REQ, AP, AR, DD, and !! are documentation-only.
-- WT and !! are out-of-band.
-- Never auto-chain WT or !! from another command.
+- `!!` is out-of-band.
+- Never auto-chain `!!` from another command.
 - **Planned routing**: auto-run REQ then AP when any direct-path condition is false, uncertain, or unsupported.
 - **Review loop**: AR fixes high-priority requirement, plan, and E2E spec issues before implementation; CR fixes high-priority code issues after implementation.
 - Rerun review until no major flaws remain.
@@ -284,15 +284,6 @@ A concise software development workflow with automatic architecture and code rev
   - Do not claim verification that did not run.
   - Mention unresolved risks, skipped checks, or unrelated failures only when they are real and specific.
   - Do not implement code or edit source files during DD.
-- **WT**: Create a new git worktree for the current story.
-  - Inspect git status before moving docs.
-  - Do not move unrelated docs or untracked artifacts into the worktree.
-  - Move matching REQ and AP docs into the new worktree.
-  - Move the existing test spec when present.
-  - Move files instead of copying them.
-  - Canonical command: `git worktree add ../{project folder}.worktrees/feature-{name} -b feature/{name} {base}`.
-  - Use this when planning is done in one checkout but implementation should continue in another.
-  - Do not edit source code; WT may only create the worktree and move matching RPD docs.
 - **!!**: Update relevant docs from the latest user message.
   - Treat the latest user message as a requirement change, clarification, or scope correction.
   - Reconcile contradictions across REQ, AP, and test specs instead of appending stale text.

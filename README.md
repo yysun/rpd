@@ -3,12 +3,12 @@
 An AI agent skill that provides a structured workflow for requirements, planning, architecture review, implementation, verification, review, documentation, E2E execution, and commit. Works with Claude Code, Cursor, Copilot, Codex, Windsurf, Cline, Aider, and other AI coding tools.
 ![Infographic illustrating the RPD loop.](rpd-loop.png)
 
-RPD gives you 13 workflow commands you can use in conversation to drive a systematic development process.
+RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
 ## Intent Routing
 
 - Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
-- Treat explicit REQ, AP, AR, DD, WT, and `!!` invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes. WT may create a worktree and move matching RPD docs, but it must not edit source code.
+- Treat explicit REQ, AP, AR, DD, and `!!` invocations as stage selectors. Perform only the documented stage; they do not implicitly authorize source changes.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
@@ -89,13 +89,12 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 | `VR` | Verify the requirement is fully implemented in code and docs; if not, refine AP, run SS, CR, TT, ET when applicable, update docs, then verify again |
 | `DD` | Document completed work as a short PR-style summary |
 | `GC` | Commit changes with clear scope |
-| `WT` | Create a new git worktree under `../{project folder}.worktrees/` and move the REQ/AP docs and existing test spec into it |
 | `!!` | Update all relevant docs with new requirements, clarifications, and changes |
 | `RPD` | Full end-to-end flow with AR, CR, and VR loops |
 
 ## Notes
 
-- Explicit commands select their documented stage. `REQ`, `AP`, `AR`, `DD`, and `!!` do not authorize source changes; `WT` may create a worktree and move matching RPD docs but does not edit source.
+- Explicit commands select their documented stage. `REQ`, `AP`, `AR`, `DD`, and `!!` do not authorize source changes.
 - A clear natural-language request to implement or fix repository behavior is implementation authorization. Direct-path work starts immediately; planned-path work continues automatically after AR passes.
 - Direct implementation requires concrete repository evidence for every condition in Intent Routing. Any false, uncertain, or unsupported condition selects REQ, AP, and AR first.
 - Every direct implementation runs relevant verification and CR. Bug fixes also localize the failure, identify and fix the root cause, confirm regression coverage, and report symptom, cause, affected path, fix, and result.
@@ -126,7 +125,7 @@ REQ, AP, and DD keep the date from when the doc was first created; later updates
 - `CR` applies a review-fix-review loop until no major flaws remain; scoped verification may run after CR changes code, but CR does not become TT.
 - Loops stop and report a blocker when failures are unrelated, pre-existing, flaky, ambiguous, or outside the current command's responsibility.
 - `GC` does not run `CR`; it commits only when verification status and intended file scope are clear.
-- `WT` and `!!` are out-of-band commands and are not auto-chained from other stages.
+- `!!` is an out-of-band command and is not auto-chained from other stages.
 - Commands trigger when a keyword appears anywhere in the message with command-like intent.
 - Keywords must be surrounded by message boundaries, punctuation, or whitespace.
 - Supported forms include `REQ`, `REQ:`, `REQ-`, `REQ,`, `REQ -`, and `'REQ'`.

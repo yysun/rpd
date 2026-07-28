@@ -5,7 +5,17 @@ All notable changes to the RPD skill are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-The version of record is the `**Version:**` line at the top of `SKILL.md`.
+The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
+
+## [3.2.1] - 2026-07-28
+
+### Changed
+
+- Moved the installable skill to `skills/rpd/` so client installations contain runtime files
+  without repository-only docs, the workflow diagram, or evals.
+- Moved the intent-routing suite from `.docs/tests/` to root `tests/`.
+- Kept `rpd-loop.png` at the repository root and updated the install command and validation
+  paths for the nested skill layout.
 
 ## [3.2.0] - 2026-07-28
 
@@ -50,7 +60,7 @@ Consistency pass over the command contracts. No command was added or removed.
 
 ### Fixed
 
-- Scenario 15 of `.docs/tests/test-intent-based-routing.md` asserted that no line may say
+- Scenario 15 of `tests/test-intent-based-routing.md` asserted that no line may say
   ``` `!!` is documentation-only ```, which incorrectly matched the accurate line "The
   reconciliation step of `!!` is documentation-only". The assertion was already failing before
   this release; the regex now excludes the reconciliation wording.

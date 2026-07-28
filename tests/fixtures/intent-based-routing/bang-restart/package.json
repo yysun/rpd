@@ -1,0 +1,8 @@
+{
+  "name": "rpd-bang-restart-fixture",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test && node scripts/verification-digest.js --write"
+  }
+}

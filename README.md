@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.2.0`
+**Version:** `3.2.1`
 
 ## Intent Routing
 
@@ -36,8 +36,10 @@ RPD gives you 12 workflow commands you can use in conversation to drive a system
 ## Quick Start
 
 ```bash
-npx skills add yysun/rpd
+npx skills add yysun/rpd --skill rpd
 ```
+
+The installable skill lives in `skills/rpd/`. Repository documentation, the workflow diagram, and root `tests/` stay outside that directory and are not copied into client skill installations.
 
 ## Workflow
 

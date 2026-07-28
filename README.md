@@ -104,7 +104,7 @@ The command reconciles the latest correction across the current story's REQ, AP,
 ├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
 ├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
 ├── tests/test-{name}.md  # optional existing E2E spec
-└── done/{yyyy}/{mm}/{dd}/done-{name}.md
+└── done/{yyyy}/{mm}/{dd}/{name}.md
 ```
 `{name}` is a short kebab-case story slug (for example: `user-auth`, `offline-sync`) reused across related docs and commands. If omitted, the skill derives one from the requirement or task description, announces it, and continues unless the slug is ambiguous, collides with an unrelated story, or could attach work to the wrong docs.
 

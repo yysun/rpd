@@ -719,8 +719,8 @@ perl -0777 -ne 'if (/(?:\A|\n)- \*\*SS\*\*:(.*?)(?=\n- \*\*[A-Z!]+\*\*:)/s) { pr
 rg -Fi 'approved plan' "${E2E_ROOT}/ss-section.txt"
 rg -Fi 'switch to planned routing' "${E2E_ROOT}/ss-section.txt"
 ! rg -Fi 'direct path' "${E2E_ROOT}/ss-section.txt"
-rg -F '.docs/done/{yyyy}/{mm}/{dd}/done-{name}.md' skills/rpd/SKILL.md
-rg -F 'done/{yyyy}/{mm}/{dd}/done-{name}.md' README.md
+rg -F '.docs/done/{yyyy}/{mm}/{dd}/{name}.md' skills/rpd/SKILL.md
+rg -F 'done/{yyyy}/{mm}/{dd}/{name}.md' README.md
 rg -F 'Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`' skills/rpd/SKILL.md
 rg -F 'Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`' README.md
 perl -0777 -ne 'if (/(?:\A|\n)## Command Keywords\n(.*?)(?=\n## Documentation Structure)/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/command-keywords.txt"

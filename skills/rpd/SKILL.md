@@ -289,7 +289,7 @@ A concise software development workflow with automatic architecture and code rev
   - Do not rewrite the E2E spec during ET except to correct stale wording after behavior is verified.
   - Rerun E2E tests after each fix.
   - Repeat until all targeted E2E tests pass.
-- **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/done-{name}.md`.
+- **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
   - Can be invoked as a single-word `DD` message.
   - Run once the story's implementation, verification, and reviews are complete, whether or not it is committed; do not fire mid-stream.
   - Inside `RPD` and `!!`, DD runs before `GC` so the commit can reference the completion summary.
@@ -354,5 +354,5 @@ A concise software development workflow with automatic architecture and code rev
 ├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
 ├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
 ├── tests/test-{name}.md  # optional existing E2E spec
-└── done/{yyyy}/{mm}/{dd}/done-{name}.md
+└── done/{yyyy}/{mm}/{dd}/{name}.md
 ```

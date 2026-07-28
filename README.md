@@ -1,7 +1,7 @@
 # RPD - Requirements, Planning, and Development Workflow
 
 An AI agent skill that provides a structured workflow for requirements, planning, architecture review, implementation, verification, review, documentation, E2E execution, and commit. Works with Claude Code, Cursor, Copilot, Codex, Windsurf, Cline, Aider, and other AI coding tools.
-![Infographic illustrating the RPD loop.](rpd-loop.png)
+![Diagram of RPD routing a request by risk: a direct path that implements, tests, and stops after code review, and a planned path that runs REQ, AP, AR, SS with code review, TT, ET, and VR; below them the full RPD sequence through DD and GC, and the `!!` reconcile-and-restart flow.](rpd-loop.png)
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 

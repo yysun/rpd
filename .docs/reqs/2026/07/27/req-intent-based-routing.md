@@ -33,6 +33,13 @@ Remove DF as a command and fold its useful bug-diagnosis obligations into direct
 - [ ] The README reports 13 commands after DF removal.
 - [ ] The skill metadata validates after the breaking command removal and reports version `3.0.0`.
 
+The "README text and visuals" criterion stayed checked but was unsupported until 2026-07-28. The
+embedded diagram still read "Define clear business outcomes, acceptance criteria, and constraints
+before any code is generated" and framed `REQ | AP | AR` as step one of a canonical workflow, which
+is the claim intent routing removed. The matching plan task recorded the embed as removed when it
+never was. The diagram was regenerated on 2026-07-28 around risk-based routing, with a direct path
+that visibly skips REQ/AP/AR, so the criterion is now supported by the artwork itself.
+
 Five criteria were unchecked on 2026-07-28 during a review of this repository's own RPD artifacts.
 They fall into three groups.
 

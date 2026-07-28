@@ -21,6 +21,12 @@ The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL
   terminus, the sequence-notation legend, the command-like-intent rules, the `SS` no-plan
   fallback, and the `done-{name}.md` completion-doc path in both documents. Each assertion was
   negative-tested against a mutated copy to confirm it fails when its contract text is removed.
+- Regenerated the workflow diagram around current risk-based routing, planned/direct
+  terminuses, requirement verification, and `!!` reconciliation. The previous diagram said
+  requirements are defined "before any code is generated" and framed `REQ | AP | AR` as step one
+  of a canonical workflow, contradicting the direct path in the routing section directly beneath
+  it. The replacement carries no version number, so ordinary releases do not make it stale, and
+  the README alt text now describes the routing it shows.
 
 ## [3.2.2] - 2026-07-28
 

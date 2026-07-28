@@ -7,6 +7,26 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.4.0] - 2026-07-28
+
+### Changed
+
+- AR, CR, and VR review loops now reuse the same independent subagent for reruns within one stage
+  while it remains available and independent. Each rerun still receives the new stable snapshot,
+  raw artifacts, and the stage's complete checklist, so fixing one finding cannot narrow the next
+  review to that finding alone.
+- A new independent reviewer starts at each review-stage boundary and whenever the current reviewer
+  becomes unavailable, contributes to an artifact under review, or mutates the reviewed snapshot.
+  The initial clean-context rule, serial gates, read-only safeguards, and primary-agent edit
+  ownership are unchanged.
+
+### Fixed
+
+- Scenario 15 now fails fast instead of silently continuing after a failed assertion.
+- Replacement reviewers now explicitly receive the same clean or minimal-context startup as the
+  initial reviewer in a stage. Reused reviewers retain their review context; newly spawned
+  replacements do not inherit authoring context.
+
 ## [3.3.0] - 2026-07-28
 
 ### Added

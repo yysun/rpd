@@ -615,6 +615,7 @@ Require both scenarios to pass; do not add a numeric file-count, line-count, or 
 Run these static assertions against the revised source repository:
 
 ```sh
+set -e
 test -z "$(rg -n '\bDF\b|Diagnose and fix root cause' skills/rpd/SKILL.md README.md || true)"
 test -z "$(rg -n '\bWT\b|story worktrees|WT may|WT and' skills/rpd/SKILL.md README.md || true)"
 test -z "$(rg -n 'without an explicit implementation command|then stop unless' skills/rpd/SKILL.md README.md || true)"
@@ -660,7 +661,7 @@ else
 fi
 perl -0777 -ne 'if (/\A---\n(.*?)\n---\n/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/frontmatter.txt"
 test -z "$(rg -n '^(metadata:|[[:space:]]*version:|[[:space:]]*repository:)' "${E2E_ROOT}/frontmatter.txt" || true)"
-test "$(rg -c '^\*\*Version:\*\* `3\.3\.0`$' skills/rpd/SKILL.md)" = 1
+test "$(rg -c '^\*\*Version:\*\* `3\.4\.0`$' skills/rpd/SKILL.md)" = 1
 perl -0777 -ne 'if (/intent: (.*?)\. A command token/s) { $value = $1; $value =~ s/\s+/ /g; print $value; exit 0 } exit 1' \
   "${E2E_ROOT}/frontmatter.txt" > "${E2E_ROOT}/trigger-commands.txt"
 test "$(cat "${E2E_ROOT}/trigger-commands.txt")" = 'RPD, REQ, AP, AR, SS, TT, ET, CR, VR, DD, GC, or !!'
@@ -703,6 +704,18 @@ perl -0777 -ne 'if (/(?:\A|\n)## Conventions\n(.*?)(?=\n## )/s) { print $1; exit
 rg -F 'Sequence notation' "${E2E_ROOT}/conventions.txt"
 rg -F 'Command-like intent' "${E2E_ROOT}/conventions.txt"
 rg -F 'Current story' "${E2E_ROOT}/conventions.txt"
+perl -0777 -ne 'if (/(?:\A|\n)## Independent Review Delegation\n(.*?)(?=\n## )/s) { print $1; exit 0 } exit 1' \
+  skills/rpd/SKILL.md > "${E2E_ROOT}/independent-review-delegation.txt"
+sed -n '/^## Notes$/,/^## License$/p' README.md > "${E2E_ROOT}/readme-notes.txt"
+for contract in \
+  'Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.' \
+  "On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings." \
+  'Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.'
+do
+  rg -F "${contract}" "${E2E_ROOT}/independent-review-delegation.txt"
+  rg -F "${contract}" "${E2E_ROOT}/readme-notes.txt"
+done
+test -z "$(rg -F 'Prefer fresh reviewer context' skills/rpd/SKILL.md README.md || true)"
 perl -0777 -ne 'if (/(?:\A|\n)- \*\*!!\*\*:(.*?)(?=\n- \*\*[A-Z!]+\*\*:)/s) { print $1; exit 0 } exit 1' \
   skills/rpd/SKILL.md > "${E2E_ROOT}/bang-section.txt"
 for contract in \

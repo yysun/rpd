@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.3.0`
+**Version:** `3.4.0`
 
 ## Intent Routing
 
@@ -145,6 +145,9 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - When the runtime supports subagents, `CR`, `VR`, and non-low-risk `AR` use a read-only independent reviewer with no inherited authoring conversation, or the smallest task-local context available. Full-history inheritance is not used for independent review.
 - If clean or minimal task-local context cannot be created, RPD treats independent delegation as unavailable and uses the primary-agent fallback.
 - Independent reviewers receive only raw artifacts and the command checklist, and report every material issue in priority order without a findings cap. VR also returns its acceptance-criteria evidence matrix. The primary agent owns fixes, tests, documentation updates, completion loops, and final pass decisions; when subagents are unavailable, the primary agent runs the same checklist.
+- Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.
+- On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings.
+- Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
 - Independent review reruns after material changes, including fixes for blocking findings, not solely for editorial corrections. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
 - RPD uses runtime-enforced read-only review when supported; otherwise it verifies the reviewed snapshot and Git-visible worktree state did not change. Reviewer mutations invalidate the review.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`.

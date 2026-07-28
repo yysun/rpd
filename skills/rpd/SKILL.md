@@ -18,7 +18,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.3.0`
+**Version:** `3.4.0`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
@@ -99,13 +99,16 @@ A concise software development workflow with automatic architecture and code rev
 - Treat AR as low-risk only when all of these are true: the plan follows an existing architecture pattern; stays within one component or subsystem; changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior; is readily reversible; and has unambiguous acceptance criteria and implementation boundaries.
 - Record the low-risk classification criterion by criterion with concrete repository evidence in the AR result. If any criterion lacks evidence or is uncertain or debatable, treat AR as non-low-risk.
 - The primary agent may complete low-risk AR itself. Otherwise, require independent AR when delegation is available. Require independent CR and VR whenever delegation is available.
-- For an independent review, use a subagent that did not author the artifacts under review. Start it with no inherited authoring conversation when the runtime supports that option; otherwise pass the smallest task-local context the runtime permits. Do not use full-history inheritance.
+- Whenever a stage needs a new independent reviewer, including a replacement reviewer, use a subagent that did not author the artifacts under review. Start it with no inherited authoring conversation when the runtime supports that option; otherwise pass the smallest task-local context the runtime permits. Do not use full-history inheritance.
 - If the runtime cannot start a reviewer with either no inherited authoring history or a minimal task-local context, treat independent delegation as unavailable and run the primary-agent fallback.
 - Give the reviewer only the raw artifacts needed for its command: the applicable REQ, AP, E2E spec, stable diff or implementation paths, verification evidence, and command-specific checklist. Do not pass the author's conclusions, suspected flaws, intended fixes, or claims that the work should pass.
 - Require the reviewer to reconstruct its judgment from those artifacts, work read-only, and return every material finding in priority order without a findings cap. For VR, require the acceptance-criteria evidence matrix in addition to the findings. Run the review only after the relevant artifacts form a stable snapshot.
+- Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.
+- On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings.
+- Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
 - Use runtime-enforced read-only tools when supported. Otherwise record the reviewed snapshot and Git-visible worktree state, instruct the reviewer not to edit, and verify both are unchanged afterward. If they changed, invalidate the review and stop for safe primary-agent recovery before rerunning it.
 - Keep AR, CR, and VR as serial gates. Do not let a reviewer inspect files while another agent is mutating them.
-- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Rerun the independent review after material changes, including fixes for blocking findings, but not solely for editorial corrections. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again. Prefer fresh reviewer context when capacity permits.
+- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Rerun the independent review after material changes, including fixes for blocking findings, but not solely for editorial corrections. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.
 - If subagents are unavailable, run the same checklist in the primary agent and produce the same required output. Delegation changes review independence, not the pass criteria.
 
 ## Command Keywords

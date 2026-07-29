@@ -18,7 +18,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.4.0`
+**Version:** `3.5.0`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
@@ -43,6 +43,7 @@ A concise software development workflow with automatic architecture and code rev
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
 - If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
+- A blocking open question about expected behavior does not exempt this from creating AP. Capture the question in REQ's Open Questions, complete AP with the open question reflected in its Decisions or Rollback / Risk, and let AR report `AR blocked` on it rather than stopping after REQ alone.
 - **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR*` after AR passes, then stop. Run DD and GC only when the user asks for them. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
 - **Direct-path terminus**: direct implementation ends after CR and creates no `.docs` artifacts. Run REQ first when the work needs a requirement doc, a plan, a completion doc, or a story that `!!` can later correct.
 - For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
@@ -108,7 +109,7 @@ A concise software development workflow with automatic architecture and code rev
 - Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
 - Use runtime-enforced read-only tools when supported. Otherwise record the reviewed snapshot and Git-visible worktree state, instruct the reviewer not to edit, and verify both are unchanged afterward. If they changed, invalidate the review and stop for safe primary-agent recovery before rerunning it.
 - Keep AR, CR, and VR as serial gates. Do not let a reviewer inspect files while another agent is mutating them.
-- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Rerun the independent review after material changes, including fixes for blocking findings, but not solely for editorial corrections. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.
+- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exception is updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.
 - If subagents are unavailable, run the same checklist in the primary agent and produce the same required output. Delegation changes review independence, not the pass criteria.
 
 ## Command Keywords
@@ -181,6 +182,7 @@ A concise software development workflow with automatic architecture and code rev
   - Create E2E specs for cross-system integrations.
   - Create E2E specs for regression-prone critical paths.
   - Skip E2E specs for pure internals unless requested.
+  - Classify by the story's subject matter, not by whether today's implementation exposes a live UI, network call, or transport. A story about authentication, payments, routing, data entry, or an external integration requires an E2E spec even when currently implemented as a single pure function with no live surface.
   - If needed, create or update `.docs/tests/test-{name}.md`.
   - Write E2E specs as human-readable scenarios.
   - Do not run tests during AP.
@@ -198,7 +200,7 @@ A concise software development workflow with automatic architecture and code rev
   - Fix blocking requirement, plan, or E2E spec flaws by updating existing docs in place.
   - Do not pass AR with unresolved blocking questions, missing validation, or a plan that `SS` cannot execute directly.
   - Do not create a separate review doc.
-  - Report exactly one of `AR passed: no blocking architecture flaws`, `AR fixed: <summary>; rerun result passed`, or `AR blocked: <flaw and why it cannot be resolved in place>`.
+  - Report exactly one of `AR passed: no blocking architecture flaws`, `AR fixed: <summary>; rerun result passed`, or `AR blocked: <flaw and why it cannot be resolved in place>`. Include this exact phrase verbatim in the final response even when a caller separately requires its own status format; the two are not interchangeable and neither substitutes for the other.
   - `AR blocked` is not a pass. Stop the flow, apply the loop blocker rules, and report the blocker instead of entering `SS`.
   - Apply the review loop.
   - Do not implement code or edit source files during standalone AR.
@@ -238,6 +240,7 @@ A concise software development workflow with automatic architecture and code rev
   - Continue until no major flaws remain.
   - After CR changes code, run scoped verification when clear.
   - Report unrelated or pre-existing failures.
+  - Report exactly one of `CR passed: no major findings` or `CR fixed: <summary>; rerun result passed`. Include this exact phrase verbatim even when a caller separately requires its own status format; the two are not interchangeable and neither substitutes for the other.
   - Do not convert CR into TT.
 - **VR**: Verify the requirement is fully implemented in both code and docs.
   - Use the Independent Review Delegation rules; when available, have a read-only independent subagent build the acceptance-criteria evidence matrix. The primary agent owns all follow-up edits and the completion loop.
@@ -251,6 +254,7 @@ A concise software development workflow with automatic architecture and code rev
   - Treat stale, contradictory, or incomplete REQ/AP/test/done docs as incomplete work, not as a documentation-only cleanup.
   - Do not treat passing tests as proof of completion when requirements are visibly unmet.
   - Do not pass VR when planned cleanup/removal work, E2E coverage, docs, or review fixes are missing.
+  - Report exactly one of `VR passed: all acceptance criteria complete` or `VR incomplete: <summary of missing work>`. Include this exact phrase verbatim even when a caller separately requires its own status format; the two are not interchangeable and neither substitutes for the other.
   - If complete, report the evidence and either stop for standalone `VR` or continue the parent `RPD` sequence.
   - If incomplete, update the existing AP doc with the missing code, test, and documentation work.
   - If missing work changes E2E coverage, update or create `.docs/tests/test-{name}.md`.

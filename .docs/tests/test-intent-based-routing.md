@@ -14,7 +14,7 @@ Prove that ordinary natural-language requests route by implementation intent and
 6. Reserve reviewer capacity for every execution case that requires AR, CR, or VR. Use the current runtime's collaboration/subagent surface and require independent reviewers to work read-only. After each reviewer completes, require the implementation agent to save the reviewer final response verbatim outside the case repository as `EVIDENCE_ROOT/CASE_NAME-<phase>-review-<attempt>.log`, numbering attempts by completion order with zero-padded integers. Preserve blocked attempts; the highest attempt number is terminal. Before replying, require the implementation agent to save the exact text of its own final response as `EVIDENCE_ROOT/CASE_NAME-result.log`.
 7. Immediately before each reviewer is spawned, have the implementation agent compute the stable snapshot hash defined below and include it in the reviewer input. Require the reviewer to recompute that hash, compare initial and final Git state, and end with the fixed evidence fields below. A review attempt is invalid if its initial hash differs from the supplied hash or its final hash/state differs from its initial state.
 8. For AR, require the terminal reviewer decision to pass and its evidence to show that `src/**` and `test/**` had no changes in the reviewed snapshot. This is the observable pre-implementation gate available from the current collaboration surface. For a blocked AR, require the terminal decision to block and require no source/test changes.
-9. For CR, include `.verification-ran` in the stable snapshot. The fixture creates that ignored marker only after `node --test` succeeds and stores a SHA-256 digest of the current `package.json`, `src/**`, and `test/**` inputs. Require the terminal CR reviewer to recompute the digest read-only with `node scripts/verification-digest.js`, report a match, and review a snapshot whose hash equals the final case snapshot hash. A later source, test, or test-command change invalidates the marker and fails CR evidence.
+9. For CR, include `.verification-ran` in the stable snapshot. The fixture creates that ignored marker only after `node --test` succeeds and stores a SHA-256 digest of the current `package.json`, `src/**`, and `test/**` inputs. Require the terminal CR reviewer to recompute the digest read-only with `node scripts/verification-digest.js`, report a match, and review a snapshot whose hash equals the final case snapshot hash — both computed by the shared `snapshot_hash` function, which excludes `.docs/reqs` because a subsequent VR pass legitimately updates REQ acceptance-criteria checkboxes without invalidating CR. A later source, test, plan, E2E spec, or test-command change invalidates the marker and fails CR evidence.
 10. Before the test operator runs any verification command, require `.verification-ran` for cases that should implement. Only then may the operator rerun `npm test`.
 11. Before inspecting working-tree changes in a non-committing case, require the current `HEAD` to equal the saved seed SHA. For `bang-restart`, require exactly one commit after the seed and inspect the committed path allowlist. Then run the case's remaining assertions. Any non-zero command fails the scenario immediately.
 12. Temporary repositories, resolved prompts, reviewer logs, result logs, and sentinels are disposable. Report their absolute root but do not copy them into the source repository.
@@ -22,7 +22,7 @@ Prove that ordinary natural-language requests route by implementation intent and
 Fixed evidence suffix:
 
 ```text
-COMMIT_POLICY The evidence root is EVIDENCE_ROOT and the case name is CASE_NAME. Before each AR, CR, or VR reviewer is spawned, compute the stable snapshot hash with this exact command from any working directory: `(cd CASE_ROOT && (find . -path './.git' -prune -o -type f -print0 | sort -z | xargs -0 shasum -a 256) | shasum -a 256 | awk '{print $1}')`. Include that hash in the reviewer input and ask the reviewer to recompute it with the same command. The ignored `CASE_ROOT/.verification-ran` file must be absent during AR. The fixture writes it only after `npm test` succeeds; its content is the SHA-256 digest of the tested `package.json`, `src/**`, and `test/**` inputs. During CR and VR, require the reviewer to run this exact read-only comparison: `test "$(tr -d '\n' < CASE_ROOT/.verification-ran)" = "$(cd CASE_ROOT && node scripts/verification-digest.js)"`. Report `Verification digest: MATCH` only when that command exits 0; report `MISMATCH` when it exits non-zero, and `ABSENT` when the marker does not exist. Require the VR reviewer to include the acceptance-criteria evidence matrix before the fixed evidence block. Ask every reviewer to end its response with exactly these six lines:
+COMMIT_POLICY The evidence root is EVIDENCE_ROOT and the case name is CASE_NAME. Before each AR, CR, or VR reviewer is spawned, compute the stable snapshot hash with this exact command from any working directory: `(cd CASE_ROOT && (find . \( -path './.git' -o -path './.docs/reqs' \) -prune -o -type f -print0 | sort -z | xargs -0 shasum -a 256) | shasum -a 256 | awk '{print $1}')`. The hash deliberately excludes `.docs/reqs`, since VR legitimately updates REQ acceptance-criteria checkboxes after CR and VR review a stable snapshot without rerunning; a snapshot difference confined to `.docs/reqs` is not a review-integrity violation. Include that hash in the reviewer input and ask the reviewer to recompute it with the same command. The ignored `CASE_ROOT/.verification-ran` file must be absent during AR. The fixture writes it only after `npm test` succeeds; its content is the SHA-256 digest of the tested `package.json`, `src/**`, and `test/**` inputs. During CR and VR, require the reviewer to run this exact read-only comparison: `test "$(tr -d '\n' < CASE_ROOT/.verification-ran)" = "$(cd CASE_ROOT && node scripts/verification-digest.js)"`. Report `Verification digest: MATCH` only when that command exits 0; report `MISMATCH` when it exits non-zero, and `ABSENT` when the marker does not exist. Require the VR reviewer to include the acceptance-criteria evidence matrix before the fixed evidence block. Ask every reviewer to end its response with exactly these six lines:
 `Phase: AR`, `Phase: CR`, or `Phase: VR`
 `Decision: PASS` or `Decision: BLOCK`
 `Snapshot: <64-lowercase-hex SHA-256>`
@@ -39,7 +39,7 @@ snapshot_hash() {
   local case_root="$1"
   (
     cd "${case_root}"
-    find . -path './.git' -prune -o -type f -print0 |
+    find . \( -path './.git' -o -path './.docs/reqs' \) -prune -o -type f -print0 |
       sort -z |
       xargs -0 shasum -a 256
   ) | shasum -a 256 | awk '{print $1}'
@@ -531,9 +531,9 @@ rg -i '\bhealth\b' "${E2E_ROOT}/bang-restart/src/status-api.js"
 ! rg -i '\bstate\b' "${E2E_ROOT}/bang-restart/src/status-api.js"
 rg -i '\bhealth\b' "${E2E_ROOT}/bang-restart/test/status-api.test.js"
 ! rg -i '\bstate\b' "${E2E_ROOT}/bang-restart/test/status-api.test.js"
-test "$(find "${E2E_ROOT}/bang-restart/.docs/done" -type f -name 'done-public-status.md' | wc -l | tr -d ' ')" = 1
+test "$(find "${E2E_ROOT}/bang-restart/.docs/done" -type f -name 'public-status.md' | wc -l | tr -d ' ')" = 1
 
-test -z "$(git -C "${E2E_ROOT}/bang-restart" diff --name-only "${seed_sha}..HEAD" | rg -v '^(src/status-api\.js|test/status-api\.test\.js|\.docs/reqs/2026/07/27/req-public-status\.md|\.docs/plans/2026/07/27/plan-public-status\.md|\.docs/tests/test-public-status\.md|\.docs/done/.*/done-public-status\.md)$')"
+test -z "$(git -C "${E2E_ROOT}/bang-restart" diff --name-only "${seed_sha}..HEAD" | rg -v '^(src/status-api\.js|test/status-api\.test\.js|\.docs/reqs/2026/07/27/req-public-status\.md|\.docs/plans/2026/07/27/plan-public-status\.md|\.docs/tests/test-public-status\.md|\.docs/done/.*/public-status\.md)$')"
 test -f "${E2E_ROOT}/bang-restart/.verification-ran"
 npm --prefix "${E2E_ROOT}/bang-restart" test
 assert_ar_before_code bang-restart
@@ -661,7 +661,7 @@ else
 fi
 perl -0777 -ne 'if (/\A---\n(.*?)\n---\n/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/frontmatter.txt"
 test -z "$(rg -n '^(metadata:|[[:space:]]*version:|[[:space:]]*repository:)' "${E2E_ROOT}/frontmatter.txt" || true)"
-test "$(rg -c '^\*\*Version:\*\* `3\.4\.0`$' skills/rpd/SKILL.md)" = 1
+test "$(rg -c '^\*\*Version:\*\* `3\.5\.0`$' skills/rpd/SKILL.md)" = 1
 perl -0777 -ne 'if (/intent: (.*?)\. A command token/s) { $value = $1; $value =~ s/\s+/ /g; print $value; exit 0 } exit 1' \
   "${E2E_ROOT}/frontmatter.txt" > "${E2E_ROOT}/trigger-commands.txt"
 test "$(cat "${E2E_ROOT}/trigger-commands.txt")" = 'RPD, REQ, AP, AR, SS, TT, ET, CR, VR, DD, GC, or !!'
@@ -700,6 +700,15 @@ rg -Fi 'not a literal value a later release invalidates' "${E2E_ROOT}/REQ-sectio
 rg -F 'Planned-routing terminus' "${E2E_ROOT}/skill-intent-routing.txt"
 rg -F 'SS(+CR*) → TT → ET? → VR*' "${E2E_ROOT}/skill-intent-routing.txt"
 rg -F 'Direct-path terminus' "${E2E_ROOT}/skill-intent-routing.txt"
+for contract in \
+  'A blocking open question about expected behavior does not exempt this from creating AP' \
+  'let AR report `AR blocked` on it rather than stopping after REQ alone'
+do
+  rg -F "${contract}" "${E2E_ROOT}/skill-intent-routing.txt"
+  rg -F "${contract}" "${E2E_ROOT}/readme-intent-routing.txt"
+done
+rg -Fi 'classify by the story'\''s subject matter' "${E2E_ROOT}/AP-section.txt"
+rg -Fi 'even when currently implemented as a single pure function' "${E2E_ROOT}/AP-section.txt"
 perl -0777 -ne 'if (/(?:\A|\n)## Conventions\n(.*?)(?=\n## )/s) { print $1; exit 0 } exit 1' skills/rpd/SKILL.md > "${E2E_ROOT}/conventions.txt"
 rg -F 'Sequence notation' "${E2E_ROOT}/conventions.txt"
 rg -F 'Command-like intent' "${E2E_ROOT}/conventions.txt"
@@ -716,6 +725,28 @@ do
   rg -F "${contract}" "${E2E_ROOT}/readme-notes.txt"
 done
 test -z "$(rg -F 'Prefer fresh reviewer context' skills/rpd/SKILL.md README.md || true)"
+for contract in \
+  'requires a rerun before the stage is complete' \
+  'The sole exception is updating REQ acceptance-criteria checkboxes to record a VR reviewer'\''s determination'
+do
+  rg -F "${contract}" "${E2E_ROOT}/independent-review-delegation.txt"
+  rg -F "${contract}" "${E2E_ROOT}/readme-notes.txt"
+done
+test -z "$(rg -F 'not solely for editorial corrections' skills/rpd/SKILL.md || true)"
+for command in CR VR
+do
+  RPD_STAGE="${command}" perl -0777 -ne 'my $command = $ENV{RPD_STAGE}; if (/(?:\A|\n)- \*\*\Q$command\E\*\*:(.*?)(?=\n- \*\*[A-Z!]+\*\*:)/s) { print $1; exit 0 } exit 1' \
+    skills/rpd/SKILL.md > "${E2E_ROOT}/${command}-section.txt"
+done
+rg -F 'CR passed: no major findings' "${E2E_ROOT}/CR-section.txt"
+rg -F 'CR fixed: <summary>; rerun result passed' "${E2E_ROOT}/CR-section.txt"
+rg -F 'VR passed: all acceptance criteria complete' "${E2E_ROOT}/VR-section.txt"
+rg -F 'VR incomplete: <summary of missing work>' "${E2E_ROOT}/VR-section.txt"
+for section in AR CR VR
+do
+  rg -Fi 'verbatim' "${E2E_ROOT}/${section}-section.txt"
+  rg -Fi 'neither substitutes for the other' "${E2E_ROOT}/${section}-section.txt"
+done
 perl -0777 -ne 'if (/(?:\A|\n)- \*\*!!\*\*:(.*?)(?=\n- \*\*[A-Z!]+\*\*:)/s) { print $1; exit 0 } exit 1' \
   skills/rpd/SKILL.md > "${E2E_ROOT}/bang-section.txt"
 for contract in \

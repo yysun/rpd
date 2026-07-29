@@ -7,6 +7,49 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.5.0] - 2026-07-28
+
+Fixes from the first full run of `.docs/tests/test-intent-based-routing.md` against real execution
+agents (13 cases, 8 pass / 5 fail against v3.3.0). See `.docs/done/2026/07/28/e2e-run-fixes.md`
+for the run's findings and evidence.
+
+### Added
+
+- `CR` and `VR` now report exactly one mandated phrase each (`CR passed: ...` / `CR fixed: ...`;
+  `VR passed: ...` / `VR incomplete: ...`), matching the format `AR` already had. Neither existed
+  before, so nothing enforced a consistent, testable CR/VR outcome string.
+- `AR`, `CR`, and `VR`'s mandated report phrases now state explicitly that the phrase is required
+  verbatim even when a caller also requires its own status format, and that the two are not
+  interchangeable. Three independent, uncoached execution agents used only a differently-formatted
+  evidence-log line and never the skill's own required phrase.
+- Planned routing now states that a blocking open question about expected behavior does not exempt
+  the flow from creating `AP`; the question belongs in REQ's Open Questions, and `AR` is the
+  mechanism that reports the block. An execution agent stopped after `REQ` alone on a genuinely
+  uncertain story, skipping `AP` and `AR` entirely.
+- `AP`'s E2E-coverage guidance now says to classify by the story's subject matter, not by whether
+  today's implementation has a live UI, network call, or transport. Two independent execution agents,
+  each with a concurring independent reviewer, skipped an E2E spec for stories SKILL.md already names
+  explicitly (auth, external integration) because the current implementation was a pure function.
+
+### Changed
+
+- Narrowed the independent-review rerun exemption. It previously allowed skipping a rerun for
+  changes made "solely for editorial corrections," which one execution agent used to justify an
+  unreviewed source edit made after both CR and VR had already passed — so the final on-disk state
+  was never seen by any reviewer. The exemption is now limited to one case: updating REQ
+  acceptance-criteria checkboxes to record a VR determination, which independent reviewers cannot do
+  themselves because they work read-only. Every other post-pass edit invalidates that pass.
+
+### Fixed
+
+- The E2E suite's shared snapshot-hash function included `.docs/reqs` in its hash. Because `VR`
+  legitimately updates REQ checkboxes after `CR` has already passed and reported its own snapshot,
+  `assert_cr_final` was unsatisfiable by construction for any scenario that reaches `VR` — three
+  independent runs failed this assertion for that reason alone. The hash (used identically by the
+  primary agent and every independent reviewer) now excludes `.docs/reqs`.
+- Scenario 11's completion-doc assertions still expected the `done-{name}.md` prefix removed in the
+  unreleased naming revert; updated to the current `{name}.md` convention.
+
 ## [3.4.0] - 2026-07-28
 
 ### Changed

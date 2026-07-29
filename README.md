@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.4.0`
+**Version:** `3.5.0`
 
 ## Intent Routing
 
@@ -17,6 +17,7 @@ RPD gives you 12 workflow commands you can use in conversation to drive a system
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
 - If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
+- A blocking open question about expected behavior does not exempt this from creating AP. Capture the question in REQ's Open Questions, complete AP with the open question reflected in its Decisions or Rollback / Risk, and let AR report `AR blocked` on it rather than stopping after REQ alone.
 - **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR*` after AR passes, then stop. Run DD and GC only when the user asks for them. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
 - **Direct-path terminus**: direct implementation ends after CR and creates no `.docs` artifacts. Run REQ first when the work needs a requirement doc, a plan, a completion doc, or a story that `!!` can later correct.
 - For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
@@ -82,7 +83,7 @@ RPD Implement JWT authentication
 
 `*` means the review or completion stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. `AP` creates or updates the E2E spec when the story needs one. `RPD` must not enter `SS` until `AR` has reviewed REQ, AP, and any E2E spec, fixed blocking doc/spec flaws in place, and explicitly reported an AR pass.
 
-Create E2E specs for user-facing flows, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested.
+Create E2E specs for user-facing flows, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested. Classify by the story's subject matter, not by whether today's implementation exposes a live UI, network call, or transport — a story about authentication, payments, routing, data entry, or an external integration needs an E2E spec even as a single pure function with no live surface yet.
 
 ### 3. Correct and restart the current story: `!!`
 
@@ -139,7 +140,8 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - A new `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
 - Acceptance criteria should name the property they depend on rather than a literal value a later release invalidates. Because `VR` may not relax a criterion to check it off, a criterion pinned to a literal version, count, or path can become permanently unsatisfiable while the work itself is complete. Prefer `a major version bump accompanies the breaking change` over `the version is 3.0.0`.
 - `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
-- `AR blocked: <flaw and why it cannot be resolved in place>` is the third possible `AR` result. It is not a pass: the flow stops and reports the blocker instead of entering `SS`.
+- `AR blocked: <flaw and why it cannot be resolved in place>` is the third possible `AR` result. It is not a pass: the flow stops and reports the blocker instead of entering `SS`. A blocking open question about expected behavior still requires AP to be created; the question is captured in REQ and AP, and AR is the mechanism that reports the block.
+- `CR` reports exactly one of `CR passed: no major findings` or `CR fixed: <summary>; rerun result passed`. `VR` reports exactly one of `VR passed: all acceptance criteria complete` or `VR incomplete: <summary of missing work>`. Both phrases are required verbatim even when a caller also asks for its own status format.
 - `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.
 - `AR` starts with a primary-agent preflight. Treat AR as low-risk only when the plan follows an existing architecture pattern; stays within one component or subsystem; changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior; is readily reversible; and has unambiguous acceptance criteria and implementation boundaries. Record each criterion with repository evidence; uncertainty makes AR non-low-risk. The primary agent may complete only low-risk AR itself. Otherwise, AR uses an independent reviewer when available.
 - When the runtime supports subagents, `CR`, `VR`, and non-low-risk `AR` use a read-only independent reviewer with no inherited authoring conversation, or the smallest task-local context available. Full-history inheritance is not used for independent review.
@@ -148,7 +150,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.
 - On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings.
 - Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
-- Independent review reruns after material changes, including fixes for blocking findings, not solely for editorial corrections. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
+- Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exception is updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
 - RPD uses runtime-enforced read-only review when supported; otherwise it verifies the reviewed snapshot and Git-visible worktree state did not change. Reviewer mutations invalidate the review.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`.
 - `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.

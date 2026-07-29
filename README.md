@@ -9,12 +9,13 @@ RPD gives you 12 workflow commands you can use in conversation to drive a system
 
 ## Intent Routing
 
-- Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
+- Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. For these read-only requests, stop after the requested inspection and response: do not create RPD artifacts or invoke AR, CR, or VR unless the user invoked that explicit workflow command. Explicit CR and VR retain their documented behavior.
 - Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage, including any gate that stage owns; they do not implicitly authorize source changes.
 - Treat explicit SS, TT, ET, CR, VR, and GC as stage selectors that may change source, tests, docs, or history within their documented scope, including the stages they auto-chain.
 - Treat explicit `!!` as a current-story correction and full-flow restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through the RPD sequence without asking for a second implementation approval.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
+- When focused inspection supports every direct-path condition, use the direct path; do not create REQ, AP, AR, or VR artifacts. Do not manufacture uncertainty after the requested behavior, internal boundary, existing pattern, reversibility, and verification are clear. Unknown behavior outside the requested contract does not select planning when the smallest causal change can preserve the existing code path unchanged. A focused regression test or unambiguous verification command is positive evidence, and confirming preserved adjacent behavior may add a regression assertion but does not by itself require planning.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
 - If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
 - A blocking open question about expected behavior does not exempt this from creating AP. Capture the question in REQ's Open Questions, complete AP with the open question reflected in its Decisions or Rollback / Risk, and let AR report `AR blocked` on it rather than stopping after REQ alone.
@@ -46,7 +47,7 @@ This repository uses RPD on itself: its requirements, plans, and E2E specs are t
 
 ## Running the test suite
 
-`.docs/tests/test-intent-based-routing.md` is an executable specification. Its scenarios are Markdown, and each carries a fenced `sh` block of assertions. Scenario 15 is the static contract check and is the fastest way to confirm a change to `SKILL.md` or `README.md` did not break a documented contract; every other scenario dispatches a fresh execution agent against an isolated fixture repository and needs an agent host.
+`.docs/tests/test-intent-based-routing.md` is an executable specification. Its scenarios are Markdown, and each carries a fenced `sh` block of assertions. Scenario 16 is the static contract check and is the fastest way to confirm a change to `SKILL.md` or `README.md` did not break a documented contract; every execution scenario dispatches a fresh agent against an isolated fixture repository and needs an agent host.
 
 Two environment variables control the parts that are machine-specific. Both have working defaults, so neither is required:
 
@@ -55,7 +56,7 @@ Two environment variables control the parts that are machine-specific. Both have
 | `RPD_TMP_ROOT` | `${TMPDIR:-/tmp}` | Base directory for isolated case repositories. Set it if you need runs on a specific volume or a canonical path. |
 | `RPD_SKILL_VALIDATOR` | `$HOME/.codex/skills/.system/skill-creator/scripts/quick_validate.py` | Skill frontmatter validator. When the file is absent the check prints a notice and is skipped rather than failing. |
 
-Scenario 15 also runs `npx skills add` against a temporary directory to prove that an install contains only the runtime skill. That step reaches the network.
+Scenario 16 also runs `npx skills add` against a temporary directory to prove that an install contains only the runtime skill. That step reaches the network.
 
 ## Workflow
 
@@ -71,7 +72,7 @@ Then follow up with `AP` to create the architecture plan and needed E2E specs, `
 
 Typical sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
 
-`AP` should produce a detailed phased plan, not a generic four-item checklist. A useful plan starts with goal, context, decisions, and risks, then breaks implementation into dependency-ordered checkbox phases that name concrete files, modules, behaviors, tests, commands, cleanup/removal checks, and validation evidence. The tasks are for the AI agent to execute, so each checkbox should describe an observable change or verification result specific enough for `SS` to run without rediscovering the architecture. Mermaid diagrams are optional and should be used only when they clarify dependencies, data flow, state transitions, or system boundaries better than text.
+`AP` should produce a detailed phased plan, not a generic four-item checklist. A useful plan starts with goal, context, decisions, and risks, then breaks implementation into dependency-ordered checkbox phases that name concrete files, modules, behaviors, tests, commands, cleanup/removal checks, and validation evidence. The tasks are for the AI agent to execute, so each checkbox should describe an observable change or verification result specific enough for `SS` to run without rediscovering the architecture. Do not add workflow bookkeeping as plan tasks: AR, CR, VR, DD, GC, staging, committing, pushing, or opening a PR are stages or delivery actions. Finish and check every plan task before the final VR decision; DD and GC may run afterward without forcing a post-VR plan edit. Mermaid diagrams are optional and should be used only when they clarify dependencies, data flow, state transitions, or system boundaries better than text.
 
 ### 2. Full end-to-end workflow: `RPD`
 
@@ -83,7 +84,7 @@ RPD Implement JWT authentication
 
 `*` means the review or completion stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. `AP` creates or updates the E2E spec when the story needs one. `RPD` must not enter `SS` until `AR` has reviewed REQ, AP, and any E2E spec, fixed blocking doc/spec flaws in place, and explicitly reported an AR pass.
 
-Create E2E specs for user-facing flows, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested. Classify by the story's subject matter, not by whether today's implementation exposes a live UI, network call, or transport — a story about authentication, payments, routing, data entry, or an external integration needs an E2E spec even as a single pure function with no live surface yet.
+Create E2E specs for user-facing flows, public API and consumer-contract changes, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested. Classify by the story's subject matter, not by whether today's implementation exposes a live UI, network call, or transport — a story about a public API, consumer contract, authentication, payments, routing, data entry, or an external integration needs an E2E spec even as a single pure function with no live surface yet.
 
 ### 3. Correct and restart the current story: `!!`
 
@@ -150,7 +151,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.
 - On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings.
 - Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
-- Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exception is updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
+- Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work after AR, which does not require rerunning AR when every task's text, order, scope, and all other plan content remain unchanged. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
 - RPD uses runtime-enforced read-only review when supported; otherwise it verifies the reviewed snapshot and Git-visible worktree state did not change. Reviewer mutations invalidate the review.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`.
 - `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.
@@ -160,6 +161,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - During `VR`, each REQ acceptance criterion is checked off only when concrete evidence proves it complete. Incomplete or blocked criteria remain unchecked, and `VR` cannot pass until every criterion is checked and evidenced.
 - `VR` changes a previously checked criterion back to unchecked whenever current implementation, test, documentation, or review evidence no longer supports it.
 - Stale, contradictory, or incomplete REQ/AP/test/done docs make `VR` incomplete even when the code works.
+- `VR` does not pass while any AP task remains unchecked. AP contains implementation and verification work, not later DD or GC bookkeeping.
 - When `VR` finds missing work, it updates the existing plan, test spec, and requirement docs when needed, runs `SS → CR* → TT → ET?`, updates affected docs, then reruns `VR` until complete or blocked.
 - `RPD from SS` uses full-flow skip rules; standalone `SS` does not. Skip stages only when artifacts are fresh, match the current story and requirement, and were gated after the latest relevant update.
 - `AR` and `CR` can also be manually triggered.

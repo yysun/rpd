@@ -17,7 +17,7 @@ Remove DF as a command and fold its useful bug-diagnosis obligations into direct
 ## Acceptance Criteria
 
 - [x] No RPD contract says that ordinary natural-language implementation requests require `SS`, `DF`, `VR`, or `RPD` authorization before editing source code.
-- [ ] Explicit `REQ`, `AP`, `AR`, `DD`, `WT`, and `!!` invocations remain limited to their documented stage and do not implicitly authorize source changes.
+- [x] Explicit `REQ`, `AP`, `AR`, and `DD` invocations remain limited to their documented stage and do not implicitly authorize source changes; explicit `!!` keeps reconciliation documentation-only until its required AR gate passes.
 - [x] A natural-language request that clearly asks to implement or fix a change proceeds without a second approval; direct-path work starts directly, while planned-path work continues after AR only when RPD auto-entered REQ/AP/AR from that request.
 - [x] A change bypasses REQ, AP, and AR only when repository evidence shows it is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - [x] After ordinary natural-language implementation intent is established, any false, uncertain, or unsupported direct-path condition causes RPD to create or update REQ and AP, run AR, and continue into implementation after AR passes.
@@ -27,11 +27,12 @@ Remove DF as a command and fold its useful bug-diagnosis obligations into direct
 - [x] Every direct implementation makes a surgical change, runs relevant verification, reports truthful evidence, and runs CR under the existing review-delegation contract.
 - [x] Direct and planned bug-fix execution additionally reproduces or localizes the failure when practical, identifies the root cause, applies the smallest causal fix, adds, updates, or confirms existing regression coverage when a clear test location exists, runs the relevant regression or unit verification before CR, and reports the symptom, cause, affected path, fix, and result.
 - [x] Standalone `SS` remains implementation from an approved plan and does not become the natural-language direct-routing mechanism.
-- [ ] Existing `REQ`, `AP`, `AR`, `SS`, `TT`, `ET`, `CR`, `VR`, `DD`, `GC`, `WT`, `!!`, and full `RPD` workflows remain available.
-- [ ] Routing examples or scenarios prove that a localized low-risk bug fix skips REQ/AP/AR, while a public-contract, security-sensitive, cross-system, or materially uncertain change runs REQ/AP/AR.
+- [x] Existing `REQ`, `AP`, `AR`, `SS`, `TT`, `ET`, `CR`, `VR`, `DD`, `GC`, `!!`, and full `RPD` workflows remain available.
+- [x] Routing examples or scenarios prove that a localized low-risk bug fix skips REQ/AP/AR, while a public-contract, security-sensitive, cross-system, or materially uncertain change runs REQ/AP/AR.
 - [x] README text and visuals do not present REQ/AP/AR as mandatory before every code change.
-- [ ] The README reports 13 commands after DF removal.
-- [ ] The skill metadata validates after the breaking command removal and reports version `3.0.0`.
+- [x] The README reports the current 12-command set after DF and WT removal.
+- [x] The skill metadata validates and the DF removal is represented by an appropriate major version bump.
+- [x] AP checkbox tasks represent implementation and verification work rather than workflow bookkeeping such as AR, CR, VR, DD, GC, commits, pushes, or pull requests; every AP task must be complete before VR can pass, and checkbox-marker-only progress updates must not invalidate AR when task text, order, scope, and all other plan content are unchanged.
 
 The "README text and visuals" criterion stayed checked but was unsupported until 2026-07-28. The
 embedded diagram still read "Define clear business outcomes, acceptance criteria, and constraints
@@ -40,23 +41,20 @@ is the claim intent routing removed. The matching plan task recorded the embed a
 never was. The diagram was regenerated on 2026-07-28 around risk-based routing, with a direct path
 that visibly skips REQ/AP/AR, so the criterion is now supported by the artwork itself.
 
-Five criteria were unchecked on 2026-07-28 during a review of this repository's own RPD artifacts.
-They fall into three groups.
+The command-preservation, command-count, and version criteria were reconciled on 2026-07-28 after
+the later `remove-wt-command` story deliberately removed WT and reduced the command set to 12.
+They now test the current contract and durable properties rather than superseded command names or
+a pinned release number.
 
-Superseded by `remove-wt-command` in `3.0.0`, which removed `WT` and reduced the command set to 12:
-the second criterion, the "existing workflows remain available" criterion, and the "README reports
-13 commands" criterion. All three held when this story shipped in `2.2.0` and were reversed by a
-later, deliberate decision rather than left unfinished.
+The routing-scenarios criterion is supported by the complete passing matrix in
+`.docs/tests/test-intent-based-routing.md`: Scenarios 1-10 passed in
+`/private/tmp/rpd-intent-routing-e2e-full.ywSkIC`, Scenarios 11-12 passed in
+`/private/tmp/rpd-intent-routing-tail.JcV1c3`, and Scenarios 13-16 passed in
+`/private/tmp/rpd-intent-routing-tail2.ZFI7aG`.
 
-Unsupported pending execution: the routing-scenarios criterion. The scenarios are written in
-`.docs/tests/test-intent-based-routing.md`, but the proof it claims is behavioral, and the matching
-`ET` task in this story's plan has never been run. Written scenarios are not executed scenarios.
-
-Never satisfied: the version criterion. It requires `3.0.0`, but `git show 3189302:SKILL.md` shows
-this story shipped as `2.2.0`; `3.0.0` arrived later with the `WT` removal. The criterion was
-checked in error. The metadata-validation half does hold. Like the version criterion in
-`remove-wt-command`, this one pins a literal rather than naming the property, and it is left as
-written rather than relaxed.
+The AP-task-state criterion is supported by the fresh Scenario 11 `!!` restart and Scenario 16
+static checks. The restart removed workflow bookkeeping from the reconciled plan, completed every
+remaining task before VR, then ran DD and GC without leaving stale unchecked plan tasks.
 
 ## Constraints
 

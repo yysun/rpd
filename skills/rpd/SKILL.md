@@ -35,12 +35,13 @@ A concise software development workflow with automatic architecture and code rev
 
 ## Intent Routing
 
-- Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. Explicit CR and VR retain their documented behavior.
+- Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. For these read-only requests, stop after the requested inspection and response: do not create RPD artifacts or invoke AR, CR, or VR unless the user invoked that explicit workflow command. Explicit CR and VR retain their documented behavior.
 - Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage, including any gate that stage owns; they do not implicitly authorize source changes.
 - Treat explicit SS, TT, ET, CR, VR, and GC as stage selectors that may change source, tests, docs, or history within their documented scope, including the stages they auto-chain.
 - Treat explicit `!!` as a current-story correction and full-flow restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through the RPD sequence without asking for a second implementation approval.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
+- When focused inspection supports every direct-path condition, use the direct path; do not create REQ, AP, AR, or VR artifacts. Do not manufacture uncertainty after the requested behavior, internal boundary, existing pattern, reversibility, and verification are clear. Unknown behavior outside the requested contract does not select planning when the smallest causal change can preserve the existing code path unchanged. A focused regression test or unambiguous verification command is positive evidence, and confirming preserved adjacent behavior may add a regression assertion but does not by itself require planning.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
 - If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
 - A blocking open question about expected behavior does not exempt this from creating AP. Capture the question in REQ's Open Questions, complete AP with the open question reflected in its Decisions or Rollback / Risk, and let AR report `AR blocked` on it rather than stopping after REQ alone.
@@ -109,7 +110,7 @@ A concise software development workflow with automatic architecture and code rev
 - Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
 - Use runtime-enforced read-only tools when supported. Otherwise record the reviewed snapshot and Git-visible worktree state, instruct the reviewer not to edit, and verify both are unchanged afterward. If they changed, invalidate the review and stop for safe primary-agent recovery before rerunning it.
 - Keep AR, CR, and VR as serial gates. Do not let a reviewer inspect files while another agent is mutating them.
-- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exception is updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.
+- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work after AR, which does not require rerunning AR when every task's text, order, scope, and all other plan content remain unchanged. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.
 - If subagents are unavailable, run the same checklist in the primary agent and produce the same required output. Delegation changes review independence, not the pass criteria.
 
 ## Command Keywords
@@ -171,6 +172,8 @@ A concise software development workflow with automatic architecture and code rev
     - Do not mark a task complete unless the agent has performed the work and, where applicable, recorded evidence.
     - Prefer tasks that produce a durable repository change or a concrete verification result.
     - Keep phases in logical execution order: discover, decide, change foundation, implement, verify, document.
+    - Do not add workflow bookkeeping as plan tasks: AR, CR, VR, DD, GC, staging, committing, pushing, or opening a PR are command stages or delivery actions, not implementation work.
+    - Finish and check every plan task before the final VR decision. DD and GC may run afterward without creating an impossible post-VR plan edit.
   - Every phase must have enough tasks that `SS` can execute without rediscovering the whole design.
   - Call out dependencies between phases when order is not obvious.
   - Do not use prose-only task lists.
@@ -178,11 +181,12 @@ A concise software development workflow with automatic architecture and code rev
   - Do not add Mermaid for simple task sequences, prose decoration, or plans that are already clear as phased checkboxes.
   - Decide whether the story needs E2E coverage.
   - Create E2E specs for user-facing flows.
+  - Create E2E specs for public API and consumer-contract changes.
   - Create E2E specs for auth, routing, payments, or data entry.
   - Create E2E specs for cross-system integrations.
   - Create E2E specs for regression-prone critical paths.
   - Skip E2E specs for pure internals unless requested.
-  - Classify by the story's subject matter, not by whether today's implementation exposes a live UI, network call, or transport. A story about authentication, payments, routing, data entry, or an external integration requires an E2E spec even when currently implemented as a single pure function with no live surface.
+  - Classify by the story's subject matter, not by whether today's implementation exposes a live UI, network call, or transport. A story about a public API, consumer contract, authentication, payments, routing, data entry, or an external integration requires an E2E spec even when currently implemented as a single pure function with no live surface.
   - If needed, create or update `.docs/tests/test-{name}.md`.
   - Write E2E specs as human-readable scenarios.
   - Do not run tests during AP.
@@ -254,6 +258,7 @@ A concise software development workflow with automatic architecture and code rev
   - Treat stale, contradictory, or incomplete REQ/AP/test/done docs as incomplete work, not as a documentation-only cleanup.
   - Do not treat passing tests as proof of completion when requirements are visibly unmet.
   - Do not pass VR when planned cleanup/removal work, E2E coverage, docs, or review fixes are missing.
+  - Do not pass VR while any AP task remains unchecked. AP must contain implementation and verification work only, not later DD or GC bookkeeping.
   - Report exactly one of `VR passed: all acceptance criteria complete` or `VR incomplete: <summary of missing work>`. Include this exact phrase verbatim even when a caller separately requires its own status format; the two are not interchangeable and neither substitutes for the other.
   - If complete, report the evidence and either stop for standalone `VR` or continue the parent `RPD` sequence.
   - If incomplete, update the existing AP doc with the missing code, test, and documentation work.

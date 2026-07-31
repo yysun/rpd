@@ -1,25 +1,25 @@
 # RPD - Requirements, Planning, and Development Workflow
 
 An AI agent skill that provides a structured workflow for requirements, planning, architecture review, implementation, verification, review, documentation, E2E execution, and commit. Works with Claude Code, Cursor, Copilot, Codex, Windsurf, Cline, Aider, and other AI coding tools.
-![Diagram of RPD routing a request by risk: a direct path that implements, tests, and stops after code review, and a planned path that runs REQ, AP, AR, SS with code review, TT, ET, and VR; below them the full RPD sequence through DD and GC, and the `!!` reconcile-and-restart flow.](rpd-loop.png)
+![Diagram of RPD routing a request by risk: a direct path that implements, tests, and stops after code review, and a planned path that runs REQ, AP, AR, SS with code review, TT, ET, VR, and DD; below them the full RPD sequence through GC, and the `!!` restart path that stops at DD without GC.](rpd-loop.png)
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.5.0`
+**Version:** `3.6.0`
 
 ## Intent Routing
 
 - Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. For these read-only requests, stop after the requested inspection and response: do not create RPD artifacts or invoke AR, CR, or VR unless the user invoked that explicit workflow command. Explicit CR and VR retain their documented behavior.
 - Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage, including any gate that stage owns; they do not implicitly authorize source changes.
 - Treat explicit SS, TT, ET, CR, VR, and GC as stage selectors that may change source, tests, docs, or history within their documented scope, including the stages they auto-chain.
-- Treat explicit `!!` as a current-story correction and full-flow restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through the RPD sequence without asking for a second implementation approval.
+- Treat explicit `!!` as a current-story correction and verified restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through architecture, implementation, verification, and DD without asking for a second implementation approval; `!!` does not authorize GC.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - When focused inspection supports every direct-path condition, use the direct path; do not create REQ, AP, AR, or VR artifacts. Do not manufacture uncertainty after the requested behavior, internal boundary, existing pattern, reversibility, and verification are clear. Unknown behavior outside the requested contract does not select planning when the smallest causal change can preserve the existing code path unchanged. A focused regression test or unambiguous verification command is positive evidence, and confirming preserved adjacent behavior may add a regression assertion but does not by itself require planning.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
 - If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
 - A blocking open question about expected behavior does not exempt this from creating AP. Capture the question in REQ's Open Questions, complete AP with the open question reflected in its Decisions or Rollback / Risk, and let AR report `AR blocked` on it rather than stopping after REQ alone.
-- **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR*` after AR passes, then stop. Run DD and GC only when the user asks for them. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
+- **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR* → DD` after AR passes, then stop. Run DD only after VR passes; if verification remains incomplete or blocked, stop without a completion document. Run GC only when the user asks for it. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
 - **Direct-path terminus**: direct implementation ends after CR and creates no `.docs` artifacts. Run REQ first when the work needs a requirement doc, a plan, a completion doc, or a story that `!!` can later correct.
 - For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
 - For direct or planned bug fixes, additionally reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
@@ -94,9 +94,9 @@ Use `!!` when a requirement changes after a story already exists:
 !! SSO is enterprise-only; remove the fallback login flow
 ```
 
-The command reconciles the latest correction across the current story's REQ, AP, and E2E spec. It removes contradictions, reopens acceptance criteria and plan tasks whose evidence is stale, invalidates the previous AR pass, and then runs `AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
+The command reconciles the latest correction across the current story's REQ, AP, and E2E spec. It removes contradictions, reopens acceptance criteria and plan tasks whose evidence is stale, invalidates the previous AR pass, and then runs `AR* → SS(+CR*) → TT → ET? → VR* → DD`.
 
-`!!` is approval to continue through implementation after AR passes. It stops when no current story can be identified, when the target story is ambiguous, or for the same blockers, destructive actions, and external writes that pause `RPD`.
+`!!` is approval to continue through implementation and documented completion after AR passes. It does not authorize `GC`; invoke `GC` separately to commit the corrected story. It also stops when no current story can be identified, when the target story is ambiguous, or for the same blockers, destructive actions, and external writes that pause `RPD`.
 
 
 ## Artifact paths used by the RPD workflow
@@ -128,12 +128,12 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 | `VR` | Verify the requirement is fully implemented in code and docs; if not, refine AP, run SS, CR, TT, ET when applicable, update docs, then verify again |
 | `DD` | Document completed work as a short PR-style summary |
 | `GC` | Commit changes with clear scope |
-| `!!` | Reconcile the current story with a correction, then restart the RPD flow |
+| `!!` | Reconcile the current story, restart through verified DD, and stop before GC |
 | `RPD` | Full end-to-end flow with AR, CR, and VR loops |
 
 ## Notes
 
-- Explicit commands select their documented stage. `REQ`, `AP`, `AR`, and `DD` do not authorize source changes. `!!` is the exception: its reconciliation step is documentation-only, then it authorizes the remaining RPD flow after AR passes.
+- Explicit commands select their documented stage. `REQ`, `AP`, `AR`, and `DD` do not authorize source changes. `!!` is the exception: its reconciliation step is documentation-only, then it authorizes architecture, implementation, verification, and DD after AR passes, but not GC.
 - A clear natural-language request to implement or fix repository behavior is implementation authorization. Direct-path work starts immediately; planned-path work continues automatically after AR passes.
 - Direct implementation requires concrete repository evidence for every condition in Intent Routing. Any false, uncertain, or unsupported condition selects REQ, AP, and AR first.
 - Every direct implementation runs relevant verification and CR. Bug fixes also localize the failure, identify and fix the root cause, confirm regression coverage, and report symptom, cause, affected path, fix, and result.
@@ -151,7 +151,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.
 - On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings.
 - Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
-- Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work after AR, which does not require rerunning AR when every task's text, order, scope, and all other plan content remain unchanged. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
+- Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work, which does not require rerunning AR or CR when every task's text, order, scope, and all other plan content remain unchanged. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
 - RPD uses runtime-enforced read-only review when supported; otherwise it verifies the reviewed snapshot and Git-visible worktree state did not change. Reviewer mutations invalidate the review.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`.
 - `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.
@@ -160,19 +160,20 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - `VR` checks the original requirement against code behavior, implementation, tests, E2E spec, RPD docs, and review state; passing tests alone are not proof of completion.
 - During `VR`, each REQ acceptance criterion is checked off only when concrete evidence proves it complete. Incomplete or blocked criteria remain unchecked, and `VR` cannot pass until every criterion is checked and evidenced.
 - `VR` changes a previously checked criterion back to unchecked whenever current implementation, test, documentation, or review evidence no longer supports it.
-- Stale, contradictory, or incomplete REQ/AP/test/done docs make `VR` incomplete even when the code works.
+- Stale, contradictory, or incomplete REQ, AP, or test docs make `VR` incomplete even when the code works.
+- Do not require a DD completion document to exist or be current before VR passes. Planned routing, `!!`, and `RPD` run DD only after VR, so a matching completion document is downstream evidence rather than a VR prerequisite.
 - `VR` does not pass while any AP task remains unchecked. AP contains implementation and verification work, not later DD or GC bookkeeping.
 - When `VR` finds missing work, it updates the existing plan, test spec, and requirement docs when needed, runs `SS → CR* → TT → ET?`, updates affected docs, then reruns `VR` until complete or blocked.
 - `RPD from SS` uses full-flow skip rules; standalone `SS` does not. Skip stages only when artifacts are fresh, match the current story and requirement, and were gated after the latest relevant update.
 - `AR` and `CR` can also be manually triggered.
 - `DD` can be invoked as a single-word message.
-- `DD` runs once implementation, verification, and reviews are complete, whether or not the work is committed. Inside `RPD` and `!!` it runs before `GC` so the commit can reference the completion summary.
+- `DD` runs once implementation, verification, and reviews are complete, whether or not the work is committed. Planned routing and `!!` run it after `VR` passes and then stop. Inside `RPD` it runs before `GC` so the commit can reference the completion summary.
 - `DD` writes a short PR-style completion summary with `Summary`, `Verification`, and `Notes`; it should not duplicate the full requirement, plan, test spec, or changelog.
 - `TT` and `ET` stop at the first failure when possible, fix root cause, rerun, and repeat until targeted tests pass.
 - `CR` applies a review-fix-review loop until no major flaws remain; scoped verification may run after CR changes code, but CR does not become TT.
 - Loops stop and report a blocker when failures are unrelated, pre-existing, flaky, ambiguous, or outside the current command's responsibility.
 - `GC` does not run `CR`; it commits only when verification status and intended file scope are clear.
-- `!!` is an out-of-band restart command and is not auto-chained from other stages. It reconciles the current story, invalidates stale completion and AR evidence, then continues through the remaining RPD stages.
+- `!!` is an out-of-band restart command and is not auto-chained from other stages. It reconciles the current story, invalidates stale completion and AR evidence, then continues through DD and stops before GC.
 - Commands trigger when a keyword appears anywhere in the message with command-like intent.
 - Keywords must be surrounded by message boundaries, punctuation, or whitespace.
 - Supported forms include `REQ`, `REQ:`, `REQ-`, `REQ,`, `REQ -`, and `'REQ'`.

@@ -2,10 +2,25 @@
 
 All notable changes to the RPD skill are documented here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
-this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning generally
+follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). `3.6.0` is an owner-directed compatibility exception for the `!!` commit-boundary correction.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
+
+## [3.6.0] - 2026-07-31
+
+### Changed
+
+- Auto-entered planned routing now closes a successfully verified story with `DD`: its terminus is
+  `SS(+CR*) → TT → ET? → VR* → DD`. If `VR` remains incomplete or blocked, the flow
+  stops without writing a misleading completion document.
+- Planned routing still does not run `GC`. Committing remains explicitly authorized by `RPD` or
+  `GC`, while direct routing remains unchanged and stops after `CR` without RPD artifacts.
+- **Compatibility note:** `!!` now reconciles and restarts through `AR* → SS(+CR*) → TT → ET? →
+  VR* → DD`, then stops with uncommitted changes. It no longer runs `GC`; invoke `GC` separately
+  when the corrected story should be committed.
+- Updated the workflow diagram and intent-routing execution/static coverage to distinguish
+  documented completion from committing.
 
 ## [3.5.0] - 2026-07-28
 

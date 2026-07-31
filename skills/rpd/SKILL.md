@@ -18,7 +18,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.5.0`
+**Version:** `3.6.0`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
@@ -38,14 +38,14 @@ A concise software development workflow with automatic architecture and code rev
 - Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. For these read-only requests, stop after the requested inspection and response: do not create RPD artifacts or invoke AR, CR, or VR unless the user invoked that explicit workflow command. Explicit CR and VR retain their documented behavior.
 - Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage, including any gate that stage owns; they do not implicitly authorize source changes.
 - Treat explicit SS, TT, ET, CR, VR, and GC as stage selectors that may change source, tests, docs, or history within their documented scope, including the stages they auto-chain.
-- Treat explicit `!!` as a current-story correction and full-flow restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through the RPD sequence without asking for a second implementation approval.
+- Treat explicit `!!` as a current-story correction and verified restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through architecture, implementation, verification, and DD without asking for a second implementation approval; `!!` does not authorize GC.
 - Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
 - Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
 - When focused inspection supports every direct-path condition, use the direct path; do not create REQ, AP, AR, or VR artifacts. Do not manufacture uncertainty after the requested behavior, internal boundary, existing pattern, reversibility, and verification are clear. Unknown behavior outside the requested contract does not select planning when the smallest causal change can preserve the existing code path unchanged. A focused regression test or unambiguous verification command is positive evidence, and confirming preserved adjacent behavior may add a regression assertion but does not by itself require planning.
 - File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
 - If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
 - A blocking open question about expected behavior does not exempt this from creating AP. Capture the question in REQ's Open Questions, complete AP with the open question reflected in its Decisions or Rollback / Risk, and let AR report `AR blocked` on it rather than stopping after REQ alone.
-- **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR*` after AR passes, then stop. Run DD and GC only when the user asks for them. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
+- **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR* → DD` after AR passes, then stop. Run DD only after VR passes; if verification remains incomplete or blocked, stop without a completion document. Run GC only when the user asks for it. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
 - **Direct-path terminus**: direct implementation ends after CR and creates no `.docs` artifacts. Run REQ first when the work needs a requirement doc, a plan, a completion doc, or a story that `!!` can later correct.
 - For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
 - For direct or planned bug fixes, additionally reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
@@ -71,7 +71,7 @@ A concise software development workflow with automatic architecture and code rev
 - **Auto-chaining**: direct implementation and SS run required verification, then auto-run CR.
 - **Completion loop**: VR verifies the requirement against code behavior, tests, and docs. If incomplete, refine AP, run SS, CR, TT, ET when applicable, update docs, then rerun VR.
 - REQ, AP, AR, and DD are documentation-only.
-- The reconciliation step of `!!` is documentation-only; after reconciliation, `!!` restarts the current story through the normal RPD architecture, implementation, verification, completion, and commit stages.
+- The reconciliation step of `!!` is documentation-only; after reconciliation, `!!` restarts the current story through architecture, implementation, verification, and completion documentation, then stops without committing.
 - `!!` is an out-of-band restart trigger.
 - Never auto-chain `!!` from another command.
 - **Planned routing**: auto-run REQ then AP when any direct-path condition is false, uncertain, or unsupported.
@@ -110,7 +110,7 @@ A concise software development workflow with automatic architecture and code rev
 - Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
 - Use runtime-enforced read-only tools when supported. Otherwise record the reviewed snapshot and Git-visible worktree state, instruct the reviewer not to edit, and verify both are unchanged afterward. If they changed, invalidate the review and stop for safe primary-agent recovery before rerunning it.
 - Keep AR, CR, and VR as serial gates. Do not let a reviewer inspect files while another agent is mutating them.
-- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work after AR, which does not require rerunning AR when every task's text, order, scope, and all other plan content remain unchanged. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.
+- The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work, which does not require rerunning AR or CR when every task's text, order, scope, and all other plan content remain unchanged. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.
 - If subagents are unavailable, run the same checklist in the primary agent and produce the same required output. Delegation changes review independence, not the pass criteria.
 
 ## Command Keywords
@@ -188,7 +188,9 @@ A concise software development workflow with automatic architecture and code rev
   - Skip E2E specs for pure internals unless requested.
   - Classify by the story's subject matter, not by whether today's implementation exposes a live UI, network call, or transport. A story about a public API, consumer contract, authentication, payments, routing, data entry, or an external integration requires an E2E spec even when currently implemented as a single pure function with no live surface.
   - If needed, create or update `.docs/tests/test-{name}.md`.
-  - Write E2E specs as human-readable scenarios.
+  - Write E2E specs as human-readable Given/When/Then scenarios.
+  - Each `## Scenario` section must contain one or more non-empty Given, When, and Then steps, grouped in that order.
+  - Allow ordinary Markdown list markers followed by whitespace and blank lines between those steps.
   - Do not run tests during AP.
   - Automatically run `AR` after updating the plan. The AR gate belongs to AP's documented stage, and both stay documentation-only.
   - Do not enter `SS` until `AR` has explicitly passed.
@@ -255,7 +257,8 @@ A concise software development workflow with automatic architecture and code rev
   - Change `- [x]` back to `- [ ]` whenever current implementation, test, documentation, or review evidence no longer supports the criterion. Never preserve a stale checkmark.
   - Treat the checkbox as recorded status, not proof. Keep the evidence in the VR matrix and do not weaken or rewrite a criterion merely to check it off.
   - Do not pass VR until every acceptance criterion in the REQ is checked and supported by evidence appropriate to that criterion.
-  - Treat stale, contradictory, or incomplete REQ/AP/test/done docs as incomplete work, not as a documentation-only cleanup.
+  - Stale, contradictory, or incomplete REQ, AP, or test docs are incomplete work, not a documentation-only cleanup.
+  - Do not require a DD completion document to exist or be current before VR passes. Planned routing, `!!`, and `RPD` run DD only after VR, so a matching completion document is downstream evidence rather than a VR prerequisite.
   - Do not treat passing tests as proof of completion when requirements are visibly unmet.
   - Do not pass VR when planned cleanup/removal work, E2E coverage, docs, or review fixes are missing.
   - Do not pass VR while any AP task remains unchecked. AP must contain implementation and verification work only, not later DD or GC bookkeeping.
@@ -304,7 +307,7 @@ A concise software development workflow with automatic architecture and code rev
 - **DD**: Document completed work in `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
   - Can be invoked as a single-word `DD` message.
   - Run once the story's implementation, verification, and reviews are complete, whether or not it is committed; do not fire mid-stream.
-  - Inside `RPD` and `!!`, DD runs before `GC` so the commit can reference the completion summary.
+  - Planned routing and `!!` run DD after VR passes and then stop. Inside `RPD`, DD runs before `GC` so the commit can reference the completion summary.
   - Write a short PR-style completion summary.
   - Keep it concise: roughly 5-12 bullets total.
   - Required sections:
@@ -316,7 +319,7 @@ A concise software development workflow with automatic architecture and code rev
   - Mention unresolved risks, skipped checks, or unrelated failures only when they are real and specific.
   - Do not implement code or edit source files during DD.
 - **!!**: Reconcile the current story from the latest user message and restart the RPD flow.
-  - Treat `!!` as approval to reconcile the current story and continue the full workflow without approval between stages.
+  - Treat `!!` as approval to reconcile the current story and continue through verified completion documentation without approval between stages. It does not authorize GC.
   - Resolve the current story using the Current story rules in Conventions.
   - Stop for clarification when no current story exists or the target story is ambiguous; do not create an unrelated story from the correction alone.
   - Treat the latest user message as a requirement change, clarification, or scope correction.
@@ -329,7 +332,7 @@ A concise software development workflow with automatic architecture and code rev
   - Record new non-goals, removed scope, changed validation, and affected phases when the clarification changes implementation direction.
   - Uncheck acceptance criteria and reopen plan tasks when the correction invalidates their existing completion evidence.
   - Treat the reconciled REQ, AP, and optional test spec as materially updated; any earlier AR pass is stale.
-  - After reconciliation, run `AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
+  - After reconciliation, run `AR* → SS(+CR*) → TT → ET? → VR* → DD`, then stop without committing.
   - Do not edit source files during reconciliation or before AR explicitly passes.
   - Apply the same pause conditions, review loops, completion loop, E2E decision, and truthful verification rules as `RPD`.
 - **RPD**: Run the full end-to-end workflow from a requirement input.

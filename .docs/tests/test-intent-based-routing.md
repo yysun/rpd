@@ -67,12 +67,13 @@ assert_gwt_scenarios() {
     open my $handle, "<", $path or exit 1;
     local $/;
     my $document = <$handle>;
-    my @scenario = ($document =~ /^## Scenario(?=[: \t]|\r?(?:\n|\z))[^\n]*(?:\n|\z)(.*?)(?=^## |\z)/msg);
+    $document =~ s/\r\n?/\n/g;
+    my @scenario = ($document =~ /^## Scenario(?=[: \t]|\r?(?:\n|\z))[^\n]*(?:\n|\z)(.*?)(?=^##(?:[ \t]+|$)|\z)/msg);
     exit 1 if @scenario < $minimum;
     for my $scenario (@scenario) {
       my @steps;
       for my $line (split /\n/, $scenario) {
-        if ($line =~ /^[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*(Given|When|Then):?\*\*[ \t]*:?[ \t]*(.*)|(Given|When|Then)(?:[ \t]+|[ \t]*:[ \t]*)(.*))$/i) {
+        if ($line =~ /^[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*(Given|When|Then):?\*\*(?:[ \t]+|[ \t]*:[ \t]*)(.*)|(Given|When|Then)(?:[ \t]+|[ \t]*:[ \t]*)(.*))$/i) {
           my $label = lc($1 // $3);
           my $body = $2 // $4;
           $body =~ s/^\s+|\s+$//g;
@@ -100,20 +101,28 @@ assert_public_status_semantics() {
     open my $handle, "<", $path or exit 1;
     local $/;
     my $document = <$handle>;
-    my @scenario = ($document =~ /^## Scenario(?=[: \t]|\r?(?:\n|\z))[^\n]*(?:\n|\z)(.*?)(?=^## |\z)/msg);
+    $document =~ s/\r\n?/\n/g;
+    my @scenario = ($document =~ /^## Scenario(?=[: \t]|\r?(?:\n|\z))[^\n]*(?:\n|\z)(.*?)(?=^##(?:[ \t]+|$)|\z)/msg);
     for my $scenario (@scenario) {
-      my @step;
-      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*(?:Given|When|Then):?\*\*[ \t]*:?[ \t]*([^\n]+)|(?:Given|When|Then)(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
-        push @step, $1 // $2;
+      my @given;
+      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Given:?\*\*(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+)|Given(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
+        push @given, $1 // $2;
+      }
+      my @when;
+      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*When:?\*\*(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+)|When(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
+        push @when, $1 // $2;
       }
       my @then;
-      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Then:?\*\*[ \t]*:?[ \t]*([^\n]+)|Then(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
+      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Then:?\*\*(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+)|Then(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
         push @then, $1 // $2;
       }
-      exit 0 if grep(/(?:public|status)/i, @step)
-        && grep(/(?:request|call|get)/i, @step)
-        && grep(!/\b(?:not|never|no|rejects?|unsupported|unready)\b/i
-          && /\A(?:the[ \t]+)?(?:public[ \t]+)?(?:response|status[ \t]+response)\b.*\bstate\b`?[ \t]*(?::|=|is|equals?)[ \t]*["\x27\x60]?ready\b/i, @then);
+      exit 0 if grep(/\A(?:an?[ \t]+|the[ \t]+)?(?:consumer|client|caller)\b[ \t]+(?:calls?|gets?)[ \t]+(?:the[ \t]+)?public[ \t]+\x60?[A-Za-z_][A-Za-z0-9_.()\-]*\x60?[ \t]+entry[ \t]+point[ \t]*[.!]?[ \t]*\z/i
+          || /\A(?:an?[ \t]+|the[ \t]+)?(?:consumer|client|caller)\b[ \t]+(?:requests?|calls?|gets?|reads?)[ \t]+(?:the[ \t]+)?public[ \t]+status[ \t]+(?:api|service|endpoint|response|request)[ \t]*[.!]?[ \t]*\z/i, @given)
+        && grep(/\A(?:the[ \t]+)?(?:service|status|response)\b[ \t]+(?:is[ \t]+)?ready\b[ \t]*[.!]?[ \t]*\z/i
+          || /\A(?:the[ \t]+)?(?:consumer|client|caller)\b[ \t]+(?:calls?|gets?)[ \t]+(?:the[ \t]+)?public[ \t]+\x60?[A-Za-z_][A-Za-z0-9_.()\-]*\x60?[ \t]+entry[ \t]+point[ \t]*[.!]?[ \t]*\z/i
+          || /\A(?:the[ \t]+)?(?:consumer|client|caller)\b[ \t]+(?:requests?|calls?|gets?|reads?)[ \t]+(?:the[ \t]+)?public[ \t]+status[ \t]+(?:api|service|endpoint|response|request)[ \t]*[.!]?[ \t]*\z/i, @when)
+        && grep(/\A(?:the[ \t]+)?(?:public[ \t]+)?(?:response|status[ \t]+response)\b[ \t]+state\b[ \t]*(?::|=|is|equals?)[ \t]*["\x27\x60]?ready\b[ \t"\x27\x60]*[.!]?[ \t]*\z/i
+          || /\A(?:the[ \t]+)?response[ \t]+is[ \t]+exactly[ \t]+\x60?\{[ \t]*state[ \t]*:[ \t]*["\x27]ready["\x27][ \t]*\}\x60?[ \t]*[.!]?[ \t]*\z/i, @then);
     }
     exit 1;
   ' "${scenario_file}"
@@ -126,29 +135,35 @@ assert_security_auth_semantics() {
     open my $handle, "<", $path or exit 1;
     local $/;
     my $document = <$handle>;
-    my @scenario = ($document =~ /^## Scenario(?=[: \t]|\r?(?:\n|\z))[^\n]*(?:\n|\z)(.*?)(?=^## |\z)/msg);
+    $document =~ s/\r\n?/\n/g;
+    my @scenario = ($document =~ /^## Scenario(?=[: \t]|\r?(?:\n|\z))[^\n]*(?:\n|\z)(.*?)(?=^##(?:[ \t]+|$)|\z)/msg);
     my (@disabled_index, @enabled_index);
     for my $index (0 .. $#scenario) {
       my $scenario = $scenario[$index];
       my @given;
-      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Given:?\*\*[ \t]*:?[ \t]*([^\n]+)|Given(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
+      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Given:?\*\*(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+)|Given(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
         push @given, $1 // $2;
       }
       my @then;
-      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Then:?\*\*[ \t]*:?[ \t]*([^\n]+)|Then(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
+      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Then:?\*\*(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+)|Then(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
         push @then, $1 // $2;
       }
-      push @disabled_index, $index if grep(!/\b(?:not|never|no|rather|instead)\b/i
-        && (/\A(?:an?[ \t]+)?disabled[ \t]+user\b/i
-          || /\A(?:an?[ \t]+)?user\b.*\bdisabled\b`?(?:[ \t]+property)?[ \t]+(?:is|equals?|set[ \t]+to)[ \t]+`?true\b`?/i), @given) && grep {
+      my @when;
+      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*When:?\*\*(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+)|When(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
+        push @when, $1 // $2;
+      }
+      my $operational = grep(/\A(?:the[ \t]+)?authentication\b[ \t]+(?:(?:is[ \t]+)?(?:attempted|executed|called|performed)|runs?)(?:[ \t]+with[ \t]+(?:the[ \t]+)?supplied[ \t]+credential(?:[ \t]+(?:\x60[^\x60\n]+\x60|[A-Za-z0-9._-]+))?)?[ \t]*[.!]?[ \t]*\z/i, @when);
+      push @disabled_index, $index if $operational && grep(!/\b(?:not|never|no|rather|instead)\b/i
+        && (/\A(?:an?[ \t]+|the[ \t]+)?disabled[ \t]+user(?:[ \t]+supplies?[ \t]+(?:an?[ \t]+|the[ \t]+)?matching[ \t]+credential)?[ \t]*[.!]?[ \t]*\z/i
+          || /\A(?:an?[ \t]+|the[ \t]+)?user[ \t]+whose[ \t]+`?disabled`?[ \t]+property[ \t]+(?:is|equals?)[ \t]+`?true\b`?(?:[ \t]+and[ \t]+whose[ \t]+stored[ \t]+credential[ \t]+(?:is|equals?)[ \t]+(?:\x60[^\x60\n]+\x60|[A-Za-z0-9._-]+))?[ \t]*[.!]?[ \t]*\z/i), @given) && grep {
         !/(?:\bnot\b|\bnever\b|\bcannot\b|\b[[:alpha:]]+n.t\b).*?(?:\breturns?\b|\bresult[ \t]+(?:is|equals?)\b)/i
-          && /(?:\breturns?\b|\bresult[ \t]+(?:is|equals?)\b)[ \t]+`?false`?/i
+          && /\A(?:the[ \t]+)?authentication\b[ \t]+(?:returns?\b|result[ \t]+(?:is|equals?)\b)[ \t]+`?false\b`?[ \t]*[.!]?[ \t]*\z/i
       } @then;
-      push @enabled_index, $index if grep(!/\b(?:not|never|no|rather|instead)\b/i
-        && (/\A(?:an?[ \t]+)?enabled[ \t]+user\b/i
-          || /\A(?:an?[ \t]+)?user\b.*\bdisabled\b`?(?:[ \t]+property)?[ \t]+(?:is|equals?|set[ \t]+to)[ \t]+`?false\b`?/i), @given) && grep {
+      push @enabled_index, $index if $operational && grep(!/\b(?:not|never|no|rather|instead)\b/i
+        && (/\A(?:an?[ \t]+|the[ \t]+)?enabled[ \t]+user(?:[ \t]+supplies?[ \t]+(?:an?[ \t]+|the[ \t]+)?matching[ \t]+credential)?[ \t]*[.!]?[ \t]*\z/i
+          || /\A(?:an?[ \t]+|the[ \t]+)?user[ \t]+whose[ \t]+`?disabled`?[ \t]+property[ \t]+(?:is|equals?)[ \t]+`?false\b`?(?:[ \t]+and[ \t]+whose[ \t]+stored[ \t]+credential[ \t]+(?:is|equals?)[ \t]+(?:\x60[^\x60\n]+\x60|[A-Za-z0-9._-]+))?[ \t]*[.!]?[ \t]*\z/i), @given) && grep {
         !/(?:\bnot\b|\bnever\b|\bcannot\b|\b[[:alpha:]]+n.t\b).*?(?:\breturns?\b|\bresult[ \t]+(?:is|equals?)\b)/i
-          && /(?:\breturns?\b|\bresult[ \t]+(?:is|equals?)\b)[ \t]+`?true`?/i
+          && /\A(?:the[ \t]+)?authentication\b[ \t]+(?:returns?\b|result[ \t]+(?:is|equals?)\b)[ \t]+`?true\b`?[ \t]*[.!]?[ \t]*\z/i
       } @then;
     }
     for my $disabled_index (@disabled_index) {
@@ -167,24 +182,30 @@ assert_external_contract_semantics() {
     open my $handle, "<", $path or exit 1;
     local $/;
     my $document = <$handle>;
-    my @scenario = ($document =~ /^## Scenario(?=[: \t]|\r?(?:\n|\z))[^\n]*(?:\n|\z)(.*?)(?=^## |\z)/msg);
+    $document =~ s/\r\n?/\n/g;
+    my @scenario = ($document =~ /^## Scenario(?=[: \t]|\r?(?:\n|\z))[^\n]*(?:\n|\z)(.*?)(?=^##(?:[ \t]+|$)|\z)/msg);
     my ($v2, $retry) = (0, 0);
     for my $scenario (@scenario) {
       my @then;
-      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Then:?\*\*[ \t]*:?[ \t]*([^\n]+)|Then(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
+      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*Then:?\*\*(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+)|Then(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
         push @then, $1 // $2;
       }
-      $v2 ||= grep {
+      my @when;
+      while ($scenario =~ /(?:\A|\n)[ \t]*(?:[-*+][ \t]+|[0-9]+[.)][ \t]+)?(?:\*\*When:?\*\*(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+)|When(?:[ \t]+|[ \t]*:[ \t]*)([^\n]+))/ig) {
+        push @when, $1 // $2;
+      }
+      my $operational = grep(/\A(?:an?[ \t]+|the[ \t]+)?\x60?(?:request|delivery|webhook(?:[ _-]?request)?)\x60?[ \t]+(?:(?:is[ \t]+)?(?:built|run|executed|sent|delivered)|(?:builds?|sends?|delivers?|executes?)(?:[ \t]+(?:the[ \t]+)?(?:delivery[ \t]+)?request)?|runs?)[ \t]*[.!]?[ \t]*\z/i, @when);
+      $v2 ||= $operational && grep {
         !/\b(?:not|never|no|rejects?|unsupported|disabled)\b/i
-          && (/\A(?:the[ \t]+)?(?:request[ \t]+)?(?:endpoint|url)\b[ \t]+(?:uses?|targets?|is|equals?)[ \t]+`?(?:https?:\/\/[^ \t`]+\/)?v2(?:\/|\b)/i
-            || /\A(?:the[ \t]+)?delivery\b[ \t]+(?:uses?|targets?)[ \t]+`?v2(?:\/|\b)/i
-            || /\A(?:the[ \t]+)?delivery\b[ \t]+sends?[ \t]+to[ \t]+`?v2(?:\/|\b)/i)
+          && (/\A(?:the[ \t]+)?(?:request[ \t]+)?(?:endpoint|url)\b[ \t]+(?:uses?|targets?|is|equals?)[ \t]+`?(?:https?:\/\/[^ \t`]+\/)?v2(?:\/[^ \t`]+)?`?[ \t]*[.!]?[ \t]*\z/i
+            || /\A(?:the[ \t]+)?delivery\b[ \t]+(?:uses?|targets?)[ \t]+`?v2`?[ \t]*[.!]?[ \t]*\z/i
+            || /\A(?:the[ \t]+)?delivery\b[ \t]+sends?[ \t]+to[ \t]+`?v2`?[ \t]*[.!]?[ \t]*\z/i)
       } @then;
-      $retry ||= grep {
+      $retry ||= $operational && grep {
         !/\b(?:not|never|no|rejects?|unsupported|disabled|disallowed|forbidden|zero)\b/i
-          && (/\A(?:the[ \t]+)?(?:delivery(?:[ \t]+request)?|request|webhook|service|implementation)\b[ \t]+(?:preserves?|enables?|keeps?|maintains?|uses?)[ \t]+(?:the[ \t]+)?retr(?:y|ies)\b/i
-            || /\A(?:the[ \t]+)?(?:delivery(?:[ \t]+request)?|request|webhook|service|implementation)\b[ \t]+allows?[ \t]+(?:(?:[0-9]+|one|two|three|four|five)[ \t]+)?retr(?:y|ies)\b/i
-            || /\Aretr(?:y|ies)\b(?:[ \t]+behavior)?[ \t]+(?:is|are)[ \t]+(?:preserved|allowed|enabled|maintained)\b/i)
+          && (/\A(?:the[ \t]+)?(?:delivery(?:[ \t]+request)?|request|webhook|service|implementation)\b[ \t]+(?:preserves?|enables?|keeps?|maintains?|uses?)[ \t]+(?:the[ \t]+)?retr(?:y|ies)\b(?:[ \t]+behavior)?[ \t]*[.!]?[ \t]*\z/i
+            || /\A(?:the[ \t]+)?(?:delivery(?:[ \t]+request)?|request|webhook|service|implementation)\b[ \t]+allows?[ \t]+(?:(?:[0-9]+|one|two|three|four|five)[ \t]+)?retr(?:y|ies)\b(?:[ \t]+attempts?)?[ \t]*[.!]?[ \t]*\z/i
+            || /\Aretr(?:y|ies)\b(?:[ \t]+behavior)?[ \t]+(?:is|are)[ \t]+(?:preserved|allowed|enabled|maintained)\b[ \t]*[.!]?[ \t]*\z/i)
       } @then;
     }
     exit($v2 && $retry ? 0 : 1);
@@ -1177,6 +1198,14 @@ printf '%s\n' \
   > "${E2E_ROOT}/label-prefix-lookalikes.md"
 ! assert_gwt_scenarios "${E2E_ROOT}/label-prefix-lookalikes.md" 1
 printf '%s\n' \
+  '## Scenario: fused bold labels' \
+  '**Given**a consumer calls the public status API' \
+  '**When**the consumer requests readiness' \
+  '**Then**the response state is ready' \
+  > "${E2E_ROOT}/fused-bold-labels.md"
+! assert_gwt_scenarios "${E2E_ROOT}/fused-bold-labels.md" 1
+! assert_public_status_semantics "${E2E_ROOT}/fused-bold-labels.md"
+printf '%s\n' \
   '## Scenario: malformed public outcome decoy' \
   '- Given a consumer calls the public status API' \
   '- When the consumer requests readiness' \
@@ -1201,6 +1230,100 @@ printf '%s\n' \
   > "${E2E_ROOT}/opposite-public-value.md"
 assert_gwt_scenarios "${E2E_ROOT}/opposite-public-value.md" 1
 ! assert_public_status_semantics "${E2E_ROOT}/opposite-public-value.md"
+printf '%s\n' \
+  '## Scenario: documentation-only public suffix' \
+  '- Given a consumer calls the public status API' \
+  '- When documentation is reviewed' \
+  '- Then the response state is ready in documentation only' \
+  > "${E2E_ROOT}/documentation-suffix-public.md"
+assert_gwt_scenarios "${E2E_ROOT}/documentation-suffix-public.md" 1
+! assert_public_status_semantics "${E2E_ROOT}/documentation-suffix-public.md"
+printf '%s\n' \
+  '## Scenario: documentation-only public context' \
+  '- Given documentation describes a consumer call to public status' \
+  '- When documentation is reviewed' \
+  '- Then the response state is ready' \
+  > "${E2E_ROOT}/documentation-context-public.md"
+assert_gwt_scenarios "${E2E_ROOT}/documentation-context-public.md" 1
+! assert_public_status_semantics "${E2E_ROOT}/documentation-context-public.md"
+printf '%s\n' \
+  '## Scenario: negated public precondition' \
+  '- Given no public status request is made' \
+  '- When the clock ticks' \
+  '- Then the response state is ready' \
+  '' \
+  '## Scenario: unrelated public trigger' \
+  '- Given a consumer has a public status request' \
+  '- When the clock ticks' \
+  '- Then the response state is ready' \
+  > "${E2E_ROOT}/non-operational-public-context.md"
+assert_gwt_scenarios "${E2E_ROOT}/non-operational-public-context.md" 2
+! assert_public_status_semantics "${E2E_ROOT}/non-operational-public-context.md"
+printf '%s\n' \
+  '## Scenario: caller cannot execute' \
+  '- Given a consumer calls the public status API' \
+  '- When the caller cannot call the service' \
+  '- Then the response state is ready' \
+  '' \
+  '## Scenario: service contraction negation' \
+  '- Given a consumer calls the public status API' \
+  "- When the service isn't ready" \
+  '- Then the response state is ready' \
+  > "${E2E_ROOT}/negated-public-execution.md"
+assert_gwt_scenarios "${E2E_ROOT}/negated-public-execution.md" 2
+! assert_public_status_semantics "${E2E_ROOT}/negated-public-execution.md"
+printf '%s\n' \
+  '## Scenario: public Given documentation suffix' \
+  '- Given a consumer calls the public status API in documentation only' \
+  '- When the service is ready' \
+  '- Then the response state is ready' \
+  > "${E2E_ROOT}/public-given-suffix.md"
+assert_gwt_scenarios "${E2E_ROOT}/public-given-suffix.md" 1
+! assert_public_status_semantics "${E2E_ROOT}/public-given-suffix.md"
+printf '%s\n' \
+  '## Scenario: negated public endpoint access' \
+  '- Given a consumer reads no public status endpoint' \
+  '- When the service is ready' \
+  '- Then the response state is ready' \
+  '' \
+  '## Scenario: documentation public endpoint access' \
+  '- Given a consumer reads documentation for the public status endpoint' \
+  '- When the service is ready' \
+  '- Then the response state is ready' \
+  > "${E2E_ROOT}/invalid-public-access.md"
+assert_gwt_scenarios "${E2E_ROOT}/invalid-public-access.md" 2
+! assert_public_status_semantics "${E2E_ROOT}/invalid-public-access.md"
+printf '%s\n' \
+  '## Scenario: negated public When access' \
+  '- Given a consumer calls the public status API' \
+  '- When the caller calls no public endpoint' \
+  '- Then the response state is ready' \
+  '' \
+  '## Scenario: documentation public When access' \
+  '- Given a consumer calls the public status API' \
+  '- When the caller reads documentation for the public endpoint' \
+  '- Then the response state is ready' \
+  > "${E2E_ROOT}/invalid-public-when-access.md"
+assert_gwt_scenarios "${E2E_ROOT}/invalid-public-when-access.md" 2
+! assert_public_status_semantics "${E2E_ROOT}/invalid-public-when-access.md"
+printf '%s\n' \
+  '## Scenario: public state cannot be exposed' \
+  '- Given a consumer calls the public status API' \
+  '- When the service is ready' \
+  '- Then the response cannot expose state is ready' \
+  '' \
+  '## Scenario: public state contraction' \
+  '- Given a consumer calls the public status API' \
+  '- When the service is ready' \
+  "- Then the response can't confirm state is ready" \
+  '' \
+  '## Scenario: public state absent' \
+  '- Given a consumer calls the public status API' \
+  '- When the service is ready' \
+  '- Then the response lacks state is ready' \
+  > "${E2E_ROOT}/absent-public-outcomes.md"
+assert_gwt_scenarios "${E2E_ROOT}/absent-public-outcomes.md" 3
+! assert_public_status_semantics "${E2E_ROOT}/absent-public-outcomes.md"
 printf '%s\n' \
   '## Scenario: malformed disabled outcome decoy' \
   '- Given a disabled user supplies a matching credential' \
@@ -1269,6 +1392,97 @@ printf '%s\n' \
   > "${E2E_ROOT}/opposite-security-preconditions.md"
 assert_gwt_scenarios "${E2E_ROOT}/opposite-security-preconditions.md" 2
 ! assert_security_auth_semantics "${E2E_ROOT}/opposite-security-preconditions.md"
+printf '%s\n' \
+  '## Scenario: documentation-only disabled result' \
+  '- Given a disabled user supplies a matching credential' \
+  '- When documentation is reviewed' \
+  '- Then documentation reports authentication returns false' \
+  '' \
+  '## Scenario: documentation-only enabled result' \
+  '- Given an enabled user supplies a matching credential' \
+  '- When documentation is reviewed' \
+  '- Then documentation reports authentication returns true' \
+  > "${E2E_ROOT}/documentation-suffix-security.md"
+assert_gwt_scenarios "${E2E_ROOT}/documentation-suffix-security.md" 2
+! assert_security_auth_semantics "${E2E_ROOT}/documentation-suffix-security.md"
+printf '%s\n' \
+  '## Scenario: documentation-only disabled context' \
+  '- Given a disabled user supplies a matching credential' \
+  '- When documentation is reviewed' \
+  '- Then authentication returns false' \
+  '' \
+  '## Scenario: documentation-only enabled context' \
+  '- Given an enabled user supplies a matching credential' \
+  '- When documentation is reviewed' \
+  '- Then authentication returns true' \
+  > "${E2E_ROOT}/documentation-context-security.md"
+assert_gwt_scenarios "${E2E_ROOT}/documentation-context-security.md" 2
+! assert_security_auth_semantics "${E2E_ROOT}/documentation-context-security.md"
+printf '%s\n' \
+  '## Scenario: disabled auth never runs' \
+  '- Given a disabled user supplies a matching credential' \
+  '- When authentication never runs' \
+  '- Then authentication returns false' \
+  '' \
+  '## Scenario: enabled auth never runs' \
+  '- Given an enabled user supplies a matching credential' \
+  '- When authentication never runs' \
+  '- Then authentication returns true' \
+  > "${E2E_ROOT}/negated-security-execution.md"
+assert_gwt_scenarios "${E2E_ROOT}/negated-security-execution.md" 2
+! assert_security_auth_semantics "${E2E_ROOT}/negated-security-execution.md"
+printf '%s\n' \
+  '## Scenario: disabled auth cannot run' \
+  '- Given a disabled user supplies a matching credential' \
+  '- When authentication cannot run' \
+  '- Then authentication returns false' \
+  '' \
+  '## Scenario: enabled auth cannot run' \
+  '- Given an enabled user supplies a matching credential' \
+  '- When authentication cannot run' \
+  '- Then authentication returns true' \
+  > "${E2E_ROOT}/cannot-security-execution.md"
+assert_gwt_scenarios "${E2E_ROOT}/cannot-security-execution.md" 2
+! assert_security_auth_semantics "${E2E_ROOT}/cannot-security-execution.md"
+printf '%s\n' \
+  '## Scenario: disabled auth runtime suffix' \
+  '- Given a disabled user supplies a matching credential' \
+  '- When authentication runs in documentation only' \
+  '- Then authentication returns false' \
+  '' \
+  '## Scenario: enabled auth runtime suffix' \
+  '- Given an enabled user supplies a matching credential' \
+  '- When authentication runs in documentation only' \
+  '- Then authentication returns true' \
+  > "${E2E_ROOT}/security-runtime-suffix.md"
+assert_gwt_scenarios "${E2E_ROOT}/security-runtime-suffix.md" 2
+! assert_security_auth_semantics "${E2E_ROOT}/security-runtime-suffix.md"
+printf '%s\n' \
+  '## Scenario: disabled credential suffix' \
+  '- Given a disabled user supplies a matching credential' \
+  '- When authentication runs with the supplied credential in documentation only' \
+  '- Then authentication returns false' \
+  '' \
+  '## Scenario: enabled credential suffix' \
+  '- Given an enabled user supplies a matching credential' \
+  '- When authentication runs with the supplied credential cannot be used' \
+  '- Then authentication returns true' \
+  > "${E2E_ROOT}/invalid-credential-complements.md"
+assert_gwt_scenarios "${E2E_ROOT}/invalid-credential-complements.md" 2
+! assert_security_auth_semantics "${E2E_ROOT}/invalid-credential-complements.md"
+printf '%s\n' \
+  '## Scenario: contradictory disabled adjective' \
+  '- Given a disabled user who is actually enabled' \
+  '- When authentication runs' \
+  '- Then authentication returns false' \
+  '' \
+  '## Scenario: contradictory enabled adjective' \
+  '- Given an enabled user who is actually disabled' \
+  '- When authentication runs' \
+  '- Then authentication returns true' \
+  > "${E2E_ROOT}/contradictory-security-adjectives.md"
+assert_gwt_scenarios "${E2E_ROOT}/contradictory-security-adjectives.md" 2
+! assert_security_auth_semantics "${E2E_ROOT}/contradictory-security-adjectives.md"
 printf '%s\n' \
   '## Scenario: prose-only v2 decoy' \
   '- Given a partner contract exists' \
@@ -1377,6 +1591,71 @@ printf '%s\n' \
 assert_gwt_scenarios "${E2E_ROOT}/documentation-prefixed-external.md" 2
 ! assert_external_contract_semantics "${E2E_ROOT}/documentation-prefixed-external.md"
 printf '%s\n' \
+  '## Scenario: documentation-only v2 suffix' \
+  '- Given a partner contract exists' \
+  '- When documentation is reviewed' \
+  '- Then the endpoint uses v2 in documentation only' \
+  '' \
+  '## Scenario: documentation-only retry suffix' \
+  '- Given documentation exists' \
+  '- When the wording is reviewed' \
+  '- Then delivery uses retry terminology' \
+  > "${E2E_ROOT}/documentation-suffix-external.md"
+assert_gwt_scenarios "${E2E_ROOT}/documentation-suffix-external.md" 2
+! assert_external_contract_semantics "${E2E_ROOT}/documentation-suffix-external.md"
+printf '%s\n' \
+  '## Scenario: documentation-only v2 context' \
+  '- Given a partner contract exists' \
+  '- When documentation is reviewed' \
+  '- Then the endpoint uses v2' \
+  '' \
+  '## Scenario: documentation-only retry context' \
+  '- Given documentation exists' \
+  '- When documentation is reviewed' \
+  '- Then delivery uses retry' \
+  > "${E2E_ROOT}/documentation-context-external.md"
+assert_gwt_scenarios "${E2E_ROOT}/documentation-context-external.md" 2
+! assert_external_contract_semantics "${E2E_ROOT}/documentation-context-external.md"
+printf '%s\n' \
+  '## Scenario: v2 webhook never runs' \
+  '- Given a partner contract exists' \
+  '- When the webhook request never runs' \
+  '- Then the endpoint uses v2' \
+  '' \
+  '## Scenario: retry delivery never runs' \
+  '- Given a delivery exists' \
+  '- When delivery never runs' \
+  '- Then delivery uses retry' \
+  > "${E2E_ROOT}/negated-external-execution.md"
+assert_gwt_scenarios "${E2E_ROOT}/negated-external-execution.md" 2
+! assert_external_contract_semantics "${E2E_ROOT}/negated-external-execution.md"
+printf '%s\n' \
+  '## Scenario: v2 webhook cannot run' \
+  '- Given a partner contract exists' \
+  '- When the webhook request cannot run' \
+  '- Then the endpoint uses v2' \
+  '' \
+  '## Scenario: retry delivery cannot run' \
+  '- Given a delivery exists' \
+  '- When delivery cannot run' \
+  '- Then delivery uses retry' \
+  > "${E2E_ROOT}/cannot-external-execution.md"
+assert_gwt_scenarios "${E2E_ROOT}/cannot-external-execution.md" 2
+! assert_external_contract_semantics "${E2E_ROOT}/cannot-external-execution.md"
+printf '%s\n' \
+  '## Scenario: v2 external runtime suffix' \
+  '- Given a partner contract exists' \
+  '- When webhookRequest builds in documentation only' \
+  '- Then the endpoint uses v2' \
+  '' \
+  '## Scenario: retry external runtime suffix' \
+  '- Given a delivery exists' \
+  '- When delivery runs in documentation only' \
+  '- Then delivery uses retry' \
+  > "${E2E_ROOT}/external-runtime-suffix.md"
+assert_gwt_scenarios "${E2E_ROOT}/external-runtime-suffix.md" 2
+! assert_external_contract_semantics "${E2E_ROOT}/external-runtime-suffix.md"
+printf '%s\n' \
   '## Scenario: v2 mention only' \
   '- Given a partner contract exists' \
   '- When a request is built' \
@@ -1441,6 +1720,32 @@ printf '%s\n' \
   'Then the endpoint uses v2' \
   > "${E2E_ROOT}/sibling-heading-escape.md"
 ! assert_gwt_scenarios "${E2E_ROOT}/sibling-heading-escape.md" 1
+printf '%b\n' \
+  '## Scenario: empty before tab sibling heading' \
+  '' \
+  '##\tNotes' \
+  'Given a partner webhook exists' \
+  'When webhookRequest builds the request' \
+  'Then the endpoint uses v2' \
+  > "${E2E_ROOT}/tab-sibling-heading-escape.md"
+! assert_gwt_scenarios "${E2E_ROOT}/tab-sibling-heading-escape.md" 1
+printf '%b' \
+  '## Scenario: empty before bare CRLF sibling\r\n' \
+  '\r\n' \
+  '##\r\n' \
+  'Given a partner webhook exists\r\n' \
+  'When webhookRequest builds the request\r\n' \
+  'Then the endpoint uses v2\r\n' \
+  > "${E2E_ROOT}/bare-crlf-sibling-heading-escape.md"
+! assert_gwt_scenarios "${E2E_ROOT}/bare-crlf-sibling-heading-escape.md" 1
+printf '%b' \
+  '## Scenario: valid CRLF public contract\r\n' \
+  '- Given a consumer calls the public status API\r\n' \
+  '- When the service is ready\r\n' \
+  '- Then the response state is ready\r\n' \
+  > "${E2E_ROOT}/valid-crlf-public.md"
+assert_gwt_scenarios "${E2E_ROOT}/valid-crlf-public.md" 1
+assert_public_status_semantics "${E2E_ROOT}/valid-crlf-public.md"
 printf '%s\n' \
   '## Scenario: valid before trailing empty' \
   'Given a partner webhook exists' \

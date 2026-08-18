@@ -181,12 +181,13 @@ test -z "$(rg -F '→ GC' "${RPD_ROOT}/bang-contract.txt" || true)"
 
 ```sh
 set -e
-test "$(rg -cF '**Version:** `3.6.0`' skills/rpd/SKILL.md)" = 1
-test "$(rg -cF '**Version:** `3.6.0`' README.md)" = 1
+test "$(rg -cF '**Version:** `3.7.0`' skills/rpd/SKILL.md)" = 1
+test "$(rg -cF '**Version:** `3.7.0`' README.md)" = 1
 rg -F 'planned path that runs REQ, AP, AR, SS with code review, TT, ET, VR, and DD' README.md
 rg -F 'full RPD sequence through GC' README.md
 rg -F 'restart path that stops at DD without GC' README.md
 perl -0777 -ne 'exit(/## \[3\.6\.0\].*?planned routing.*?DD.*?(?:!!).*?(?:no longer|does not|without).*?(?:GC|commit)/is ? 0 : 1)' CHANGELOG.md
+perl -0777 -ne 'exit(/## \[3\.7\.0\].*?review round.*?reviewer.*?(?:reused|new).*?(?:not applicable|primary-agent)/is ? 0 : 1)' CHANGELOG.md
 rg -F '`3.6.0` is an owner-directed compatibility exception' CHANGELOG.md
 test -s rpd-loop.png
 file rpd-loop.png | rg -F 'PNG image data'
@@ -352,4 +353,88 @@ rg -F 'assert_cr_final internal-bug' .docs/tests/test-tier2-evidence-integrity.m
 rg -F 'assert_ar_before_code security-fix' .docs/tests/test-tier2-evidence-integrity.md
 rg -F 'assert_dd_after_vr security-fix disabled-user-auth.md ABSENT' .docs/tests/test-tier2-evidence-integrity.md
 rg -F "! rg -q '^GC:'" .docs/tests/test-tier2-evidence-integrity.md
+rg -F 'review round: [0-9]+; reviewer: (reused|new|not applicable)' .docs/tests/test-tier2-evidence-integrity.md
+test "$(rg -c '^\s*rg -e .\^..*review round: \[0-9\]\+; reviewer:' .docs/tests/test-tier2-evidence-integrity.md)" -ge 2
+```
+## Scenario 0.7 - Review-round disclosure is stated everywhere and preserves the existing contract
+
+Asserts the additive disclosure — round number and reviewer reuse — in the skill, the README, and the
+changelog, and asserts that every guarantee the disclosure must not weaken is still stated verbatim.
+
+```sh
+set -e
+RPD_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/rpd-tier0-disclosure.XXXXXX")"
+perl -0777 -ne 'if (/(?:\A|\n)## Independent Review Delegation\n(.*?)(?=\n## )/s) { print $1; exit 0 } exit 1' \
+  skills/rpd/SKILL.md > "${RPD_ROOT}/delegation.txt"
+test -s "${RPD_ROOT}/delegation.txt"
+
+# The disclosure itself: round counting, line shape, and the three reviewer states.
+rg -F 'Count the stage'"'"'s first review as round 1' "${RPD_ROOT}/delegation.txt"
+rg -F '`<STAGE> review round: <n>; reviewer: <reused|new|not applicable>`' "${RPD_ROOT}/delegation.txt"
+rg -F 'on its own line' "${RPD_ROOT}/delegation.txt"
+rg -F 'That line begins with the stage token' "${RPD_ROOT}/delegation.txt"
+rg -F 'A stage'"'"'s round 1 is always `reviewer: new`' "${RPD_ROOT}/delegation.txt"
+rg -F 'Report `reviewer: reused` when the round used the same independent subagent as the previous round' "${RPD_ROOT}/delegation.txt"
+rg -F 'Report `reviewer: not applicable (primary-agent review)`' "${RPD_ROOT}/delegation.txt"
+rg -Fi 'never report a reused reviewer for a round no independent subagent performed' "${RPD_ROOT}/delegation.txt"
+
+# A replacement at round 2 or later names one of the already-permitted conditions.
+rg -Fi 'At round 2 or later' "${RPD_ROOT}/delegation.txt"
+for condition in \
+  'previous reviewer unavailable' \
+  'previous reviewer contributed to the artifacts under review' \
+  'previous reviewer modified the reviewed snapshot'
+do
+  rg -F "${condition}" "${RPD_ROOT}/delegation.txt"
+  rg -F "${condition}" README.md
+done
+
+# The disclosure is a report, not a budget.
+rg -F 'a report, not a budget' "${RPD_ROOT}/delegation.txt"
+rg -F 'a report, not a budget' README.md
+rg -Fi 'no round limit, no findings cap, and no fix-only rerun' "${RPD_ROOT}/delegation.txt"
+rg -Fi 'no round limit, no findings cap, and no fix-only rerun' README.md
+
+# The line shape carries no verdict wording, so a caller still parses one verdict line per stage.
+perl -0777 -ne 'if (/(\Q`<STAGE> review round: <n>; reviewer: <reused|new|not applicable>`\E)/) { print $1; exit 0 } exit 1' \
+  "${RPD_ROOT}/delegation.txt" > "${RPD_ROOT}/line-shape.txt"
+test -z "$(rg -ni 'passed|fixed|blocked|incomplete' "${RPD_ROOT}/line-shape.txt" || true)"
+
+# Each review command requires the disclosure alongside its unchanged terminal phrase.
+for command in AR CR VR
+do
+  RPD_STAGE="${command}" perl -0777 -ne 'my $command = $ENV{RPD_STAGE}; if (/(?:\A|\n)- \*\*\Q$command\E\*\*:(.*?)(?=\n- \*\*[A-Z!]+\*\*:)/s) { print $1; exit 0 } exit 1' \
+    skills/rpd/SKILL.md > "${RPD_ROOT}/${command}-section.txt"
+  rg -F 'Report the round-and-reuse disclosure defined in Independent Review Delegation on its own line alongside that phrase' \
+    "${RPD_ROOT}/${command}-section.txt"
+  rg -F "\`${command} review round: " "${RPD_ROOT}/${command}-section.txt"
+done
+
+# The terminal phrases are unchanged and still the sole verdict.
+rg -F 'Report exactly one of `AR passed: no blocking architecture flaws`, `AR fixed: <summary>; rerun result passed`, or `AR blocked: <flaw and why it cannot be resolved in place>`.' "${RPD_ROOT}/AR-section.txt"
+rg -F 'Report exactly one of `CR passed: no major findings` or `CR fixed: <summary>; rerun result passed`.' "${RPD_ROOT}/CR-section.txt"
+rg -F 'Report exactly one of `VR passed: all acceptance criteria complete` or `VR incomplete: <summary of missing work>`.' "${RPD_ROOT}/VR-section.txt"
+
+# Preserved guarantees the disclosure must not weaken.
+for guarantee in \
+  'Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.' \
+  'On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage'"'"'s full checklist; do not limit the review to prior findings.' \
+  'return every material finding in priority order without a findings cap' \
+  'Start it with no inherited authoring conversation when the runtime supports that option' \
+  'Do not use full-history inheritance.' \
+  'Keep AR, CR, and VR as serial gates.' \
+  'work read-only' \
+  'The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision.' \
+  'If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.'
+do
+  rg -F "${guarantee}" skills/rpd/SKILL.md
+done
+
+# README states the same disclosure behavior as the skill.
+rg -F '`<STAGE> review round: <n>; reviewer: <reused|new|not applicable>`' README.md
+rg -F 'reviewer: not applicable (primary-agent review)' README.md
+rg -Fi 'still carries the verdict by itself' README.md
+rg -F 'on its own line beginning with the stage token' README.md
+rg -F 'A stage'"'"'s round 1 is always `reviewer: new`' README.md
+rg -F 'Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.' README.md
 ```

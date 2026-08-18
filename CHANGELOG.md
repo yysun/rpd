@@ -7,6 +7,35 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). `3.6.0` is a
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.7.0] - 2026-08-18
+
+### Added
+
+- `AR`, `CR`, and `VR` results now disclose which round within that stage produced them and whether
+  that round's reviewer was reused from the previous round or newly started, reported on its own
+  line as `<STAGE> review round: <n>; reviewer: <reused|new|not applicable>`. The reuse obligation
+  already existed, but nothing reported whether it was honored, so a stage that silently swapped in
+  a fresh reviewer each round looked identical to one that was converging.
+- A reviewer newly started at round 2 or later must name the permitted replacement condition that
+  applied — previous reviewer unavailable, contributed to the artifacts under review, or modified
+  the reviewed snapshot — so an unexplained replacement is visible in the result.
+- A primary-agent review, whether because delegation is unavailable or because `AR` was classified
+  low-risk, reports the round and `reviewer: not applicable (primary-agent review)` instead of
+  claiming a reused reviewer.
+- Tier 0 gains Scenario 0.7, which asserts the disclosure contract across the skill, the README, and
+  this changelog, and asserts that the preserved guarantees — the terminal phrases, the reuse
+  obligation, no findings cap, full-checklist reruns, clean-context independence, serial read-only
+  review, primary-agent ownership, and the unresolvable-blocker stop rule — are still stated
+  verbatim. Tier 2 now asserts the disclosure line in each execution agent's own result log.
+
+### Unchanged
+
+- The exact terminal phrases are untouched and remain the only verdict a caller needs to parse; the
+  disclosure line is additive and contains no verdict wording.
+- No round limit, no findings cap, and no fix-only rerun is introduced. A rerun still judges the
+  complete new stable snapshot against the stage's full checklist, and an unresolvable blocking
+  finding still stops the loop instead of triggering another review of an unchanged snapshot.
+
 ## [3.6.0] - 2026-07-31
 
 ### Changed

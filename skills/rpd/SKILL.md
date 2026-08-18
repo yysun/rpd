@@ -18,7 +18,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.6.0`
+**Version:** `3.7.0`
 **Repository:** https://github.com/yysun/rpd
 
 A concise software development workflow with automatic architecture and code review loops.
@@ -108,6 +108,11 @@ A concise software development workflow with automatic architecture and code rev
 - Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.
 - On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings.
 - Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
+- Disclose the review round and reviewer continuity in every AR, CR, and VR stage result. Count the stage's first review as round 1 and each rerun within that stage as the next round.
+- Report the disclosure on its own line, additional to and separate from the stage's terminal phrase. That line begins with the stage token and takes the shape `<STAGE> review round: <n>; reviewer: <reused|new|not applicable>`, for example `CR review round: 2; reviewer: reused`. The terminal phrase is unchanged and still carries the verdict by itself; the disclosure line must never contain verdict wording, alter that phrase, or substitute for it.
+- Report `reviewer: reused` when the round used the same independent subagent as the previous round within the stage, and `reviewer: new` when it started a different one. A stage's round 1 is always `reviewer: new` when an independent subagent performed it, and names no replacement condition, because there is no previous round to reuse. At round 2 or later, `new` must name the permitted replacement condition in parentheses: `previous reviewer unavailable`, `previous reviewer contributed to the artifacts under review`, or `previous reviewer modified the reviewed snapshot`.
+- Report `reviewer: not applicable (primary-agent review)` when the primary agent ran the checklist because delegation was unavailable or the AR was classified low-risk. Still report the round, and never report a reused reviewer for a round no independent subagent performed.
+- Treat the disclosure as a report, not a budget. It imposes no round limit, no findings cap, and no fix-only rerun; it does not weaken the reuse obligation; and it does not change that an unresolvable blocking finding stops the loop and is reported instead of causing another review of an unchanged snapshot.
 - Use runtime-enforced read-only tools when supported. Otherwise record the reviewed snapshot and Git-visible worktree state, instruct the reviewer not to edit, and verify both are unchanged afterward. If they changed, invalidate the review and stop for safe primary-agent recovery before rerunning it.
 - Keep AR, CR, and VR as serial gates. Do not let a reviewer inspect files while another agent is mutating them.
 - The primary agent owns edits, fixes, tests, documentation updates, completion loops, and the final pass decision. Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work, which does not require rerunning AR or CR when every task's text, order, scope, and all other plan content remain unchanged. If a blocking finding cannot be resolved, stop and report the blocker instead of reviewing the unchanged snapshot again.
@@ -207,6 +212,7 @@ A concise software development workflow with automatic architecture and code rev
   - Do not pass AR with unresolved blocking questions, missing validation, or a plan that `SS` cannot execute directly.
   - Do not create a separate review doc.
   - Report exactly one of `AR passed: no blocking architecture flaws`, `AR fixed: <summary>; rerun result passed`, or `AR blocked: <flaw and why it cannot be resolved in place>`. Include this exact phrase verbatim in the final response even when a caller separately requires its own status format; the two are not interchangeable and neither substitutes for the other.
+  - Report the round-and-reuse disclosure defined in Independent Review Delegation on its own line alongside that phrase, for example `AR review round: 1; reviewer: new`. The disclosure is additive and does not change the phrase or the verdict it carries.
   - `AR blocked` is not a pass. Stop the flow, apply the loop blocker rules, and report the blocker instead of entering `SS`.
   - Apply the review loop.
   - Do not implement code or edit source files during standalone AR.
@@ -247,6 +253,7 @@ A concise software development workflow with automatic architecture and code rev
   - After CR changes code, run scoped verification when clear.
   - Report unrelated or pre-existing failures.
   - Report exactly one of `CR passed: no major findings` or `CR fixed: <summary>; rerun result passed`. Include this exact phrase verbatim even when a caller separately requires its own status format; the two are not interchangeable and neither substitutes for the other.
+  - Report the round-and-reuse disclosure defined in Independent Review Delegation on its own line alongside that phrase, for example `CR review round: 2; reviewer: reused`. The disclosure is additive and does not change the phrase or the verdict it carries.
   - Do not convert CR into TT.
 - **VR**: Verify the requirement is fully implemented in both code and docs.
   - Use the Independent Review Delegation rules; when available, have a read-only independent subagent build the acceptance-criteria evidence matrix. The primary agent owns all follow-up edits and the completion loop.
@@ -263,6 +270,7 @@ A concise software development workflow with automatic architecture and code rev
   - Do not pass VR when planned cleanup/removal work, E2E coverage, docs, or review fixes are missing.
   - Do not pass VR while any AP task remains unchecked. AP must contain implementation and verification work only, not later DD or GC bookkeeping.
   - Report exactly one of `VR passed: all acceptance criteria complete` or `VR incomplete: <summary of missing work>`. Include this exact phrase verbatim even when a caller separately requires its own status format; the two are not interchangeable and neither substitutes for the other.
+  - Report the round-and-reuse disclosure defined in Independent Review Delegation on its own line alongside that phrase, for example `VR review round: 1; reviewer: not applicable (primary-agent review)`. The disclosure is additive and does not change the phrase or the verdict it carries.
   - If complete, report the evidence and either stop for standalone `VR` or continue the parent `RPD` sequence.
   - If incomplete, update the existing AP doc with the missing code, test, and documentation work.
   - If missing work changes E2E coverage, update or create `.docs/tests/test-{name}.md`.

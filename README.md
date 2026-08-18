@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.6.0`
+**Version:** `3.7.0`
 
 ## Intent Routing
 
@@ -151,6 +151,10 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.
 - On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings.
 - Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
+- Every `AR`, `CR`, and `VR` result also states which round within that stage produced it and whether that round's reviewer was reused or newly started, on its own line beginning with the stage token, in the shape `<STAGE> review round: <n>; reviewer: <reused|new|not applicable>`. The disclosure is additive: the terminal phrase is unchanged and still carries the verdict by itself, so a caller reads the verdict from that phrase alone.
+- A stage's round 1 is always `reviewer: new` when an independent subagent performed it, and names no replacement condition. A reviewer newly started at round 2 or later names the permitted replacement condition that applied: `previous reviewer unavailable`, `previous reviewer contributed to the artifacts under review`, or `previous reviewer modified the reviewed snapshot`.
+- When the primary agent runs the checklist because delegation is unavailable or the `AR` was low-risk, the result still states the round and reports `reviewer: not applicable (primary-agent review)` rather than claiming a reused reviewer.
+- The disclosure is a report, not a budget. It adds no round limit, no findings cap, and no fix-only rerun, and an unresolvable blocking finding still stops the loop and is reported instead of causing another review of an unchanged snapshot.
 - Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work, which does not require rerunning AR or CR when every task's text, order, scope, and all other plan content remain unchanged. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
 - RPD uses runtime-enforced read-only review when supported; otherwise it verifies the reviewed snapshot and Git-visible worktree state did not change. Reviewer mutations invalidate the review.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`.

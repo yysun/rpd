@@ -15,6 +15,9 @@ Two cases, chosen to cover both termini exactly once:
 | `internal-bug` | `internal-bug` | direct, ends after CR | CR | `assert_cr_final` |
 | `security-fix` | `security-fix` | planned, `AR → SS → TT → ET → VR → DD` | AR, CR, VR | `assert_ar_before_code`, `assert_cr_final`, `assert_dd_after_vr` |
 
+Both cases additionally require each review stage's round-and-reuse disclosure line in the agent's
+own result log, matching `review round: [0-9]+; reviewer: (reused|new|not applicable)`.
+
 ## Common Execution Procedure
 
 1. Run setup and every assertion block with Bash fail-fast semantics: `set -euo pipefail`.
@@ -122,6 +125,8 @@ Expected behavior:
 - No REQ, AP, AR, or other `.docs/` artifact is created.
 - The final response reports symptom, root cause, affected path, fix, exact verification, and CR
   result.
+- The CR result carries its round-and-reuse disclosure line. Nothing in the evidence suffix asks for
+  it; `SKILL.md` alone requires it, so the assertion measures whether the contract was followed.
 
 `assert_cr_final` is the anti-fabrication check: the CR reviewer's recorded snapshot must equal the
 final repository snapshot, and the `.verification-ran` digest must equal a freshly recomputed digest,
@@ -142,6 +147,7 @@ do
 done
 rg -Fx 'Verification: PASS — npm test (exit 0)' "${E2E_ROOT}/internal-bug-result.log"
 rg -Fx 'CR: PASS — no major findings' "${E2E_ROOT}/internal-bug-result.log"
+rg -e '^CR review round: [0-9]+; reviewer: (reused|new|not applicable)' "${E2E_ROOT}/internal-bug-result.log"
 assert_cr_final internal-bug
 assert_no_review_phase internal-bug AR
 assert_no_review_phase internal-bug VR
@@ -169,6 +175,8 @@ Expected behavior:
   VR, and DD all run.
 - DD writes exactly one scoped completion document, and only after VR passes.
 - Git history remains at the seed commit; no `GC:` claim appears.
+- Each of the AR, CR, and VR results carries its own round-and-reuse disclosure line. The evidence
+  suffix never asks for those lines; `SKILL.md` alone requires them.
 
 The mutant block replaces the prose-matching semantic assertions the previous suite used. It proves
 the agent's regression test actually pins the behavior, rather than proving that the generated
@@ -230,6 +238,10 @@ rg -Fx 'Verification: PASS — npm test (exit 0)' "${E2E_ROOT}/security-fix-resu
 rg -Fx 'CR: PASS — no major findings' "${E2E_ROOT}/security-fix-result.log"
 rg -Fx 'VR: PASS — all acceptance criteria complete' "${E2E_ROOT}/security-fix-result.log"
 rg -x 'ET: PASS — (\.docs/tests/)?test-disabled-user-auth\.md' "${E2E_ROOT}/security-fix-result.log"
+for review_stage in AR CR VR
+do
+  rg -e "^${review_stage} review round: [0-9]+; reviewer: (reused|new|not applicable)" "${E2E_ROOT}/security-fix-result.log"
+done
 assert_ar_before_code security-fix
 assert_cr_final security-fix
 assert_dd_after_vr security-fix disabled-user-auth.md ABSENT

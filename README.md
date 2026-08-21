@@ -5,24 +5,10 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.7.0`
+**Version:** `3.8.0`
 
-## Intent Routing
-
-- Interpret ordinary natural-language requests by their requested outcome. Requests limited to explanation, diagnosis, review, requirements, planning, or architecture review do not authorize implementation. For these read-only requests, stop after the requested inspection and response: do not create RPD artifacts or invoke AR, CR, or VR unless the user invoked that explicit workflow command. Explicit CR and VR retain their documented behavior.
-- Treat explicit REQ, AP, AR, and DD invocations as stage selectors. Perform only the documented stage, including any gate that stage owns; they do not implicitly authorize source changes.
-- Treat explicit SS, TT, ET, CR, VR, and GC as stage selectors that may change source, tests, docs, or history within their documented scope, including the stages they auto-chain.
-- Treat explicit `!!` as a current-story correction and verified restart. Reconcile the current story's REQ, AP, and E2E spec, then continue through architecture, implementation, verification, and DD without asking for a second implementation approval; `!!` does not authorize GC.
-- Treat a natural-language request that clearly asks to implement, fix, add, remove, or change repository behavior as implementation authorization. Do not require a special command token or ask for a second approval.
-- Use direct implementation only when focused repository evidence shows that the work is localized, follows an existing pattern, changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior, is readily reversible, and has clear expected behavior and verification.
-- When focused inspection supports every direct-path condition, use the direct path; do not create REQ, AP, AR, or VR artifacts. Do not manufacture uncertainty after the requested behavior, internal boundary, existing pattern, reversibility, and verification are clear. Unknown behavior outside the requested contract does not select planning when the smallest causal change can preserve the existing code path unchanged. A focused regression test or unambiguous verification command is positive evidence, and confirming preserved adjacent behavior may add a regression assertion but does not by itself require planning.
-- File count, estimated effort, and textual diff size are not routing criteria. A one-line security or public-contract change requires planned routing; a multi-file internal mechanical change may qualify for direct implementation.
-- If any direct-path condition is false, uncertain, or unsupported, use planned routing: create or update REQ and AP, then run AR.
-- A blocking open question about expected behavior does not exempt this from creating AP. Capture the question in REQ's Open Questions, complete AP with the open question reflected in its Decisions or Rollback / Risk, and let AR report `AR blocked` on it rather than stopping after REQ alone.
-- **Planned-routing terminus**: when planning was auto-entered from a natural-language implementation request, continue `SS(+CR*) → TT → ET? → VR* → DD` after AR passes, then stop. Run DD only after VR passes; if verification remains incomplete or blocked, stop without a completion document. Run GC only when the user asks for it. Explicit standalone REQ, AP, or AR still stops after its documented stage instead of continuing.
-- **Direct-path terminus**: direct implementation ends after CR and creates no `.docs` artifacts. Run REQ first when the work needs a requirement doc, a plan, a completion doc, or a story that `!!` can later correct.
-- For every direct implementation, make a surgical change, run relevant verification, report truthful evidence, and run CR under the existing independent-review rules.
-- For direct or planned bug fixes, additionally reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
+The installable [skills/rpd/SKILL.md](skills/rpd/SKILL.md) is the normative workflow contract. This
+README explains why RPD exists and how to use it.
 
 ## Why RPD
 
@@ -37,56 +23,72 @@ RPD gives you 12 workflow commands you can use in conversation to drive a system
 
 ## Quick Start
 
-```bash
-npx skills add yysun/rpd --skill rpd
+```text
+Install RPD skill from GitHub yysun/rpd
 ```
 
 The installable skill lives in `skills/rpd/`. Repository documentation, the workflow diagram, and everything under `.docs/` stay outside that directory and are not copied into client skill installations.
 
-This repository uses RPD on itself: its requirements, plans, and E2E specs are tracked in git under `.docs/`, following the same artifact paths the skill writes in any project. The intent-routing suite lives at `.docs/tests/test-intent-based-routing.md` with its fixtures in `.docs/tests/fixtures/`.
+This repository uses RPD on itself: its requirements, plans, and maintainer checks are tracked in git under `.docs/`, following the same artifact paths the skill writes in any project. The compact maintainer suite lives under `.docs/tests/`.
 
-## Running the test suite
-
-`.docs/tests/test-intent-based-routing.md` is an executable specification. Its scenarios are Markdown, and each carries a fenced `sh` block of assertions. Scenario 16 is the static contract check and is the fastest way to confirm a change to `SKILL.md` or `README.md` did not break a documented contract; every execution scenario dispatches a fresh agent against an isolated fixture repository and needs an agent host.
-
-Two environment variables control the parts that are machine-specific. Both have working defaults, so neither is required:
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `RPD_TMP_ROOT` | `${TMPDIR:-/tmp}` | Base directory for isolated case repositories. Set it if you need runs on a specific volume or a canonical path. |
-| `RPD_SKILL_VALIDATOR` | `$HOME/.codex/skills/.system/skill-creator/scripts/quick_validate.py` | Skill frontmatter validator. When the file is absent the check prints a notice and is skipped rather than failing. |
-
-Scenario 16 also runs `npx skills add` against a temporary directory to prove that an install contains only the runtime skill. That step reaches the network.
+Maintainers: test instructions live in [.docs/tests/README.md](.docs/tests/README.md).
 
 ## Workflow
 
-### 1. Targeted command workflow
+### 1. Recommended: Full RPD workflow
 
-Start with `REQ` to describe a new requirement, then use the other commands as needed to create the plan, review architecture, implement step-by-step, run tests, review code, execute story E2E specs, verify requirement completion, document completion, and commit.
+Use `RPD` as the default for feature work when you want the workflow to carry a requirement through
+planning, implementation, verification, documentation, and commit. It runs automatic review loops for
+architecture, code, and requirement completion without pausing for human approval between stages,
+except for clarification, blockers, destructive actions, or external writes.
 
-```
-REQ Implement JWT authentication
-```
-
-Then follow up with `AP` to create the architecture plan and needed E2E specs, `AR` to review and fix blocking requirement, plan, or E2E spec flaws before implementation, `SS` to implement step-by-step, `TT` to run unit and integration tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's E2E scenarios when applicable, `VR` to verify the original requirement is fully implemented, `DD` to document completed work, and `GC` to commit with a clear message.
-
-Typical sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
-
-`AP` should produce a detailed phased plan, not a generic four-item checklist. A useful plan starts with goal, context, decisions, and risks, then breaks implementation into dependency-ordered checkbox phases that name concrete files, modules, behaviors, tests, commands, cleanup/removal checks, and validation evidence. The tasks are for the AI agent to execute, so each checkbox should describe an observable change or verification result specific enough for `SS` to run without rediscovering the architecture. Do not add workflow bookkeeping as plan tasks: AR, CR, VR, DD, GC, staging, committing, pushing, or opening a PR are stages or delivery actions. Finish and check every plan task before the final VR decision; DD and GC may run afterward without forcing a post-VR plan edit. Mermaid diagrams are optional and should be used only when they clarify dependencies, data flow, state transitions, or system boundaries better than text.
-
-### 2. Full end-to-end workflow: `RPD`
-
-Use `RPD` to run the full end-to-end workflow from a requirement input with automatic review loops for architecture review, code review, and requirement completion. `RPD` is approval to run the sequence without human approval between stages, except for clarification, blockers, destructive actions, or external writes. Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`.
-
-```
+```text
 RPD Implement JWT authentication
 ```
 
+Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
+
 `*` means the review or completion stage loops until no major issues remain. `?` means the stage runs only when the current story has a matching E2E test spec. `AP` creates or updates the E2E spec when the story needs one. `RPD` must not enter `SS` until `AR` has reviewed REQ, AP, and any E2E spec, fixed blocking doc/spec flaws in place, and explicitly reported an AR pass.
 
-Create E2E specs for user-facing flows, public API and consumer-contract changes, auth, routing, payments, data entry, cross-system integrations, and regression-prone critical paths. Skip them for pure internals unless requested. Classify by the story's subject matter, not by whether today's implementation exposes a live UI, network call, or transport — a story about a public API, consumer contract, authentication, payments, routing, data entry, or an external integration needs an E2E spec even as a single pure function with no live surface yet.
+Create E2E specs for executable user flows, observable public or external boundaries, and
+regression-prone critical paths. Skip them for pure internals without such a surface unless requested.
 
-### 3. Correct and restart the current story: `!!`
+### 2. Targeted command workflow
+
+Use an individual command when you want to run or resume a particular stage instead of starting the
+complete workflow. For example, start requirement work with:
+
+```text
+REQ Implement JWT authentication
+```
+
+Follow with `AP` to create the architecture plan and needed E2E specs, `AR` to review and fix blocking
+requirement, plan, or E2E spec flaws, `SS` to implement step-by-step, `TT` to run unit and integration
+tests and fix failures, `CR` to review code, `ET` to execute and fix applicable story E2E scenarios,
+`VR` to verify requirement completion, `DD` to document completed work, and `GC` to commit.
+
+Typical sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
+
+`AP` should be proportional to the work. A useful plan records the relevant goal, context, decisions,
+ordered executable checkbox tasks, validation, and real risks. It has no mandatory phase count. Each
+task should name a concrete file, behavior, artifact, or command so `SS` can execute it without
+rediscovering the architecture. AR, CR, VR, DD, GC, staging, and committing are workflow stages or
+delivery actions, not plan tasks.
+
+### 3. Automatic routing for ordinary requests
+
+You do not need a workflow command for every request:
+
+- Explanation, diagnosis, review, requirements, and planning requests stay read-only.
+- A clear request to implement or fix something authorizes implementation without a special command.
+- Localized, reversible work that follows an existing pattern and changes no protected boundary takes
+  the direct path: implement, verify, and stop after CR.
+- Protected or uncertain work takes the planned path through REQ, AP, AR, implementation, testing,
+  verification, and DD. Explicit `RPD` continues through GC.
+- Explicit commands select their named stage; the installable skill defines the exact authorization
+  and risk rules.
+
+### 4. Correct and restart the current story: `!!`
 
 Use `!!` when a requirement changes after a story already exists:
 
@@ -135,28 +137,21 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 
 - Explicit commands select their documented stage. `REQ`, `AP`, `AR`, and `DD` do not authorize source changes. `!!` is the exception: its reconciliation step is documentation-only, then it authorizes architecture, implementation, verification, and DD after AR passes, but not GC.
 - A clear natural-language request to implement or fix repository behavior is implementation authorization. Direct-path work starts immediately; planned-path work continues automatically after AR passes.
-- Direct implementation requires concrete repository evidence for every condition in Intent Routing. Any false, uncertain, or unsupported condition selects REQ, AP, and AR first.
+- Direct implementation requires concrete repository evidence for every low-risk condition in the normative skill contract. Any false, uncertain, or unsupported condition selects REQ, AP, and AR first.
 - Every direct implementation runs relevant verification and CR. Bug fixes also localize the failure, identify and fix the root cause, confirm regression coverage, and report symptom, cause, affected path, fix, and result.
 - Standalone `SS` implements an existing approved plan; it is not the natural-language direct-routing mechanism. When the current story has no plan, or its plan has not passed `AR` since its latest material update, `SS` switches to planned routing instead of improvising an implementation.
 - A new `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
 - Acceptance criteria should name the property they depend on rather than a literal value a later release invalidates. Because `VR` may not relax a criterion to check it off, a criterion pinned to a literal version, count, or path can become permanently unsatisfiable while the work itself is complete. Prefer `a major version bump accompanies the breaking change` over `the version is 3.0.0`.
 - `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
 - `AR blocked: <flaw and why it cannot be resolved in place>` is the third possible `AR` result. It is not a pass: the flow stops and reports the blocker instead of entering `SS`. A blocking open question about expected behavior still requires AP to be created; the question is captured in REQ and AP, and AR is the mechanism that reports the block.
-- `CR` reports exactly one of `CR passed: no major findings` or `CR fixed: <summary>; rerun result passed`. `VR` reports exactly one of `VR passed: all acceptance criteria complete` or `VR incomplete: <summary of missing work>`. Both phrases are required verbatim even when a caller also asks for its own status format.
+- A completed `CR` reports exactly one of `CR passed: no major findings` or `CR fixed: <summary>; rerun result passed`. A CR that cannot continue reports `CR blocked: <reason>`. `VR` reports exactly one of `VR passed: all acceptance criteria complete` or `VR incomplete: <summary of missing work>`.
 - `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.
-- `AR` starts with a primary-agent preflight. Treat AR as low-risk only when the plan follows an existing architecture pattern; stays within one component or subsystem; changes no public API, schema, persistence, migration, authentication, security, privacy, external integration or dependency contract, infrastructure, deployment, concurrency, performance, availability, or reliability behavior; is readily reversible; and has unambiguous acceptance criteria and implementation boundaries. Record each criterion with repository evidence; uncertainty makes AR non-low-risk. The primary agent may complete only low-risk AR itself. Otherwise, AR uses an independent reviewer when available.
-- When the runtime supports subagents, `CR`, `VR`, and non-low-risk `AR` use a read-only independent reviewer with no inherited authoring conversation, or the smallest task-local context available. Full-history inheritance is not used for independent review.
-- If clean or minimal task-local context cannot be created, RPD treats independent delegation as unavailable and uses the primary-agent fallback.
-- Independent reviewers receive only raw artifacts and the command checklist, and report every material issue in priority order without a findings cap. VR also returns its acceptance-criteria evidence matrix. The primary agent owns fixes, tests, documentation updates, completion loops, and final pass decisions; when subagents are unavailable, the primary agent runs the same checklist.
-- Reuse the same independent subagent for every rerun within one AR, CR, or VR stage while it remains available and independent.
-- On every rerun, give that reviewer the new stable snapshot and raw artifacts and require the stage's full checklist; do not limit the review to prior findings.
-- Start a new independent reviewer when the next stage begins, or when the current reviewer is unavailable, has contributed to artifacts under review, or modified the reviewed snapshot.
-- Every `AR`, `CR`, and `VR` result also states which round within that stage produced it and whether that round's reviewer was reused or newly started, on its own line beginning with the stage token, in the shape `<STAGE> review round: <n>; reviewer: <reused|new|not applicable>`. The disclosure is additive: the terminal phrase is unchanged and still carries the verdict by itself, so a caller reads the verdict from that phrase alone.
-- A stage's round 1 is always `reviewer: new` when an independent subagent performed it, and names no replacement condition. A reviewer newly started at round 2 or later names the permitted replacement condition that applied: `previous reviewer unavailable`, `previous reviewer contributed to the artifacts under review`, or `previous reviewer modified the reviewed snapshot`.
-- When the primary agent runs the checklist because delegation is unavailable or the `AR` was low-risk, the result still states the round and reports `reviewer: not applicable (primary-agent review)` rather than claiming a reused reviewer.
-- The disclosure is a report, not a budget. It adds no round limit, no findings cap, and no fix-only rerun, and an unresolvable blocking finding still stops the loop and is reported instead of causing another review of an unchanged snapshot.
-- Any edit to source, test, plan, or E2E spec content made after a reviewer's terminal pass invalidates that pass and requires a rerun before the stage is complete. The sole exceptions are updating REQ acceptance-criteria checkboxes to record a VR reviewer's determination, which does not require rerunning VR, and updating only AP task checkbox markers to record completed work, which does not require rerunning AR or CR when every task's text, order, scope, and all other plan content remain unchanged. An unresolved blocker stops the loop instead of causing another review of an unchanged snapshot.
-- RPD uses runtime-enforced read-only review when supported; otherwise it verifies the reviewed snapshot and Git-visible worktree state did not change. Reviewer mutations invalidate the review.
+- One protected-boundary definition drives routing and AR, CR, and VR. It covers public and consumer contracts, data and migrations, authentication/security/privacy, external integrations, infrastructure/deployment, and concurrency/performance/availability/reliability behavior.
+- Low-risk work must also be localized, follow an existing pattern, be reversible, and have clear behavior and verification. Uncertainty is non-low-risk; file count, diff size, documentation-only scope, test-only scope, and model identity are not evidence.
+- The primary agent reviews low-risk work. A clean-context independent reviewer checks protected or uncertain work when available; otherwise the primary runs the same checklist and states that independence was unavailable.
+- Reviews are serial and read-only. The first review is full. Reuse the same reviewer for a finding-fix rerun focused on every unresolved finding plus affected and plausible cross-cutting areas. Changed reviewers, protected boundaries, expanded scope, or uncertain reach force full review.
+- Report one concise risk reason, one reviewer/round line, every material finding without a cap, and the terminal verdict. Stable finding/checklist IDs, evidence matrices, inventory counts, and review-action/scope fields are not required.
+- No snapshot hash, verification digest, retained byte bundle, or path manifest is required. Any observed reviewer or concurrent mutation invalidates the result.
 - `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`.
 - `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.
 - Before asking which verification to run, inspect project scripts, task runners, lockfiles, build/test configs, CI workflows, Makefiles, docs, and nearby manifests; ask only when no unambiguous command exists or choices have materially different scope or side effects.
@@ -174,7 +169,9 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - `DD` runs once implementation, verification, and reviews are complete, whether or not the work is committed. Planned routing and `!!` run it after `VR` passes and then stop. Inside `RPD` it runs before `GC` so the commit can reference the completion summary.
 - `DD` writes a short PR-style completion summary with `Summary`, `Verification`, and `Notes`; it should not duplicate the full requirement, plan, test spec, or changelog.
 - `TT` runs every applicable unit and integration suite, stops at the first failure when possible, fixes the root cause, and repeats until every applicable suite passes; it reports an absent suite instead of inventing a command. `ET` applies the same failure-fix-rerun loop to the targeted E2E scope.
+- Tier 2 dogfood is a maintainer check, not part of ordinary `TT` or `ET`. Run it only when explicitly planned for changes to RPD routing or review behavior; fixture reviews never become parent-story review rounds.
 - `CR` applies a review-fix-review loop until no major flaws remain. It does not run full unit or integration suites or execute E2E scenarios: `TT` owns full unit and integration test execution and `ET` owns E2E execution. After CR changes code, it may run only narrow verification directly covering the fix, such as one test case or file, targeted typecheck, lint, or build verification; broader verification is deferred to `TT` and `ET`.
+- During review-contract iteration, run Tier 0 and the three compact Tier 2 dogfood scenarios after the contract stabilizes.
 - Loops stop and report a blocker when failures are unrelated, pre-existing, flaky, ambiguous, or outside the current command's responsibility.
 - `GC` does not run `CR`; it commits only when verification status and intended file scope are clear.
 - `!!` is an out-of-band restart command and is not auto-chained from other stages. It reconciles the current story, invalidates stale completion and AR evidence, then continues through DD and stops before GC.

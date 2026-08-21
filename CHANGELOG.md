@@ -3,9 +3,37 @@
 All notable changes to the RPD skill are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning generally
-follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). `3.6.0` is an owner-directed compatibility exception for the `!!` commit-boundary correction.
+follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). `3.6.0` and `3.8.0` are
+owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
+
+## [3.8.0] - 2026-08-21
+
+### Changed
+
+- Restored the compact shape of the pre-`7599c05` workflow while keeping intent routing, File Comment
+  Blocks, `!!`, the AR gate, review loops, and CR/TT/ET ownership.
+- One protected-boundary definition now drives direct/planned routing and risk-based AR, CR, and VR.
+  Low-risk review stays with the primary agent; protected or uncertain work uses an independent reviewer
+  when available.
+- The first review is full. Same-reviewer finding fixes rerun against unresolved findings and affected
+  areas; changed reviewers, protected boundaries, expanded scope, or uncertain reach force full review.
+- Review results now require only a concise risk reason, round/reviewer disclosure, uncapped material
+  findings, and the terminal verdict. Stable finding/checklist IDs, evidence matrices, inventory counts,
+  and review-action/scope fields were removed.
+- Removed review snapshot hashes, verification digests, retained bundles, and path manifests. Reviews
+  remain serial and read-only; any observed mutation invalidates a result.
+- AP is proportional rather than a mandatory five-phase template. E2E specs cover executable flows,
+  observable boundaries, and critical paths—not subject matter without a real surface.
+- Replaced the large three-tier evidence suite with one deterministic contract check and three short
+  explicitly planned maintainer dogfood scenarios. They remain outside ordinary TT and ET.
+
+### Unchanged
+
+- Findings and review rounds remain uncapped. The primary agent owns fixes and reviewers stay read-only.
+- CR still does not run full unit, integration, or E2E suites; TT and ET retain execution ownership.
+- The release version remains `3.8.0`; `4.0.0` was never released.
 
 ## [3.7.0] - 2026-08-18
 

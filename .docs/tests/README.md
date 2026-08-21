@@ -1,57 +1,23 @@
-# RPD Test Suite
+# RPD Maintainer Tests
 
-Three tiers, ordered by cost. Run the cheap ones often; run the expensive one when the routing
-contract or the review gates change.
+RPD keeps one deterministic contract check and three short maintainer dogfood scenarios.
 
-| Tier | File | Agents | Runtime | Run it |
-|---|---|---|---|---|
-| 0 | [test-tier0-static-contracts.md](test-tier0-static-contracts.md) | 0 | seconds | every commit |
-| 1 | [test-tier1-routing-decisions.md](test-tier1-routing-decisions.md) | 13 short | minutes | on any change to Intent Routing or a command contract |
-| 2 | [test-tier2-evidence-integrity.md](test-tier2-evidence-integrity.md) | 2 + 4 reviewers | long | before a release, or when a review gate changes |
+| Test | Purpose | Ordinary TT/ET? |
+|---|---|---|
+| [Tier 0](test-tier0-static-contracts.md) | Static routing, review, command, version, and simplicity invariants | No; maintainer check |
+| [Tier 2](test-tier2-evidence-integrity.md) | Real low-risk, protected, and focused-review behavior | No; explicitly planned only |
 
-[test-helpers.md](test-helpers.md) holds the shared shell functions. Every tier extracts them with
-the same one-liner; nothing else should define them.
+The former 13-agent Tier 1 routing matrix was removed. Its durable routing decisions now have static
+Tier 0 assertions, while Tier 2 samples the actual behavior that static prose cannot prove.
 
-## What each tier is for
+There is no snapshot hash, verification digest, retained evidence bundle, or exact-prose mirror of
+the complete skill. Tests assert decisions and observable outcomes.
 
-**Tier 0** checks that the skill, the README, the CHANGELOG, and the packaged artifact all state the
-same contract, and that the two shell helpers with real logic — `snapshot_hash` and
-`assert_gwt_scenarios` — behave correctly. No model is involved, so it cannot flake and costs
-nothing.
+Run Tier 0 from the repository root:
 
-**Tier 1** checks the actual thesis: that natural-language requests route by implementation intent
-and concrete risk rather than by diff size, and that explicit commands stay stage-scoped. Each agent
-stops at the first review gate its route requires, so a planned case ends after REQ/AP and a direct
-case ends after the edit. No reviewers are provisioned. The route is observable from three things:
-which `.docs/` artifacts appeared, whether `src/**` changed, and the single `Gate:` line the agent
-reports.
+```bash
+sed -n '/^```sh$/,/^```$/p' .docs/tests/test-tier0-static-contracts.md | sed '1d;$d' | bash
+```
 
-**Tier 2** checks that a claimed pass is a real pass. This is where the snapshot hashes, the
-`.verification-ran` digest, and the completion-document ordering live. It runs two cases — one per
-terminus — because the apparatus proves a property of the evidence chain, not of any particular
-fixture, and running it six times proves the same property six times.
-
-## Ordering
-
-Tier 1 assumes Tier 0 passes; Tier 2 assumes both. A Tier 1 failure usually means the routing
-contract changed. A Tier 2 failure usually means an agent claimed something it did not do, which is
-the failure mode the whole apparatus exists to catch.
-
-## What this replaces
-
-The previous suite lived in `test-intent-based-routing.md` (1,883 lines) and
-`test-planned-routing-dd.md` (271 lines). It ran 14 full-pipeline cases with reviewers, and its
-[one recorded run](results/2026-07-28-partial-run.md) exhausted a monthly spend limit after verifying
-3 of 13 cases without a single scenario failing.
-
-Two things were dropped deliberately:
-
-- **The prose-matching semantic assertions.** `assert_public_status_semantics`,
-  `assert_security_auth_semantics`, and `assert_external_contract_semantics` were ~135 lines of Perl
-  that regex-matched English wording in generated Given/When/Then documents, plus ~750 lines and 61
-  decoy fixtures testing those regexes. They asserted phrasing, not behavior, and a correctly
-  specified scenario worded differently would fail. Mutant testing in Tier 2 covers the behavior
-  those assertions were reaching for, and `assert_gwt_scenarios` still enforces document structure.
-- **Redundant full pipelines.** Scenarios 3, 5, and 6 each drove `AR → SS → TT → ET → VR → DD` to
-  prove the same terminus, differing only in which risk condition selected planning. That predicate
-  is now a Tier 1 assertion; the terminus is proven once, in Tier 2.
+Run Tier 2 only when an approved change affects RPD routing or review behavior. Its fixture reviews
+are isolated maintainer evidence and never become an ordinary story's TT, ET, AR, CR, or VR rounds.

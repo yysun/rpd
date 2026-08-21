@@ -68,7 +68,7 @@ Start with `REQ` to describe a new requirement, then use the other commands as n
 REQ Implement JWT authentication
 ```
 
-Then follow up with `AP` to create the architecture plan and needed E2E specs, `AR` to review and fix blocking requirement, plan, or E2E spec flaws before implementation, `SS` to implement step-by-step, `TT` to run unit tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's E2E scenarios when applicable, `VR` to verify the original requirement is fully implemented, `DD` to document completed work, and `GC` to commit with a clear message.
+Then follow up with `AP` to create the architecture plan and needed E2E specs, `AR` to review and fix blocking requirement, plan, or E2E spec flaws before implementation, `SS` to implement step-by-step, `TT` to run unit and integration tests and fix failures, `CR` to review code, `ET` to execute and fix the current story's E2E scenarios when applicable, `VR` to verify the original requirement is fully implemented, `DD` to document completed work, and `GC` to commit with a clear message.
 
 Typical sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
 
@@ -122,7 +122,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 | `AP` | Create architecture plan and needed E2E specs; then trigger the required AR gate |
 | `AR` | Review architecture and fix blocking requirement, plan, or E2E spec flaws before implementation |
 | `SS` | Step-by-step implementation |
-| `TT` | Run unit tests and fix failures |
+| `TT` | Run unit and integration tests and fix failures |
 | `ET` | Run E2E tests and fix failures |
 | `CR` | Code review |
 | `VR` | Verify the requirement is fully implemented in code and docs; if not, refine AP, run SS, CR, TT, ET when applicable, update docs, then verify again |
@@ -173,8 +173,8 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - `DD` can be invoked as a single-word message.
 - `DD` runs once implementation, verification, and reviews are complete, whether or not the work is committed. Planned routing and `!!` run it after `VR` passes and then stop. Inside `RPD` it runs before `GC` so the commit can reference the completion summary.
 - `DD` writes a short PR-style completion summary with `Summary`, `Verification`, and `Notes`; it should not duplicate the full requirement, plan, test spec, or changelog.
-- `TT` and `ET` stop at the first failure when possible, fix root cause, rerun, and repeat until targeted tests pass.
-- `CR` applies a review-fix-review loop until no major flaws remain; scoped verification may run after CR changes code, but CR does not become TT.
+- `TT` runs every applicable unit and integration suite, stops at the first failure when possible, fixes the root cause, and repeats until every applicable suite passes; it reports an absent suite instead of inventing a command. `ET` applies the same failure-fix-rerun loop to the targeted E2E scope.
+- `CR` applies a review-fix-review loop until no major flaws remain. It does not run full unit or integration suites or execute E2E scenarios: `TT` owns full unit and integration test execution and `ET` owns E2E execution. After CR changes code, it may run only narrow verification directly covering the fix, such as one test case or file, targeted typecheck, lint, or build verification; broader verification is deferred to `TT` and `ET`.
 - Loops stop and report a blocker when failures are unrelated, pre-existing, flaky, ambiguous, or outside the current command's responsibility.
 - `GC` does not run `CR`; it commits only when verification status and intended file scope are clear.
 - `!!` is an out-of-band restart command and is not auto-chained from other stages. It reconciles the current story, invalidates stale completion and AR evidence, then continues through DD and stops before GC.

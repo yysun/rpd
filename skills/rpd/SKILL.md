@@ -3,7 +3,7 @@ name: rpd
 description: >
   Run or explain the RPD workflow for repository software work, including codebase
   explanation and diagnosis, requirements, architecture planning and review,
-  implementation, debugging, unit and E2E testing, code review, acceptance
+  implementation, debugging, unit, integration, and E2E testing, code review, acceptance
   verification, completion documentation, and scoped commits.
   Also use when the user invokes an RPD command with command-like intent: RPD, REQ,
   AP, AR, SS, TT, ET, CR, VR, DD, GC, or !!. A command token must be bounded by
@@ -232,15 +232,16 @@ A concise software development workflow with automatic architecture and code rev
   - Fix relevant verification failures before review.
   - For a bug fix, reproduce or localize the failure when practical, identify the root cause, apply the smallest causal fix, add, update, or confirm existing regression coverage when a clear test location exists, run the relevant regression or unit verification before CR, and report the symptom, root cause, affected path, fix, and result.
   - Auto-run `CR*` after verification passes.
-- **TT**: Run unit tests and fix failures.
-  - Detect the unit test command using the Verification detection rules.
-  - Ask only after local inspection cannot identify one unambiguous command.
+- **TT**: Run unit and integration tests and fix failures.
+  - Detect every applicable unit and integration test command using the Verification detection rules.
+  - Ask only when local inspection cannot identify a required applicable command unambiguously.
+  - If no unit or integration suite exists, report that scope as absent and continue with every suite that does exist; do not invent a command.
   - Stop at the first failure when the runner supports it.
   - Record the exact failing test, error, suspected cause, fix, and rerun result.
   - Fix the root cause of that failure.
   - Do not skip, delete, weaken, or rename tests to force a pass unless the REQ explicitly changes the expected behavior.
-  - Rerun unit tests after each fix.
-  - Repeat until all unit tests pass.
+  - Rerun the affected unit or integration tests after each fix.
+  - Repeat until every applicable unit and integration suite passes.
 - **CR**: Review uncommitted changes with git.
   - Can be manually triggered.
   - Use the Independent Review Delegation rules; when available, have a read-only independent subagent review the stable diff and return prioritized findings to the primary agent.
@@ -250,7 +251,10 @@ A concise software development workflow with automatic architecture and code rev
   - Fix high-priority findings.
   - Rerun CR after fixes.
   - Continue until no major flaws remain.
-  - After CR changes code, run scoped verification when clear.
+  - Do not run the full unit or integration test suite during CR; `TT` owns full unit and integration test execution.
+  - Do not execute E2E scenarios during CR; `ET` owns E2E execution. Reviewing an E2E spec does not authorize running it.
+  - After CR changes code, run only narrow verification directly covering the fix when clear, such as one test case or file, targeted typecheck, lint, or build verification.
+  - Defer broader unit, integration, and E2E verification to `TT` and `ET`.
   - Report unrelated or pre-existing failures.
   - Report exactly one of `CR passed: no major findings` or `CR fixed: <summary>; rerun result passed`. Include this exact phrase verbatim even when a caller separately requires its own status format; the two are not interchangeable and neither substitutes for the other.
   - Report the round-and-reuse disclosure defined in Independent Review Delegation on its own line alongside that phrase, for example `CR review round: 2; reviewer: reused`. The disclosure is additive and does not change the phrase or the verdict it carries.

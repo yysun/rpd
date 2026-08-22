@@ -25,14 +25,17 @@ question, and stop once the critical ambiguity is resolved and implementation is
 - [x] Existing AR review coverage, fix-in-place behavior, risk classification, reviewer selection,
       result disclosures, terminal verdicts, and documentation-only boundary remain intact.
 - [x] README explains the new AR behavior without duplicating the normative contract.
-- [x] Tier 0, skill validation, size limits, diff checks, and installed-skill parity pass.
+- [x] Tier 0, skill validation, size limits, diff checks, and installed-skill parity pass for the
+      `3.9.0` release state.
+- [x] The skill and README report minor version `3.9.0`, the changelog records the release, and the
+      installed skill matches the repository before release delivery.
 
 ## Constraints
 
 - Keep `skills/rpd/SKILL.md` compact and normative.
 - Keep the interaction proportional. AR is not an evidence-based audit, citation exercise, exhaustive
   decision tree, or open-ended product workshop.
-- Preserve version `3.8.0` for this focused contract correction.
+- Release the AR behavior as minor version `3.9.0`.
 
 ## Non-Goals
 

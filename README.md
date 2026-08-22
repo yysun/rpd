@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.8.0`
+**Version:** `3.9.0`
 
 The installable [skills/rpd/SKILL.md](skills/rpd/SKILL.md) is the normative workflow contract. This
 README explains why RPD exists and how to use it.

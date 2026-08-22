@@ -8,6 +8,14 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.9.0] - 2026-08-22
+
+### Changed
+
+- AR now challenges weak or unclear requirements and plans. When a consequential choice remains, it
+  offers viable options with real tradeoffs, recommends one, asks only what is necessary, and stops
+  once the plan is clear enough to implement.
+
 ## [3.8.0] - 2026-08-21
 
 ### Changed
@@ -26,9 +34,6 @@ The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL
   remain serial and read-only; any observed mutation invalidates a result.
 - AP is proportional rather than a mandatory five-phase template. E2E specs cover executable flows,
   observable boundaries, and critical paths—not subject matter without a real surface.
-- AR now challenges weak or unclear requirements and plans. When a consequential choice remains, it
-  offers viable options with real tradeoffs, recommends one, asks only what is necessary, and stops
-  once the plan is clear enough to implement.
 - Replaced the large three-tier evidence suite with one deterministic contract check and three short
   explicitly planned maintainer dogfood scenarios. They remain outside ordinary TT and ET.
 

@@ -8,14 +8,15 @@ clarifies the important choice, and clears the path to implementation.
 ## Current Context and Decisions
 
 - `skills/rpd/SKILL.md` already requires AR to review and fix blocking document flaws, but it does not
-  define how to investigate or present a decision that cannot be fixed from repository evidence.
+  define how to challenge a weak decision or help the user choose when a consequential choice remains.
 - The general RPD principles already discourage unnecessary questions. AR only needs a compact
   stage-specific instruction to challenge weak decisions, offer useful options, and stop when clear.
 - Preserve AR's terminal verdicts. A genuinely blocking user decision still produces the existing
   blocked verdict, but the interaction needs no new fields, evidence inventory, or decision matrix.
 - Adapt Grill Me's decision discipline, not its literal three-label response template. The AR output
   remains compact and compatible with its current risk, round, and verdict lines.
-- Keep version `3.8.0`; this is a focused correction to the current review contract, not a release task.
+- Release the additive AR behavior as minor version `3.9.0`; tag `v3.9.0` after the scoped commit and
+  push the branch and tag to `origin` as explicitly authorized by the user.
 - No story E2E spec is needed: this changes an internal text contract and has no executable user flow
   or observable runtime boundary. Tier 0 covers the durable contract; the existing Tier 2 scenarios
   preserve cross-cutting review behavior without adding a bespoke audit harness.
@@ -29,11 +30,15 @@ clarifies the important choice, and clears the path to implementation.
       role of the installable skill.
 - [x] Add focused durable assertions to `.docs/tests/test-tier0-static-contracts.md` and document the
       behavior change in `CHANGELOG.md`.
-- [x] Run the Tier 0 block, skill validator, size limits, version checks, and `git diff --check`.
 - [x] Run the three compact Tier 2 scenarios in `.docs/tests/test-tier2-evidence-integrity.md` after
       the contract stabilizes. Record actual outcomes without inventing findings.
 - [x] Sync the complete `skills/rpd/` directory to the global installation with stale removal and
       verify byte parity before VR.
+- [x] Update the skill, README, and Tier 0 version assertions to `3.9.0`; move the AR behavior entry
+      from the `3.8.0` changelog section into a new `3.9.0` section; resync the complete installable
+      directory and verify parity.
+- [x] Run the Tier 0 block, skill validator, size limits, version checks, and `git diff --check` for
+      the `3.9.0` release state.
 
 ## Validation
 
@@ -42,9 +47,17 @@ clarifies the important choice, and clears the path to implementation.
 - `test "$(wc -l < skills/rpd/SKILL.md)" -le 300`
 - `test "$(wc -w < skills/rpd/SKILL.md)" -le 3500`
 - `git diff --check`
+- `rg -Fq '3.9.0' skills/rpd/SKILL.md README.md` passes; the changelog contains
+  `## [3.9.0] - 2026-08-22`.
 - Execute Scenarios 2.1 through 2.3 in `.docs/tests/test-tier2-evidence-integrity.md`; expect their
   stated risk, reviewer, read-only, and rerun behavior.
 - `diff -ru skills/rpd ~/.agents/skills/rpd`
+
+## Delivery
+
+After VR, confirm the DD completion note and acceptance checkboxes reflect the `3.9.0` release. Then
+commit only this story's release files, create annotated tag `v3.9.0`, push `main` and the tag to
+`origin`, and confirm the remote refs.
 
 ## Risk
 

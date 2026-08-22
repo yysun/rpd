@@ -9,7 +9,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.8.0`
+**Version:** `3.9.0`
 **Repository:** https://github.com/yysun/rpd
 
 A compact workflow with proportional planning and risk-based review.

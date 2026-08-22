@@ -12,13 +12,14 @@
 ## Verification
 
 - Tier 0 static contract passed; skill validation, size/version limits, and `git diff --check` passed.
-- Protected CR passed on round 1 with an independent reviewer and no findings.
+- Release AR passed on round 3; protected CR passed on round 2 with the same reviewer after correcting
+  stale version wording in this completion note.
 - Tier 2 passed: low-risk primary CR behaved correctly; the protected current-story CR passed; the
   focused rerun fixed one real coverage finding and passed with the same reviewer on round 2.
-- VR passed every acceptance criterion and plan task; no ordinary TT suite or matching story E2E spec
-  exists.
+- Fresh release VR passed every acceptance criterion and plan task; no ordinary TT suite or matching
+  story E2E spec exists.
 - The complete installable directory was synced to `~/.agents/skills/rpd/`; byte parity passed.
 
 ## Notes
 
-- Version remains `3.8.0` for this focused contract correction.
+- The additive AR behavior is released as minor version `3.9.0`.

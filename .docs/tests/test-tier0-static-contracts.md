@@ -23,6 +23,12 @@ rg -q 'Explanation, diagnosis, review, requirements, and planning requests are r
 rg -q '`REQ`, `AP`, `AR`, and `DD` do not authorize source' "$skill"
 rg -q 'If no current plan has passed AR' "$skill"
 
+rg -q 'Challenge unclear or weak requirements, plans, and proposed solutions' "$skill"
+rg -q 'offer a small set of viable options' "$skill"
+rg -q 'name the real tradeoffs, and recommend one' "$skill"
+rg -q 'Ask only the next necessary question' "$skill"
+rg -q 'plan is clear enough to implement' "$skill"
+
 rg -q 'Low-risk review stays with the primary agent' "$skill"
 rg -q 'Non-low-risk review uses an independent subagent' "$skill"
 rg -q 'The first review in a stage is full' "$skill"
@@ -56,6 +62,7 @@ rg -q 'TT owns full unit/integration execution' "$skill"
 rg -q 'ET owns E2E' "$skill"
 
 rg -q 'normative.*skills/rpd/SKILL.md|skills/rpd/SKILL.md.*normative' README.md
+rg -q '`AR` challenges weak or unclear requirements and plans' README.md
 test -z "$(rg '^## Intent Routing$' README.md || true)"
 rg -Fxq '### 1. Recommended: Full RPD workflow' README.md
 rg -Fxq '### 2. Targeted command workflow' README.md

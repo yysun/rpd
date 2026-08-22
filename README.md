@@ -75,6 +75,10 @@ task should name a concrete file, behavior, artifact, or command so `SS` can exe
 rediscovering the architecture. AR, CR, VR, DD, GC, staging, and committing are workflow stages or
 delivery actions, not plan tasks.
 
+`AR` challenges weak or unclear requirements and plans instead of merely checking completeness. When
+a consequential choice remains, it offers viable options with real tradeoffs, recommends one, asks
+only what is necessary, and stops once the plan is clear enough to implement.
+
 ### 3. Automatic routing for ordinary requests
 
 You do not need a workflow command for every request:

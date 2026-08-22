@@ -120,6 +120,10 @@ scope, test-only scope, and model identity are not risk evidence.
 - **AR**: Review the current REQ, AP, and optional E2E spec before implementation.
   - Check testability, simplicity, architecture, boundaries, dependencies, edge cases, compatibility,
     rollback, task executability, validation, E2E coverage, constraints, and non-goals.
+  - Challenge unclear or weak requirements, plans, and proposed solutions instead of only checking
+    document completeness. When a consequential choice remains, offer a small set of viable options,
+    name the real tradeoffs, and recommend one. Ask only the next necessary question, then stop when
+    the critical ambiguity is resolved and the plan is clear enough to implement.
   - Fix blocking document flaws in place and rerun. Do not edit source.
   - Report `AR passed: no blocking architecture flaws`, `AR fixed: <summary>; rerun result passed`, or
     `AR blocked: <reason>`. A block stops implementation.

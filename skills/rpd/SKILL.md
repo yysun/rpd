@@ -131,10 +131,16 @@ scope, test-only scope, and model identity are not risk evidence.
 - **SS**: Implement an AR-approved plan.
   - If no current plan has passed AR since its latest material change, enter planned routing instead of
     improvising implementation.
-  - Read the story artifacts, execute Tasks in order, and mark a task complete only after its change or
-    evidence exists. Update the plan when discovery materially changes the implementation path.
-  - Run relevant build, compile, typecheck, or focused regression verification; fix relevant failures.
-  - Auto-run CR after verification.
+  - Read the story artifacts and execute implementation tasks in order. Mark each complete only when
+    concrete repository or command evidence shows its stated outcome exists; performing the action
+    alone is insufficient. Update the plan when discovery materially changes the implementation path.
+  - Complete every SS implementation task and its focused verification before starting CR.
+  - Do not run CR between plan tasks, subtasks, or informal implementation phases.
+  - Auto-run CR once after SS completes. Rerun CR after a CR finding is fixed.
+  - If a later stage materially changes the reviewed implementation, tests, requirement, or plan,
+    rerun CR once after those changes stabilize.
+  - Phase completion, test execution without edits, and checkbox-only progress do not trigger CR.
+  - TT and ET mark their own plan tasks complete when required evidence exists.
 
 - **TT**: Run applicable unit and integration suites and fix failures.
   - Detect every applicable command. Report absent suites instead of inventing commands.

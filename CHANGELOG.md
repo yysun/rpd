@@ -8,6 +8,25 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.10.0] - 2026-08-31
+
+### Changed
+
+- Automatic routing now escalates only for material protected-boundary impact, coordinated
+  cross-component design, difficult rollback or significant blast radius, or consequential uncertainty
+  remaining after focused inspection. Narrow documentation, test, and contract-surface edits can stay
+  on the direct path; explicit `RPD` is the only unconditional full-process trigger.
+- E2E specs now require explicit initial conditions, ordered executable actions, and observable
+  outcomes without forcing every scenario into Given/When/Then. Compact behaviors may use
+  Given/When/Then; longer flows may use numbered steps.
+- AR may inspect verification surfaces but no longer executes verification. Runtime feasibility uses a
+  bounded first SS probe with explicit decision criteria and returns to AR when the result invalidates
+  the architecture.
+- SS now completes every implementation task and its focused verification before running CR once,
+  reruns CR only after relevant changes, and lets TT and ET close their own planned verification tasks.
+- Repository installation now keeps `~/.agents/skills/rpd/` linked directly to `skills/rpd/`, removing
+  manual copy synchronization.
+
 ## [3.9.0] - 2026-08-22
 
 ### Changed

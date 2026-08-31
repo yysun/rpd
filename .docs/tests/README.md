@@ -1,6 +1,6 @@
 # RPD Maintainer Tests
 
-RPD keeps one deterministic contract check and three short maintainer dogfood scenarios.
+RPD keeps one deterministic contract check and four short maintainer dogfood scenarios.
 
 | Test | Purpose | Ordinary TT/ET? |
 |---|---|---|

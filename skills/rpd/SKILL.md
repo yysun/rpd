@@ -9,7 +9,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.9.0`
+**Version:** `3.10.0`
 **Repository:** https://github.com/yysun/rpd
 
 A compact workflow with proportional planning and risk-based review.
@@ -42,22 +42,23 @@ A compact workflow with proportional planning and risk-based review.
 authentication, security, and privacy; external dependencies and integrations; infrastructure and
 deployment; concurrency, performance, availability, and reliability behavior.
 
-Work is **low risk** only when focused repository evidence shows that it:
+Start with focused repository inspection. Work is **non-low-risk** only when evidence shows that it:
 
-- is localized within one component and follows an existing pattern;
-- changes no protected boundary;
-- is readily reversible; and
-- has clear expected behavior and clear verification.
+- materially changes a protected boundary or needs compatibility or rollout coordination;
+- spans components in a way that requires coordinated design;
+- is difficult to reverse or failure has significant blast radius; or
+- leaves a consequential behavior, architecture, or verification decision unresolved after inspection.
 
-Uncertain or unsupported classification is non-low-risk. File count, diff size, documentation-only
-scope, test-only scope, and model identity are not risk evidence.
+Otherwise, clear, localized, readily reversible work with straightforward verification is low risk.
+A narrow edit to documentation, tests, or a contract surface is not non-low-risk unless its behavioral
+impact meets a criterion above. File count, diff size, and model identity do not determine risk alone.
 
 - Low-risk implementation uses the direct path: edit surgically, run relevant verification, then CR.
   It creates no REQ, AP, AR, VR, or DD artifact and stops after CR.
 - Non-low-risk implementation uses the planned path: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD`.
   It stops before GC.
-- Explicit `RPD` runs the full path through GC. Explicit standalone stages stop according to their
-  own command contract.
+- Explicit `RPD` is the only unconditional full-process trigger and runs through GC. Explicit
+  standalone stages stop according to their own command contract.
 - For bug fixes, reproduce or localize the failure when practical, identify the root cause, apply the
   smallest causal fix, add or confirm focused regression coverage, and report the result.
 
@@ -114,7 +115,9 @@ scope, test-only scope, and model identity are not risk evidence.
     and Risk when real. Tasks name concrete files, behavior, or commands; no fixed phase count applies.
   - Add `.docs/tests/test-{name}.md` only for an executable user flow, observable public or external
     boundary, or regression-prone critical path. Skip E2E for pure internals without such a surface.
-  - Write E2E specs as Given/When/Then scenarios. Do not run tests or edit source during AP.
+  - Write each E2E scenario with explicit initial conditions, ordered executable actions, and
+    observable expected outcomes. Use Given/When/Then for compact behavioral scenarios or numbered
+    steps for longer multi-step flows. Do not run tests or edit source during AP.
   - Auto-run AR and do not enter SS until AR passes.
 
 - **AR**: Review the current REQ, AP, and optional E2E spec before implementation.
@@ -124,6 +127,13 @@ scope, test-only scope, and model identity are not risk evidence.
     document completeness. When a consequential choice remains, offer a small set of viable options,
     name the real tradeoffs, and recommend one. Ask only the next necessary question, then stop when
     the critical ambiguity is resolved and the plan is clear enough to implement.
+  - Inspect existing tests, scripts, configurations, and prior evidence as needed, but do not execute
+    tests, builds, typechecks, linters, benchmarks, E2E scenarios, or other verification commands
+    during AR.
+  - If runtime evidence is required to resolve feasibility, require a bounded first SS task with
+    explicit decision criteria; do not use a full unit/integration suite or E2E scenario as the probe.
+    If the probe fails or materially changes the architecture, stop dependent implementation, update
+    the story artifacts, and rerun AR.
   - Fix blocking document flaws in place and rerun. Do not edit source.
   - Report `AR passed: no blocking architecture flaws`, `AR fixed: <summary>; rerun result passed`, or
     `AR blocked: <reason>`. A block stops implementation.

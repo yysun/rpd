@@ -1,6 +1,8 @@
 # Repository Instructions
 
-## Installation sync
+## Installation link
 
-- After any edit that affects the installable skill in `skills/rpd/`, always sync that directory to the global installation at `~/.agents/skills/rpd/` before considering the work complete.
-- Sync the complete installable directory, not only the files edited, so removed and generated files do not leave the global installation stale.
+- Treat `skills/rpd/` as the source of truth. The global installation at `~/.agents/skills/rpd/` must
+  be a symlink to `/Users/esun/Documents/Projects/rpd/skills/rpd/`.
+- After any edit that affects the installable skill, verify that the symlink still resolves to this
+  repository. Recreate a missing or incorrect link; do not manually copy or sync the directory.

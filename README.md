@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.9.0`
+**Version:** `3.10.0`
 
 The installable [skills/rpd/SKILL.md](skills/rpd/SKILL.md) is the normative workflow contract. This
 README explains why RPD exists and how to use it.
@@ -52,6 +52,8 @@ Sequence: `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC`
 
 Create E2E specs for executable user flows, observable public or external boundaries, and
 regression-prone critical paths. Skip them for pure internals without such a surface unless requested.
+Each scenario must define its initial conditions, ordered executable actions, and observable expected
+outcomes. Given/When/Then suits compact behaviors; numbered steps suit longer multi-step flows.
 
 ### 2. Targeted command workflow
 
@@ -85,10 +87,13 @@ You do not need a workflow command for every request:
 
 - Explanation, diagnosis, review, requirements, and planning requests stay read-only.
 - A clear request to implement or fix something authorizes implementation without a special command.
-- Localized, reversible work that follows an existing pattern and changes no protected boundary takes
-  the direct path: implement, verify, and stop after CR.
-- Protected or uncertain work takes the planned path through REQ, AP, AR, implementation, testing,
-  verification, and DD. Explicit `RPD` continues through GC.
+- Clear, localized, reversible work with straightforward verification takes the direct path: implement,
+  verify, and stop after CR. A narrow protected-surface edit does not escalate merely because of its
+  location.
+- Material protected-boundary changes, coordinated cross-component design, difficult rollback,
+  significant blast radius, or consequential uncertainty remaining after focused inspection take the
+  planned path through DD. Explicit `RPD` is the only unconditional full-process trigger and continues
+  through GC.
 - Explicit commands select their named stage; the installable skill defines the exact authorization
   and risk rules.
 
@@ -141,18 +146,19 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 
 - Explicit commands select their documented stage. `REQ`, `AP`, `AR`, and `DD` do not authorize source changes. `!!` is the exception: its reconciliation step is documentation-only, then it authorizes architecture, implementation, verification, and DD after AR passes, but not GC.
 - A clear natural-language request to implement or fix repository behavior is implementation authorization. Direct-path work starts immediately; planned-path work continues automatically after AR passes.
-- Direct implementation requires concrete repository evidence for every low-risk condition in the normative skill contract. Any false, uncertain, or unsupported condition selects REQ, AP, and AR first.
+- Automatic routing starts with focused repository inspection. It escalates only when evidence meets a non-low-risk criterion in the normative skill contract; ordinary uncertainty should be investigated before it becomes process.
 - Every direct implementation runs relevant verification and CR. Bug fixes also localize the failure, identify and fix the root cause, confirm regression coverage, and report symptom, cause, affected path, fix, and result.
 - Standalone `SS` implements an existing approved plan; it is not the natural-language direct-routing mechanism. When the current story has no plan, or its plan has not passed `AR` since its latest material update, `SS` switches to planned routing instead of improvising an implementation.
 - A new `REQ` should capture a testable problem, requirement, acceptance criteria, constraints, non-goals, and only blocking open questions.
 - Acceptance criteria should name the property they depend on rather than a literal value a later release invalidates. Because `VR` may not relax a criterion to check it off, a criterion pinned to a literal version, count, or path can become permanently unsatisfiable while the work itself is complete. Prefer `a major version bump accompanies the breaking change` over `the version is 3.0.0`.
 - `AP` and `RPD` must not enter `SS` until `AR` explicitly reports either `AR passed: no blocking architecture flaws` or `AR fixed: <summary>; rerun result passed`.
 - `AR blocked: <flaw and why it cannot be resolved in place>` is the third possible `AR` result. It is not a pass: the flow stops and reports the blocker instead of entering `SS`. A blocking open question about expected behavior still requires AP to be created; the question is captured in REQ and AP, and AR is the mechanism that reports the block.
+- `AR` may inspect tests, scripts, configurations, and prior evidence, but it does not execute verification. Runtime feasibility evidence becomes a bounded first `SS` task; a failed probe or material architecture change stops dependent work, updates the story artifacts, and returns to `AR`.
 - A completed `CR` reports exactly one of `CR passed: no major findings` or `CR fixed: <summary>; rerun result passed`. A CR that cannot continue reports `CR blocked: <reason>`. `VR` reports exactly one of `VR passed: all acceptance criteria complete` or `VR incomplete: <summary of missing work>`.
 - `AR` should block vague plans, missing validation evidence, unresolved architecture questions, and unnecessary compatibility or fallback machinery.
 - One protected-boundary definition drives routing and AR, CR, and VR. It covers public and consumer contracts, data and migrations, authentication/security/privacy, external integrations, infrastructure/deployment, and concurrency/performance/availability/reliability behavior.
-- Low-risk work must also be localized, follow an existing pattern, be reversible, and have clear behavior and verification. Uncertainty is non-low-risk; file count, diff size, documentation-only scope, test-only scope, and model identity are not evidence.
-- The primary agent reviews low-risk work. A clean-context independent reviewer checks protected or uncertain work when available; otherwise the primary runs the same checklist and states that independence was unavailable.
+- Non-low-risk work materially changes a protected boundary, requires coordinated cross-component design, is difficult to reverse or high-blast-radius, or retains a consequential unresolved decision after focused inspection. Narrow documentation, test, and contract-surface edits do not escalate without that impact.
+- The primary agent reviews low-risk work. A clean-context independent reviewer checks non-low-risk work when available; otherwise the primary runs the same checklist and states that independence was unavailable.
 - Reviews are serial and read-only. The first review is full. Reuse the same reviewer for a finding-fix rerun focused on every unresolved finding plus affected and plausible cross-cutting areas. Changed reviewers, protected boundaries, expanded scope, or uncertain reach force full review.
 - Report one concise risk reason, one reviewer/round line, every material finding without a cap, and the terminal verdict. Stable finding/checklist IDs, evidence matrices, inventory counts, and review-action/scope fields are not required.
 - No snapshot hash, verification digest, retained byte bundle, or path manifest is required. Any observed reviewer or concurrent mutation invalidates the result.
@@ -175,7 +181,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - `TT` runs every applicable unit and integration suite, stops at the first failure when possible, fixes the root cause, and repeats until every applicable suite passes; it reports an absent suite instead of inventing a command. `ET` applies the same failure-fix-rerun loop to the targeted E2E scope.
 - Tier 2 dogfood is a maintainer check, not part of ordinary `TT` or `ET`. Run it only when explicitly planned for changes to RPD routing or review behavior; fixture reviews never become parent-story review rounds.
 - `CR` applies a review-fix-review loop until no major flaws remain. It does not run full unit or integration suites or execute E2E scenarios: `TT` owns full unit and integration test execution and `ET` owns E2E execution. After CR changes code, it may run only narrow verification directly covering the fix, such as one test case or file, targeted typecheck, lint, or build verification; broader verification is deferred to `TT` and `ET`.
-- During review-contract iteration, run Tier 0 and the three compact Tier 2 dogfood scenarios after the contract stabilizes.
+- During review-contract iteration, run Tier 0 and the four compact Tier 2 dogfood scenarios after the contract stabilizes.
 - Loops stop and report a blocker when failures are unrelated, pre-existing, flaky, ambiguous, or outside the current command's responsibility.
 - `GC` does not run `CR`; it commits only when verification status and intended file scope are clear.
 - `!!` is an out-of-band restart command and is not auto-chained from other stages. It reconciles the current story, invalidates stale completion and AR evidence, then continues through DD and stops before GC.

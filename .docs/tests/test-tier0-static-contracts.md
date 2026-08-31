@@ -8,17 +8,24 @@ set -euo pipefail
 
 skill=skills/rpd/SKILL.md
 
-rg -Fxq '**Version:** `3.9.0`' "$skill"
-rg -Fxq '**Version:** `3.9.0`' README.md
-rg -q '^## \[3\.9\.0\]' CHANGELOG.md
+rg -Fxq '**Version:** `3.10.0`' "$skill"
+rg -Fxq '**Version:** `3.10.0`' README.md
+rg -q '^## \[3\.10\.0\]' CHANGELOG.md
 test "$(wc -l < "$skill")" -le 300
 test "$(wc -w < "$skill")" -le 3500
 
 rg -q '^\*\*Protected boundaries:\*\*' "$skill"
-rg -q 'Uncertain or unsupported classification is non-low-risk' "$skill"
+rg -q 'Start with focused repository inspection' "$skill"
+rg -q 'materially changes a protected boundary or needs compatibility or rollout coordination' "$skill"
+rg -q 'spans components in a way that requires coordinated design' "$skill"
+rg -q 'difficult to reverse or failure has significant blast radius' "$skill"
+rg -q 'consequential behavior, architecture, or verification decision unresolved after inspection' "$skill"
+rg -q 'narrow edit to documentation, tests, or a contract surface is not non-low-risk' "$skill"
+rg -q 'only unconditional full-process trigger' "$skill"
+! rg -q 'Uncertain or unsupported classification is non-low-risk|changes no protected boundary' "$skill"
 rg -q 'Low-risk implementation uses the direct path' "$skill"
 rg -q 'Non-low-risk implementation uses the planned path' "$skill"
-rg -q 'File count, diff size, documentation-only' "$skill"
+rg -q 'File count, diff size, and model identity do not determine risk alone' "$skill"
 rg -q 'Explanation, diagnosis, review, requirements, and planning requests are read-only' "$skill"
 rg -q '`REQ`, `AP`, `AR`, and `DD` do not authorize source' "$skill"
 rg -q 'If no current plan has passed AR' "$skill"
@@ -36,6 +43,8 @@ rg -q 'offer a small set of viable options' "$skill"
 rg -q 'name the real tradeoffs, and recommend one' "$skill"
 rg -q 'Ask only the next necessary question' "$skill"
 rg -q 'plan is clear enough to implement' "$skill"
+perl -0777 -ne 'exit 0 if /Inspect existing tests, scripts, configurations, and prior evidence as needed,\s+but do not execute\s+tests, builds, typechecks, linters, benchmarks, E2E scenarios, or other verification commands\s+during AR\./; exit 1' "$skill"
+perl -0777 -ne 'exit 0 if /require a bounded first SS task with\s+explicit decision criteria; do not use a full unit\/integration suite or E2E scenario as the probe\.\s+If the probe fails or materially changes the architecture, stop dependent implementation, update\s+the story artifacts, and rerun AR\./; exit 1' "$skill"
 
 rg -q 'Low-risk review stays with the primary agent' "$skill"
 rg -q 'Non-low-risk review uses an independent subagent' "$skill"
@@ -64,6 +73,8 @@ rg -q 'no fixed phase count applies' "$skill"
 rg -q 'observable public or external' "$skill"
 rg -q 'boundary, or regression-prone critical path' "$skill"
 rg -q 'Skip E2E for pure internals' "$skill"
+perl -0777 -ne 'exit 0 if /explicit initial conditions, ordered executable actions, and\s+observable expected outcomes\. Use Given\/When\/Then for compact behavioral scenarios or numbered\s+steps for longer multi-step flows\./; exit 1' "$skill"
+! rg -Fq 'Write E2E specs as Given/When/Then scenarios.' "$skill"
 
 rg -q 'Do not run full unit/integration suites or E2E scenarios' "$skill"
 rg -q 'TT owns full unit/integration execution' "$skill"

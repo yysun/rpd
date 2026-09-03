@@ -9,7 +9,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.10.0`
+**Version:** `3.10.1`
 **Repository:** https://github.com/yysun/rpd
 
 A compact workflow with proportional planning and risk-based review.
@@ -144,7 +144,11 @@ impact meets a criterion above. File count, diff size, and model identity do not
   - Read the story artifacts and execute implementation tasks in order. Mark each complete only when
     concrete repository or command evidence shows its stated outcome exists; performing the action
     alone is insufficient. Update the plan when discovery materially changes the implementation path.
-  - Complete every SS implementation task and its focused verification before starting CR.
+  - Complete every SS implementation task before starting CR. During implementation, run immediate
+    focused verification only to resolve uncertainty or prevent dependent work from building on an
+    unverified assumption; do not run routine checks at task, subtask, or phase boundaries.
+  - After implementation stabilizes, run one consolidated set of focused checks covering the affected
+    behavior before starting CR. Defer full unit/integration suites to TT and E2E scenarios to ET.
   - Do not run CR between plan tasks, subtasks, or informal implementation phases.
   - Auto-run CR once after SS completes. Rerun CR after a CR finding is fixed.
   - If a later stage materially changes the reviewed implementation, tests, requirement, or plan,

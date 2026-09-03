@@ -8,9 +8,9 @@ set -euo pipefail
 
 skill=skills/rpd/SKILL.md
 
-rg -Fxq '**Version:** `3.10.0`' "$skill"
-rg -Fxq '**Version:** `3.10.0`' README.md
-rg -q '^## \[3\.10\.0\]' CHANGELOG.md
+rg -Fxq '**Version:** `3.10.1`' "$skill"
+rg -Fxq '**Version:** `3.10.1`' README.md
+rg -q '^## \[3\.10\.1\]' CHANGELOG.md
 test "$(wc -l < "$skill")" -le 300
 test "$(wc -w < "$skill")" -le 3500
 
@@ -31,7 +31,11 @@ rg -q '`REQ`, `AP`, `AR`, and `DD` do not authorize source' "$skill"
 rg -q 'If no current plan has passed AR' "$skill"
 rg -q 'concrete repository or command evidence shows its stated outcome exists' "$skill"
 rg -q 'alone is insufficient' "$skill"
-rg -q 'Complete every SS implementation task and its focused verification before starting CR' "$skill"
+rg -q 'Complete every SS implementation task before starting CR' "$skill"
+rg -q 'focused verification only to resolve uncertainty' "$skill"
+rg -q 'do not run routine checks at task, subtask, or phase boundaries' "$skill"
+rg -q 'run one consolidated set of focused checks covering the affected' "$skill"
+rg -q 'Defer full unit/integration suites to TT and E2E scenarios to ET' "$skill"
 rg -Fq 'Do not run CR between plan tasks, subtasks, or informal implementation phases.' "$skill"
 rg -Fq 'Auto-run CR once after SS completes. Rerun CR after a CR finding is fixed.' "$skill"
 perl -0777 -ne 'exit 0 if /If a later stage materially changes the reviewed implementation, tests, requirement, or plan,\s+rerun CR once after those changes stabilize\./; exit 1' "$skill"

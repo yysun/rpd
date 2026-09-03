@@ -8,6 +8,15 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.10.1] - 2026-09-03
+
+### Changed
+
+- SS now batches routine affected checks once after implementation stabilizes instead of running them
+  at every task, subtask, or phase boundary. Immediate focused verification remains available when it
+  resolves uncertainty or prevents dependent work from building on an unverified assumption; TT and
+  ET retain ownership of full unit/integration suites and E2E scenarios.
+
 ## [3.10.0] - 2026-08-31
 
 ### Changed

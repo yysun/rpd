@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.10.0`
+**Version:** `3.10.1`
 
 The installable [skills/rpd/SKILL.md](skills/rpd/SKILL.md) is the normative workflow contract. This
 README explains why RPD exists and how to use it.
@@ -162,7 +162,10 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - Reviews are serial and read-only. The first review is full. Reuse the same reviewer for a finding-fix rerun focused on every unresolved finding plus affected and plausible cross-cutting areas. Changed reviewers, protected boundaries, expanded scope, or uncertain reach force full review.
 - Report one concise risk reason, one reviewer/round line, every material finding without a cap, and the terminal verdict. Stable finding/checklist IDs, evidence matrices, inventory counts, and review-action/scope fields are not required.
 - No snapshot hash, verification digest, retained byte bundle, or path manifest is required. Any observed reviewer or concurrent mutation invalidates the result.
-- `SS` verifies compile/build/typecheck, fixes failures, then auto-runs `CR*`.
+- `SS` implements all plan tasks, runs immediate focused checks only when uncertainty or dependent work
+  requires them, then runs one consolidated set of affected compile, build, typecheck, or other focused
+  checks before auto-running `CR*`. Routine checks do not run at task, subtask, or phase boundaries;
+  full unit/integration suites remain in `TT` and E2E scenarios remain in `ET`.
 - `SS`, `TT`, `ET`, `CR`, and `VR` should report concrete evidence: commands, failing cases, fixes, reruns, review findings, and acceptance-criteria status.
 - Before asking which verification to run, inspect project scripts, task runners, lockfiles, build/test configs, CI workflows, Makefiles, docs, and nearby manifests; ask only when no unambiguous command exists or choices have materially different scope or side effects.
 - Inside `RPD`, `SS` still auto-runs `CR*` before the workflow continues to `TT`.

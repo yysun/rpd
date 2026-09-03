@@ -8,6 +8,13 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.10.2] - 2026-09-03
+
+### Changed
+
+- DD now preserves the complete final VR result exactly as reported by the VR stage, including its
+  original structure and detail, instead of summarizing or reconstructing that evidence.
+
 ## [3.10.1] - 2026-09-03
 
 ### Changed

@@ -9,7 +9,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.10.1`
+**Version:** `3.10.2`
 **Repository:** https://github.com/yysun/rpd
 
 A compact workflow with proportional planning and risk-based review.
@@ -187,8 +187,11 @@ impact meets a criterion above. File count, diff size, and model identity do not
   - Maintainer routing/review scenarios are not automatically the current story's ET spec.
 
 - **DD**: Write `.docs/done/{yyyy}/{mm}/{dd}/{name}.md` after implementation and verification finish.
-  - Keep it to a short PR-style Summary, truthful Verification, and specific Notes. Do not duplicate
-    the requirement, plan, spec, or changelog. DD never edits source.
+  - Keep a short PR-style Summary, Verification, and specific Notes. Verification must include the
+    complete final VR result exactly as reported by the VR stage, preserving its structure and detail
+    without summarizing or rewriting it.
+  - Apart from the required final VR result, do not duplicate the requirement, plan, spec, or
+    changelog. DD never edits source.
 
 - **GC**: Commit only the current story's intended changes.
   - Inspect status, ensure relevant verification is current, stop on ambiguous unrelated changes, stage

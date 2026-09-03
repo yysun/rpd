@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.10.1`
+**Version:** `3.10.2`
 
 The installable [skills/rpd/SKILL.md](skills/rpd/SKILL.md) is the normative workflow contract. This
 README explains why RPD exists and how to use it.
@@ -137,7 +137,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 | `ET` | Run E2E tests and fix failures |
 | `CR` | Code review |
 | `VR` | Verify the requirement is fully implemented in code and docs; if not, refine AP, run SS, CR, TT, ET when applicable, update docs, then verify again |
-| `DD` | Document completed work as a short PR-style summary |
+| `DD` | Document completed work and preserve the complete final VR result |
 | `GC` | Commit changes with clear scope |
 | `!!` | Reconcile the current story, restart through verified DD, and stop before GC |
 | `RPD` | Full end-to-end flow with AR, CR, and VR loops |
@@ -180,7 +180,7 @@ The **current story** — what `!!`, `VR`, and mid-sequence `RPD` operate on —
 - `AR` and `CR` can also be manually triggered.
 - `DD` can be invoked as a single-word message.
 - `DD` runs once implementation, verification, and reviews are complete, whether or not the work is committed. Planned routing and `!!` run it after `VR` passes and then stop. Inside `RPD` it runs before `GC` so the commit can reference the completion summary.
-- `DD` writes a short PR-style completion summary with `Summary`, `Verification`, and `Notes`; it should not duplicate the full requirement, plan, test spec, or changelog.
+- `DD` writes a short PR-style completion record with `Summary`, `Verification`, and `Notes`. `Verification` must include the complete final VR result exactly as reported by the VR stage, preserving its structure and detail without summarizing or rewriting it. Apart from the required VR result, DD should not duplicate the full requirement, plan, test spec, or changelog.
 - `TT` runs every applicable unit and integration suite, stops at the first failure when possible, fixes the root cause, and repeats until every applicable suite passes; it reports an absent suite instead of inventing a command. `ET` applies the same failure-fix-rerun loop to the targeted E2E scope.
 - Tier 2 dogfood is a maintainer check, not part of ordinary `TT` or `ET`. Run it only when explicitly planned for changes to RPD routing or review behavior; fixture reviews never become parent-story review rounds.
 - `CR` applies a review-fix-review loop until no major flaws remain. It does not run full unit or integration suites or execute E2E scenarios: `TT` owns full unit and integration test execution and `ET` owns E2E execution. After CR changes code, it may run only narrow verification directly covering the fix, such as one test case or file, targeted typecheck, lint, or build verification; broader verification is deferred to `TT` and `ET`.

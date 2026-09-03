@@ -8,9 +8,9 @@ set -euo pipefail
 
 skill=skills/rpd/SKILL.md
 
-rg -Fxq '**Version:** `3.10.1`' "$skill"
-rg -Fxq '**Version:** `3.10.1`' README.md
-rg -q '^## \[3\.10\.1\]' CHANGELOG.md
+rg -Fxq '**Version:** `3.10.2`' "$skill"
+rg -Fxq '**Version:** `3.10.2`' README.md
+rg -q '^## \[3\.10\.2\]' CHANGELOG.md
 test "$(wc -l < "$skill")" -le 300
 test "$(wc -w < "$skill")" -le 3500
 
@@ -41,6 +41,10 @@ rg -Fq 'Auto-run CR once after SS completes. Rerun CR after a CR finding is fixe
 perl -0777 -ne 'exit 0 if /If a later stage materially changes the reviewed implementation, tests, requirement, or plan,\s+rerun CR once after those changes stabilize\./; exit 1' "$skill"
 rg -q 'test execution without edits, and checkbox-only progress do not trigger CR' "$skill"
 rg -q 'TT and ET mark their own plan tasks complete when required evidence exists' "$skill"
+rg -Fq 'complete final VR result exactly as reported by the VR stage' "$skill"
+rg -Fq 'complete final VR result exactly as reported by the VR stage' README.md
+rg -Fq 'preserving its structure' "$skill"
+rg -Fq 'without summarizing or rewriting it' "$skill"
 
 rg -q 'Challenge unclear or weak requirements, plans, and proposed solutions' "$skill"
 rg -q 'offer a small set of viable options' "$skill"

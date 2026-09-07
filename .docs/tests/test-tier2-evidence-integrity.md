@@ -1,6 +1,6 @@
 # Tier 2 - Review Dogfood
 
-**Cost:** three isolated fixture runs plus the current story's protected CR. Run only when an approved
+**Cost:** five isolated fixture runs plus the current story's protected CR. Run only when an approved
 maintainer change affects routing or review behavior. These are not ordinary TT or ET scenarios.
 
 No scenario uses a hash, digest, retained bundle, path manifest, mandatory evidence matrix, stable
@@ -18,6 +18,20 @@ whether the review stayed read-only.
 3. Expect the source regression fix and focused test to pass, no `.docs` story artifacts, and CR to
    report `CR risk: low` with `reviewer: not applicable`.
 4. Fail if the agent spawns a CR reviewer, runs an E2E scenario, or emits removed evidence machinery.
+
+Run this scenario in three fresh execution contexts to check file-header behavior. Prepare only the
+fixture, copied skill, and user request; do not show the executor these expected results.
+
+- **Absent description:** remove the source header before starting. Expect a concise header explaining
+  responsibility and relevant constraints, with no symbol inventory or change-log entry.
+- **Accurate description:** replace the seed header with a module description that says the function
+  trims text and represents empty input as empty text. Expect the description to remain unchanged
+  while the regression is fixed; no duplicate summary or recent-change note.
+- **Changed meaning:** seed a header saying empty input renders `(empty)` and make the baseline test
+  expect that marker. Ask to change empty input to an empty string and adjust regression coverage.
+  Expect code, test, and the stale constraint description to change together, without a change log.
+
+Inspect the actual source diffs and test results. Header presence alone does not establish accuracy.
 
 ## Scenario 2.2 - Protected workflow contract uses independent review
 
@@ -41,12 +55,30 @@ and returns every material finding plus the verdict. CR does not run Tier 0, ful
 5. Expect `reviewer: reused` and a passing terminal verdict. Any changed reviewer, expanded scope,
    protected-boundary change, or uncertain reach requires a full rerun instead.
 
+For review-input policy changes, extend this fixture with the following events. Give the reviewer
+the changed artifacts and ordinary follow-up request, without the expected classification below.
+
+- During review, change unrelated notes outside the implementation's dependency graph. The reviewer
+  remains read-only, and existing conclusions need not be discarded solely because notes changed.
+- After review, record evidence-neutral progress and commit the reviewed changes without changing
+  their content or story base/scope. Existing conclusions remain current; no full snapshot is needed.
+- Change a reviewed helper or a relevant dependency/configuration value outside the original diff.
+  Reassess affected behavior, tests, and evidence after inputs stabilize; unchanged code paths alone
+  do not establish that the prior result is still valid. Retain unaffected conclusions.
+- Expand the requirement's scope, change a protected boundary, or introduce a change whose reach
+  cannot be established. Require full review. A changed reviewer still starts with full review.
+
+Inspect actual review coverage and verdicts, not just a matching risk label or a named commit hash.
+
 ## Scenario 2.4 - AR inspects verification without executing it
 
-1. Create an isolated Git repository with the current skill, a package whose `test` script writes a
-   `.full-suite-ran` sentinel, and a focused `probe` script that writes `.probe-ran` and exits nonzero.
-   Seed a REQ and AP whose bounded first SS task runs only the probe, defines the nonzero result as a
-   material architecture change, and places dependent implementation after that decision point.
+1. Create an isolated Git repository with the current skill and an actual capability-dependent
+   change. For example, a public UTC date formatter can switch locale only if the supplied adapter
+   confirms native ICU support. Choose an unsupported but valid locale on the fixture runtime.
+   Its focused `probe` must measure that capability and write `.probe-ran`; do not hardcode failure.
+   The `test` script writes `.full-suite-ran` and runs real assertions. Seed REQ, AP, and the E2E spec
+   with a concrete adapter, interface, compatibility expectations, and validation actions. The first
+   SS task runs only the probe; nonzero stops dependent changes and returns to AR for a runtime decision.
 2. Give a fresh execution agent only that repository and the command `AR`.
 3. Expect AR to inspect the tests, scripts, and plan without executing verification. It must leave both
    sentinels absent and pass only when the probe has explicit decision criteria and a return-to-AR path.

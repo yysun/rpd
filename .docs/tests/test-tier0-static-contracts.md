@@ -1,117 +1,82 @@
-# Tier 0 - Compact Static Contract
+# Tier 0 - Package and Protocol Checks
 
-Run the single block from the repository root. It checks durable behavior without duplicating the
-entire skill or enforcing incidental prose.
+Run the single block from the repository root with Python 3. It checks parseable structure, metadata,
+links, and externally consumed protocol literals. It does not establish the meaning of instructions;
+review and Tier 2 cover that. Rephrasing ordinary guidance must not require changing these assertions.
 
 ```sh
 set -euo pipefail
+python3 - <<'PY'
+import json
+import re
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
-skill=skills/rpd/SKILL.md
+root = Path.cwd()
+skill_path = root / 'skills/rpd/SKILL.md'
+skill = skill_path.read_text()
+readme = (root / 'README.md').read_text()
+changelog = (root / 'CHANGELOG.md').read_text()
 
-rg -Fxq '**Version:** `3.10.3`' "$skill"
-rg -Fxq '**Version:** `3.10.3`' README.md
-rg -q '^## \[3\.10\.3\]' CHANGELOG.md
-test "$(wc -l < "$skill")" -le 300
-test "$(wc -w < "$skill")" -le 3500
+frontmatter = re.match(r'\A---\n(.*?)\n---\n', skill, re.S)
+assert frontmatter, 'Missing skill frontmatter'
+assert re.search(r'^name:\s*rpd\s*$', frontmatter[1], re.M), 'Invalid skill name'
+assert re.search(r'^description:\s*\S', frontmatter[1], re.M), 'Missing description'
 
-rg -q '^\*\*Protected boundaries:\*\*' "$skill"
-rg -q 'Start with focused repository inspection' "$skill"
-rg -q 'materially changes a protected boundary or needs compatibility or rollout coordination' "$skill"
-rg -q 'spans components in a way that requires coordinated design' "$skill"
-rg -q 'difficult to reverse or failure has significant blast radius' "$skill"
-rg -q 'consequential behavior, architecture, or verification decision unresolved after inspection' "$skill"
-rg -q 'narrow edit to documentation, tests, or a contract surface is not non-low-risk' "$skill"
-rg -q 'only unconditional full-process trigger' "$skill"
-! rg -q 'Uncertain or unsupported classification is non-low-risk|changes no protected boundary' "$skill"
-rg -q 'Low-risk implementation uses the direct path' "$skill"
-rg -q 'Non-low-risk implementation uses the planned path' "$skill"
-rg -q 'File count, diff size, and model identity do not determine risk alone' "$skill"
-rg -q 'Explanation, diagnosis, review, requirements, and planning requests are read-only' "$skill"
-rg -q '`REQ`, `AP`, `AR`, and `DD` do not authorize source' "$skill"
-rg -q 'If no current plan has passed AR' "$skill"
-rg -q 'concrete repository or command evidence shows its stated outcome exists' "$skill"
-rg -q 'alone is insufficient' "$skill"
-rg -q 'Complete every SS implementation task before starting CR' "$skill"
-rg -q 'focused verification only to resolve uncertainty' "$skill"
-rg -q 'do not run routine checks at task, subtask, or phase boundaries' "$skill"
-rg -q 'run one consolidated set of focused checks covering the affected' "$skill"
-rg -q 'Defer full unit/integration suites to TT and E2E scenarios to ET' "$skill"
-rg -Fq 'Do not run CR between plan tasks, subtasks, or informal implementation phases.' "$skill"
-rg -Fq 'Auto-run CR once after SS completes. Rerun CR after a CR finding is fixed.' "$skill"
-perl -0777 -ne 'exit 0 if /If a later stage materially changes the reviewed implementation, tests, requirement, or plan,\s+rerun CR once after those changes stabilize\./; exit 1' "$skill"
-rg -q 'test execution without edits, and checkbox-only progress do not trigger CR' "$skill"
-rg -q 'TT and ET mark their own plan tasks complete when required evidence exists' "$skill"
-rg -Fq 'complete final VR result exactly as reported by the VR stage' "$skill"
-rg -Fq 'complete final VR result exactly as reported by the VR stage' README.md
-rg -Fq 'preserving its structure' "$skill"
-rg -Fq 'without summarizing or rewriting it' "$skill"
+version_pattern = r'^\*\*Version:\*\* `(\d+\.\d+\.\d+)`$'
+versions = re.findall(version_pattern, skill, re.M)
+assert len(versions) == 1, 'Expected one skill version'
+assert re.findall(version_pattern, readme, re.M) == versions, 'README version differs'
+assert re.findall(r'^## \[([^]]+)\]', changelog, re.M)[0] == versions[0], 'Changelog version differs'
 
-rg -q 'Challenge unclear or weak requirements, plans, and proposed solutions' "$skill"
-rg -q 'offer a small set of viable options' "$skill"
-rg -q 'name the real tradeoffs, and recommend one' "$skill"
-rg -q 'Ask only the next necessary question' "$skill"
-rg -q 'plan is clear enough to implement' "$skill"
-perl -0777 -ne 'exit 0 if /Inspect existing tests, scripts, configurations, and prior evidence as needed,\s+but do not execute\s+tests, builds, typechecks, linters, benchmarks, E2E scenarios, or other verification commands\s+during AR\./; exit 1' "$skill"
-perl -0777 -ne 'exit 0 if /require a bounded first SS task with\s+explicit decision criteria; do not use a full unit\/integration suite or E2E scenario as the probe\.\s+If the probe fails or materially changes the architecture, stop dependent implementation, update\s+the story artifacts, and rerun AR\./; exit 1' "$skill"
+expected_commands = {'REQ', 'AP', 'AR', 'SS', 'TT', 'ET', 'CR', 'VR', 'DD', 'GC', '!!', 'RPD'}
+commands = re.findall(r'^- \*\*([A-Z!]+)\*\*', skill, re.M)
+assert len(commands) == len(expected_commands) and set(commands) == expected_commands, commands
 
-rg -q 'Low-risk review stays with the primary agent' "$skill"
-rg -q 'Non-low-risk review uses an independent subagent' "$skill"
-rg -q 'The first review in a stage is full' "$skill"
-rg -q 'focus on every unresolved finding plus affected' "$skill"
-rg -q 'without a findings cap' "$skill"
-rg -q 'STAGE risk: low|non-low' "$skill"
-rg -q 'STAGE review round: <n>; reviewer:' "$skill"
-rg -q 'any observed reviewer or concurrent' "$skill"
+for path in (
+    '.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md',
+    '.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md',
+    '.docs/tests/test-{name}.md',
+    '.docs/done/{yyyy}/{mm}/{dd}/{name}.md',
+):
+    assert f'`{path}`' in skill, f'Missing artifact path: {path}'
 
-test -z "$(rg -l 'snapshot_hash|verification-digest|Verification digest|Snapshot unchanged|Review action:|Review scope:|Carried-forward checklist|stable finding ID|checklist-area universe' skills/rpd README.md .docs/tests/README.md .docs/tests/test-tier2-evidence-integrity.md .docs/tests/fixtures || true)"
-test -z "$(find .docs/tests/fixtures -name '.verification-ran' -o -name 'verification-digest.js')"
-test -z "$(rg -l '\.verification-ran' .docs/tests/fixtures || true)"
+protocol = (
+    'STAGE risk: low|non-low — <reason>',
+    'STAGE review round: <n>; reviewer: <new|reused|not applicable>',
+    'AR passed: no blocking architecture flaws',
+    'AR fixed: <summary>; rerun result passed',
+    'AR blocked: <reason>',
+    'CR passed: no major findings',
+    'CR fixed: <summary>; rerun result passed',
+    'CR blocked: <reason>',
+    'VR passed: all acceptance criteria complete',
+    'VR incomplete: <missing work>',
+)
+for literal in protocol:
+    assert f'`{literal}`' in skill, f'Missing review protocol: {literal}'
 
-rg -q 'Before editing a source file, add a top comment block when absent' "$skill"
-rg -q 'After editing, update the block' "$skill"
-rg -q 'Files under `.docs/` are exempt' "$skill"
+runtime_files = {p.relative_to(skill_path.parent).as_posix()
+                 for p in skill_path.parent.rglob('*') if p.is_file()}
+assert runtime_files == {'SKILL.md'}, runtime_files
+assert 'skills/rpd/SKILL.md' in readme, 'README must link the normative skill'
 
-rg -Fq '`!!` is a current-story correction and restart through verified DD' "$skill"
-rg -Fq 'reopen acceptance criteria and tasks whose evidence became stale' "$skill"
-rg -Fq 'invalidate the prior AR pass' "$skill"
-rg -Fq 'Run `AR* → SS(+CR*) → TT → ET? → VR* → DD`, then stop without GC' "$skill"
+for doc in (skill_path, root / 'README.md', root / '.docs/tests/README.md'):
+    for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)', doc.read_text()):
+        url = urlsplit(target)
+        if url.scheme or url.netloc:
+            continue
+        linked = (doc.parent / unquote(url.path)).resolve() if url.path else doc
+        assert linked.exists(), f'{doc}: missing link {target}'
+        if url.fragment and linked.suffix == '.md':
+            headings = re.findall(r'^#{1,6}\s+(.+)$', linked.read_text(), re.M)
+            anchors = {re.sub(r'[^\w\- ]', '', h.lower()).replace(' ', '-') for h in headings}
+            assert unquote(url.fragment) in anchors, f'{doc}: missing anchor {target}'
 
-rg -q 'no fixed phase count applies' "$skill"
-! rg -q 'Phased task template|Classify by the story.s subject matter' "$skill"
-rg -q 'observable public or external' "$skill"
-rg -q 'boundary, or regression-prone critical path' "$skill"
-rg -q 'Skip E2E for pure internals' "$skill"
-perl -0777 -ne 'exit 0 if /explicit initial conditions, ordered executable actions, and\s+observable expected outcomes\. Use Given\/When\/Then for compact behavioral scenarios or numbered\s+steps for longer multi-step flows\./; exit 1' "$skill"
-! rg -Fq 'Write E2E specs as Given/When/Then scenarios.' "$skill"
+for package in (root / '.docs/tests/fixtures').rglob('package.json'):
+    command = json.loads(package.read_text()).get('scripts', {}).get('test')
+    assert command is None or command == 'node --test', f'Unexpected fixture command: {package}'
 
-rg -q 'Do not run full unit/integration suites or E2E scenarios' "$skill"
-rg -q 'TT owns full unit/integration execution' "$skill"
-rg -q 'ET owns E2E' "$skill"
-
-rg -q 'normative.*skills/rpd/SKILL.md|skills/rpd/SKILL.md.*normative' README.md
-rg -q '`AR` challenges weak or unclear requirements and plans' README.md
-test -z "$(rg '^## Intent Routing$' README.md || true)"
-rg -Fxq '### 1. Recommended: Full RPD workflow' README.md
-rg -Fxq '### 2. Targeted command workflow' README.md
-rg -Fxq '### 3. Automatic routing for ordinary requests' README.md
-rg -Fxq '### 4. Correct and restart the current story: `!!`' README.md
-quick_start="$(perl -0777 -ne 'if (/## Quick Start\n(.*?)(?=\n## )/s) { print $1; exit } exit 1' README.md)"
-printf '%s\n' "$quick_start" | rg -Fxq 'Install RPD skill from GitHub yysun/rpd'
-test -z "$(printf '%s\n' "$quick_start" | rg -i '\bnpx\b' || true)"
-workflow_headings="$(perl -0777 -ne 'if (/## Workflow\n(.*?)(?=\n## )/s) { $section=$1; while ($section =~ /^(### .+)$/mg) { print "$1\n" } exit } exit 1' README.md)"
-test "$workflow_headings" = "$(printf '%s\n' \
-  '### 1. Recommended: Full RPD workflow' \
-  '### 2. Targeted command workflow' \
-  '### 3. Automatic routing for ordinary requests' \
-  '### 4. Correct and restart the current story: `!!`')"
-test "$(find skills/rpd -type f | wc -l | tr -d ' ')" = 1
-
-for package in .docs/tests/fixtures/intent-based-routing/*/package.json
-do
-  if rg -q '"test"' "$package"; then
-    rg -q '"test": "node --test"' "$package"
-  fi
-done
-
-printf '%s\n' 'Tier 0 passed'
+print('Tier 0 passed')
+PY
 ```

@@ -1,17 +1,16 @@
 # RPD Maintainer Tests
 
-RPD keeps one deterministic contract check and four short maintainer dogfood scenarios.
+RPD keeps one deterministic package/protocol check and focused maintainer dogfood scenarios.
 
 | Test | Purpose | Ordinary TT/ET? |
 |---|---|---|
-| [Tier 0](test-tier0-static-contracts.md) | Static routing, review, command, version, and simplicity invariants | No; maintainer check |
-| [Tier 2](test-tier2-evidence-integrity.md) | Real low-risk, protected, and focused-review behavior | No; explicitly planned only |
+| [Tier 0](test-tier0-static-contracts.md) | Package, version, commands, paths, links, and review protocol | No; maintainer check |
+| [Tier 2](test-tier2-evidence-integrity.md) | Routing, file headers, review reuse, and AR/SS behavior | No; explicitly planned only |
+| [SS checkpoints](test-tier2-ss-checkpoints.md) | Milestone commits, review scope, opt-out, and final GC | No; explicitly planned only |
 
-The former 13-agent Tier 1 routing matrix was removed. Its durable routing decisions now have static
-Tier 0 assertions, while Tier 2 samples the actual behavior that static prose cannot prove.
-
-There is no snapshot hash, verification digest, retained evidence bundle, or exact-prose mirror of
-the complete skill. Tests assert decisions and observable outcomes.
+Tier 0 checks structure and protocol, not the semantics of instructions. Independent review and
+Tier 2 check decisions and observable outcomes; neither a matching phrase nor a few passing scenarios
+prove all behavior. Ordinary wording and document length are not test assertions.
 
 Run Tier 0 from the repository root:
 

@@ -8,6 +8,30 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.11.0] - 2026-09-07
+
+### Changed
+
+- Simplified the single-file skill following OpenAI's instruction-following guidance. User instructions
+  take precedence; skill-driven pauses must cite the actual rule. Existing authorization remains valid.
+  Commands, stage gates, review protocols, evidence limits, and complete final VR records are retained.
+- File headers describe responsibilities, important constraints, and design reasons. Reuse effective
+  module documentation and update it only when those facts change; omit inventories and change logs.
+- SS automatically commits independently revertible implementation milestones locally, records hashes
+  and verification status in AP, and continues unless the user forbids commits. These commits do not
+  establish acceptance, replace CR/TT/ET/VR, or authorize push or history rewriting.
+- Preserve the story Git base across SS reruns. CR covers all story commits since that base and remaining
+  staged, unstaged, and untracked changes. GC commits remaining delivery changes, preserves milestones,
+  and creates no empty commit when nothing remains.
+- Review validity follows relevant inputs, including dependencies, configuration, and evidence.
+  Unrelated work, neutral progress updates, and commits preserving inputs and scope leave conclusions
+  valid. Material changes require affected-conclusion reassessment; expanded scope, protected-boundary
+  changes, uncertain reach, or a different reviewer require full review. Reviewers remain read-only;
+  no repository-wide snapshot is required.
+- Replaced duplicated README rules with explanations and links. Tier 0 checks package structure,
+  metadata, links, and protocol literals; maintainer scenarios cover file headers, milestone commits,
+  whole-story review, and review-input changes.
+
 ## [3.10.3] - 2026-09-07
 
 ### Changed

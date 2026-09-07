@@ -8,9 +8,9 @@ set -euo pipefail
 
 skill=skills/rpd/SKILL.md
 
-rg -Fxq '**Version:** `3.10.2`' "$skill"
-rg -Fxq '**Version:** `3.10.2`' README.md
-rg -q '^## \[3\.10\.2\]' CHANGELOG.md
+rg -Fxq '**Version:** `3.10.3`' "$skill"
+rg -Fxq '**Version:** `3.10.3`' README.md
+rg -q '^## \[3\.10\.3\]' CHANGELOG.md
 test "$(wc -l < "$skill")" -le 300
 test "$(wc -w < "$skill")" -le 3500
 

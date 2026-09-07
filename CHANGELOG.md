@@ -8,6 +8,16 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.10.3] - 2026-09-07
+
+### Changed
+
+- Delivery commitments now require feasibility facts to be checked and pending runtime validation
+  to be stated as conditions. Conclusions stay within the evidence's version, environment, and
+  verification level; actual behavior and constraint scope take precedence over names or declarations.
+- AP now checks key feasibility facts and records assumptions pending runtime validation, with a
+  bounded validation task planned before dependent implementation.
+
 ## [3.10.2] - 2026-09-03
 
 ### Changed

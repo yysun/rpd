@@ -9,7 +9,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.10.2`
+**Version:** `3.10.3`
 **Repository:** https://github.com/yysun/rpd
 
 A compact workflow with proportional planning and risk-based review.
@@ -17,6 +17,11 @@ A compact workflow with proportional planning and risk-based review.
 ## Principles
 
 - Report only work and verification actually performed.
+- Before making delivery commitments, verify the key facts that determine feasibility. When runtime
+  verification is pending, state the unverified conditions and how they qualify those commitments.
+- Keep conclusions within the versions, environments, and verification levels covered by the evidence.
+- Check actual behavior, semantics, and the scope of constraints; do not infer overall behavior solely
+  from names, declarations, or local checks.
 - Understand the causal path before editing; prefer the smallest sufficient change.
 - Keep unrelated refactors, flags, fallbacks, compatibility layers, and artifacts out of scope.
 - Ask only when a missing decision blocks correct work or an action needs new authority.
@@ -111,6 +116,8 @@ impact meets a criterion above. File count, diff size, and model identity do not
 
 - **AP**: Create or update `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`.
   - Inspect the repository first. Keep the plan proportional to the work.
+  - Verify key facts that determine the plan's feasibility. Where runtime validation is pending,
+    state the assumptions and plan a bounded validation task before dependent implementation.
   - Include Goal, relevant Current Context and Decisions, ordered executable checkbox Tasks, Validation,
     and Risk when real. Tasks name concrete files, behavior, or commands; no fixed phase count applies.
   - Add `.docs/tests/test-{name}.md` only for an executable user flow, observable public or external

@@ -8,6 +8,19 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.11.1] - 2026-09-08
+
+### Fixed
+
+- Restored explicit scope boundaries and proportional planning after skill consolidation. Plans leave
+  routine implementation choices to SS; changes exclude unrelated work and speculative infrastructure.
+- AR stops once the plan is feasible and verifiable with no blocking flaws. Reviews distinguish concrete
+  blockers from optional improvements, reuse valid conclusions, and diagnose stalled loops without
+  extra reporting artifacts. Local fallback review uses the same checklist.
+- SS completes implementation before CR and reuses current verification; task and milestone boundaries
+  do not trigger checks or review. VR investigates evidence gaps without adding goals or repeating valid
+  verification. Existing acceptance requirements, review gates, and commit rules remain intact.
+
 ## [3.11.0] - 2026-09-07
 
 ### Changed

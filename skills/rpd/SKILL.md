@@ -7,7 +7,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.11.0`
+**Version:** `3.11.1`
 **Repository:** https://github.com/yysun/rpd
 
 ## Principles
@@ -20,7 +20,9 @@ description: >
 - Report actual work and evidence limits: versions, environments, verification levels, and pending
   runtime conditions. Establish feasibility before promising outcomes; declarations and local checks
   alone do not prove overall behavior.
-- Make the smallest sufficient change after understanding its cause and constraints.
+- Understand the cause and constraints; make the smallest sufficient change that meets current
+  requirements and preserves unaffected contracts. Keep unrelated refactors and speculative
+  abstractions, flags, fallbacks, compatibility layers, and artifacts out of scope.
 
 ## Intent and Routing
 
@@ -71,7 +73,8 @@ facts change. Reuse existing documentation; omit code inventories and change his
 ## Review Contract
 
 - AR, CR, and VR use the routing risk definition. The primary agent reviews low-risk work;
-  non-low-risk work uses an independent subagent when available, otherwise local review with disclosure.
+  non-low-risk work uses an independent subagent when available, otherwise the same checklist locally
+  with disclosure.
 - Give reviewers artifacts, stable implementation/diff paths, evidence, and the stage checklist without
   authoring history or the author's conclusions. Reviewers stay read-only; the primary agent owns fixes.
 - Review inputs include the story base, requirements, implementation, dependencies/configuration,
@@ -79,10 +82,17 @@ facts change. Reuse existing documentation; omit code inventories and change his
   inputs and scope leave conclusions valid; no repository-wide snapshot is required.
 - After material input changes stabilize, reassess affected conclusions before passing. Judge impact
   by behavior and evidence, not paths alone. Reuse the reviewer to cover unresolved findings, affected
-  areas, and cross-cutting effects. First review, changed reviewer, protected-boundary changes, expanded
-  scope, or uncertain reach require full review.
-- Report all material findings in priority order. Fix, narrowly verify, and rerun until passed or
-  blocked. Include stage evidence, its exact terminal verdict, and:
+  areas, and cross-cutting effects; reopen settled conclusions only when new evidence invalidates them.
+  First review, changed reviewer, protected-boundary changes, expanded scope, or uncertain reach require
+  full review.
+- Block only on unmet requirements, violated constraints, missing required evidence, or concrete
+  material risks within the change's impact. Explain the failure condition and consequence;
+  speculative improvements and stylistic preferences are non-blocking.
+- When review stops making substantive progress, identify the unresolved decision or missing evidence
+  instead of repeating the same review. Provide evidence sufficient for the verdict without extra
+  tracking fields or reporting artifacts beyond the stage contract.
+- Report all material findings in priority order. Fix blocking findings, narrowly verify, and rerun
+  until passed or blocked. Include stage evidence, its exact terminal verdict, and:
   `STAGE risk: low|non-low — <reason>`
   `STAGE review round: <n>; reviewer: <new|reused|not applicable>`
 
@@ -93,8 +103,10 @@ facts change. Reuse existing documentation; omit code inventories and change his
   questions; specify outcomes rather than implementation steps.
 
 - **AP** — Create/update `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`; auto-run AR. Standalone AP stops there.
-  Inspect first; record goals, decisions, ordered executable checkbox tasks, validation, and risks. Name files,
-  behavior, or commands; omit downstream review/delivery bookkeeping. Apply AR's feasibility-probe rule.
+  Inspect first; keep the plan proportional to the work. Record outcomes, boundaries, consequential
+  decisions, ordered executable checkbox tasks, sufficient validation, and real risks. Tasks name files,
+  behavior, or commands and serve requirements or preserved contracts; leave routine implementation
+  choices to SS. Omit downstream review/delivery bookkeeping. Apply AR's feasibility-probe rule.
   Create `.docs/tests/test-{name}.md` for executable user flows, observable public/external boundaries,
   or regression-prone critical paths; skip pure internals without such a surface. Scenarios need
   initial conditions, actions, and observable outcomes. AP executes no tests and edits no source;
@@ -102,8 +114,10 @@ facts change. Reuse existing documentation; omit code inventories and change his
 
 - **AR** — Review REQ, AP, and any E2E spec for testability, simplicity, architecture, boundaries,
   dependencies, edge cases, compatibility/rollback, executable tasks, coverage, constraints, and
-  non-goals. Challenge weak choices; present viable options, tradeoffs, and a recommendation when a
-  consequential decision remains. Inspect tests, configuration, and evidence without executing
+  non-goals. Challenge weak choices and unnecessary scope or complexity; resolve decisions that block correct
+  implementation with viable options, tradeoffs, and a recommendation. Pass once the plan is feasible,
+  sufficiently verifiable, and has no blocking flaws; do not manufacture alternatives or require routine
+  implementation details. Inspect tests, configuration, and evidence without executing
   verification commands. Required runtime feasibility becomes a bounded first SS probe with decision
   criteria, not a full suite or E2E. Failed probes or material architecture changes stop dependent work,
   update story artifacts, and return to AR.
@@ -112,17 +126,18 @@ facts change. Reuse existing documentation; omit code inventories and change his
   `AR blocked: <reason>`. A block stops implementation.
 
 - **SS** — Implement the current plan; without an AR pass since its latest material change, enter
-  planned routing. Read story artifacts, execute implementation tasks in order, and update the plan
-  for material discoveries. Check off tasks only when repository/command evidence proves their
-  outcomes; TT/ET close their own tasks.
+  planned routing. Read story artifacts, execute the approved implementation tasks in order without
+  adjacent improvements, and update the plan for material discoveries. Check off tasks only when
+  repository/command evidence proves their outcomes; TT/ET close their own tasks.
   Before editing, record the story's Git base in AP; recover the earlier story base when resuming and
   preserve it across reruns. Include relevant changes already present at entry in the story scope.
   After completing an independently revertible implementation milestone, automatically commit locally,
   record its hash and verification status in AP, and continue. SS authorizes these commits unless the
   user forbids them. Stage commits do not mean acceptance or replace CR/TT/ET/VR.
-  Reuse current verification; run focused checks for uncertainty, dependent work, or milestones.
-  Batch remaining checks after implementation stabilizes, then auto-run CR. Later material changes
-  to implementation, tests, requirements, or plan trigger CR under the Review Contract. Task boundaries,
+  Reuse current verification; run additional focused checks only for changed behavior or unresolved
+  uncertainty. Complete SS implementation tasks and batch remaining checks before auto-running CR.
+  Do not insert CR between tasks or milestones. Later material changes to implementation, tests,
+  requirements, or plan trigger CR under the Review Contract. Task boundaries,
   commits, test execution without edits, and checkbox updates alone trigger neither checks nor CR.
 
 - **TT** — Run every applicable unit/integration suite; report absent suites. Stop at the first failure
@@ -137,8 +152,10 @@ facts change. Reuse existing documentation; omit code inventories and change his
   `CR blocked: <reason>`.
 
 - **VR** — Compare each acceptance criterion with the plan, E2E spec, code behavior, tests, docs,
-  and review state. Record complete/incomplete/blocked with concrete evidence; update REQ checkboxes
-  and uncheck stale claims. Do not relax criteria to pass. Tests alone do not prove completion.
+  and review state without adding goals or preferred designs. Reuse valid review and test evidence;
+  investigate gaps or contradictions rather than repeating completed verification. Record
+  complete/incomplete/blocked with concrete evidence; update REQ checkboxes and uncheck stale claims.
+  Do not relax criteria to pass. Tests alone do not prove completion.
   Pass only with every criterion evidenced and every AP task complete; DD is not a prerequisite.
   Report `VR passed: all acceptance criteria complete` or `VR incomplete: <missing work>`.
   When incomplete, update story artifacts, run `SS → CR* → TT → ET?`, and rerun VR.

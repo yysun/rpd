@@ -7,7 +7,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.11.1`
+**Version:** `3.11.2`
 **Repository:** https://github.com/yysun/rpd
 
 ## Principles
@@ -178,5 +178,10 @@ facts change. Reuse existing documentation; omit code inventories and change his
   Reconciliation is documentation-only. Run `AR* → SS(+CR*) → TT → ET? → VR* → DD`; stop before GC.
 
 - **RPD** — Run `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC` without inter-stage approval.
-  Pause only for a blocker or action needing new authority. Mid-sequence entry skips only fresh
-  matching artifacts and gates passed after their latest material update.
+  Once VR passes, complete DD and then GC before reporting the story complete. Report the final local
+  delivery commit hash or, if GC finds nothing left to commit, the existing story commit hashes.
+  Treat SS milestone commits as progress and continue through the remaining stages.
+  If a blocker or missing authorization prevents a step, finish all remaining in-scope work that can
+  proceed independently before ending the run. Report the blocked stage or acceptance criteria, what
+  prevents progress, and what is needed to resume. Mid-sequence entry skips only fresh matching
+  artifacts and gates passed after their latest material update.

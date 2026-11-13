@@ -8,6 +8,14 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.11.2] - 2026-11-12
+
+### Fixed
+
+- Explicit RPD continues through DD and GC after VR passes and reports the delivery commit hash.
+  If a step is blocked, finish independent in-scope work before reporting what is blocked and what
+  is needed to resume.
+
 ## [3.11.1] - 2026-09-08
 
 ### Fixed

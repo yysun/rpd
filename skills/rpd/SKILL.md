@@ -7,7 +7,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.12.0`
+**Version:** `3.12.1`
 **Repository:** https://github.com/yysun/rpd
 
 ## Principles
@@ -128,8 +128,12 @@ facts change. Reuse existing documentation; omit code inventories and change his
 
 - **AR** — Review REQ, AP, and any E2E spec for testability, simplicity, architecture, boundaries,
   dependencies, edge cases, compatibility/rollback, one-way changes, executable tasks, coverage,
-  constraints, and non-goals. Challenge weak choices and unnecessary scope or complexity; resolve decisions that block correct
-  implementation with viable options, tradeoffs, and a recommendation. Pass once the plan is feasible,
+  constraints, and non-goals. Challenge the REQ and plan rather than audit them: for each part, ask
+  whether it needs to exist; whether project code, the platform or standard library, or an installed
+  dependency already covers it; and whether removing or changing code beats adding it. Cut what the
+  outcome does not justify, never safety, data protection, compatibility or verification the
+  requirements need. Resolve blocking decisions with viable options, tradeoffs, and a recommendation;
+  when one turns on what the user wants, block with one plain question. Pass once the plan is feasible,
   sufficiently verifiable, and has no blocking flaws; do not manufacture alternatives or require routine
   implementation details. Inspect tests, configuration, and evidence without executing
   verification commands. Required runtime feasibility becomes a bounded first SS probe with decision

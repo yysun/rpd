@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.12.0`
+**Version:** `3.12.1`
 
 The installable [skills/rpd/SKILL.md](skills/rpd/SKILL.md) is the normative workflow contract. This
 README explains why RPD exists and how to use it.
@@ -87,9 +87,12 @@ task should name a concrete file, behavior, artifact, or command so `SS` can exe
 rediscovering the architecture. AR, CR, VR, DD, GC, staging, and committing are workflow stages or
 delivery actions, not plan tasks.
 
-`AR` challenges weak or unclear requirements and plans instead of merely checking completeness. When
-a consequential choice remains, it offers viable options with real tradeoffs, recommends one, asks
-only what is necessary, and stops once the plan is clear enough to implement.
+`AR` challenges weak or unclear requirements and plans instead of merely checking completeness. For
+each part it asks whether the part needs to exist, whether existing code, the platform, or an installed
+dependency already covers it, and whether removing code beats adding it; it never cuts safety, data
+protection, compatibility, or required verification. When a consequential choice remains, it offers
+viable options with real tradeoffs, recommends one, asks only what is necessary, and stops once the
+plan is clear enough to implement.
 
 ### 3. Automatic routing for ordinary requests
 

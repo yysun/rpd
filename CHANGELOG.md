@@ -8,6 +8,16 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.12.1] - 2026-11-25
+
+### Changed
+
+- AR challenges each part of the REQ and plan rather than auditing it: does the part need to exist; does
+  project code, the platform or standard library, or an installed dependency already cover it; would
+  removing or changing code beat adding it. It cuts what the outcome does not justify, but never safety,
+  data protection, compatibility, or required verification. A decision that turns on what the user
+  wants blocks with one plain question instead of a new pause.
+
 ## [3.12.0] - 2026-11-25
 
 ### Added

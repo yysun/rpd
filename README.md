@@ -5,7 +5,7 @@ An AI agent skill that provides a structured workflow for requirements, planning
 
 RPD gives you 12 workflow commands you can use in conversation to drive a systematic development process.
 
-**Version:** `3.11.2`
+**Version:** `3.12.0`
 
 The installable [skills/rpd/SKILL.md](skills/rpd/SKILL.md) is the normative workflow contract. This
 README explains why RPD exists and how to use it.
@@ -15,7 +15,7 @@ README explains why RPD exists and how to use it.
 1. **Fast to invoke**: two- and three-letter command keywords keep prompts short and reduce friction during implementation, review, and iteration.
 2. **Built on context engineering and spec-driven development**: spec-driven development helps you start correctly; RPD helps you finish correctly and improve the project's working context over time.
 3. **PDCA-compatible with review gates**: the workflow follows a Plan-Do-Check-Act shape and adds explicit review gates as safety rails before work moves forward.
-4. **Creates a searchable project knowledge base**: requirements, plans, tests, and completion notes accumulate into documentation that reduces technical debt and long-term context loss.
+4. **Creates a searchable project knowledge base**: requirements, plans, tests, and completion notes accumulate into documentation that reduces technical debt and long-term context loss. Living docs (top-level `.docs/*.md` by default, indexed in `.docs/README.md`) describe current behavior and are updated by the stories that change it; dated story records keep the history and are marked when a later story supersedes them, so agents do not mistake an old plan for a current rule.
 5. **Preserves intent alongside code history**: combining the history of intent with the history of code gives humans and AI agents a stable map of what the team meant, making the system easier to hand off, extend, and change safely over time.
 6. **Safer incremental change**: separating requirements, planning, implementation, testing, and review reduces the chance of skipping key checks or jumping from idea straight into risky code changes.
 7. **Better onboarding and recovery**: when work is interrupted or handed to a new contributor, the requirement, plan, test, and done docs make it much easier to resume with the right context.
@@ -40,7 +40,11 @@ Maintainers: test instructions live in [.docs/tests/README.md](.docs/tests/READM
 Use `RPD` as the default for feature work when you want the workflow to carry a requirement through
 planning, implementation, verification, documentation, and commit. It runs automatic review loops for
 architecture, code, and requirement completion without pausing for human approval between stages,
-except for clarification, blockers, destructive actions, or external writes.
+except for clarification, blockers, destructive actions, or external writes. It also asks once before
+editing a one-way change you have not specifically requested or approved (a data migration, a persisted
+format older versions cannot read, or a breaking removal from a public contract), while independent
+work continues. A planned probe or gate that gets skipped or dropped from the plan cannot pass; RPD
+reports what is unverified and leaves the decision to you.
 
 ```text
 RPD Implement JWT authentication
@@ -116,13 +120,15 @@ The command reconciles the latest correction across the current story's REQ, AP,
 `!!` is approval to continue through implementation and documented completion after AR passes,
 including SS milestone commits. It does not run final GC; invoke GC separately to finalize delivery.
 It also stops when no current story can be identified, when the target story is ambiguous, or for
-the same blockers, destructive actions, and external writes that pause RPD.
+the same blockers, destructive actions, external writes, and unapproved one-way changes that pause RPD.
 
 
 ## Artifact paths used by the RPD workflow
 
 ```
 .docs/
+├── README.md             # index of living docs, created when first needed
+├── *.md                  # living docs: current behavior
 ├── reqs/{yyyy}/{mm}/{dd}/req-{name}.md
 ├── plans/{yyyy}/{mm}/{dd}/plan-{name}.md
 ├── tests/test-{name}.md  # optional existing E2E spec

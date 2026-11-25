@@ -7,7 +7,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.11.2`
+**Version:** `3.12.0`
 **Repository:** https://github.com/yysun/rpd
 
 ## Principles
@@ -56,6 +56,13 @@ For bugs, reproduce or localize the failure, fix its cause, and verify regressio
 - Use one unique kebab-case `{name}` per story; derive and announce it unless ambiguous. Resolve the
   current story from the user's selection, this session, then the most recently substantively changed
   REQ; checkbox-only edits do not change recency. Update existing documents in place.
+- Living docs describe current behavior and stay current: top-level `.docs/*.md` by default, plus
+  anything the index `.docs/README.md` (areas mapped to living docs) or project instructions list.
+  A story's REQ, AP, E2E spec, done note, and any project reports are story records: later stories
+  change them only with a one-line superseded note, while `!!` and reruns of the same story update them
+  in place. Read the index when present. Earlier stories' records are history: confirm their rules
+  against code and living docs before relying on them. Report conflicts between documents; stop only
+  when one blocks a decision.
 - `*` repeats until pass or blocked; `?` runs only with a matching E2E spec. Stop stalled loops and
   report failures outside the current task's scope.
 - Discover verification commands from scripts, manifests, CI, and docs. Full unit/integration suites
@@ -88,6 +95,10 @@ facts change. Reuse existing documentation; omit code inventories and change his
 - Block only on unmet requirements, violated constraints, missing required evidence, or concrete
   material risks within the change's impact. Explain the failure condition and consequence;
   speculative improvements and stylistic preferences are non-blocking.
+- A planned probe, gate, or rehearsal that is skipped, or removed or replaced by a plan update, cannot
+  pass what it was meant to prove unless the user approved that change, or approved removing the claim
+  from the REQ, in conversation or project instructions; a plan or REQ edit is not approval. Report
+  the unverified claim, who is affected, the potential loss, and the recovery path; the user decides.
 - When review stops making substantive progress, identify the unresolved decision or missing evidence
   instead of repeating the same review. Provide evidence sufficient for the verdict without extra
   tracking fields or reporting artifacts beyond the stage contract.
@@ -100,21 +111,24 @@ facts change. Reuse existing documentation; omit code inventories and change his
 
 - **REQ** — Create/update `.docs/reqs/{yyyy}/{mm}/{dd}/req-{name}.md`, then stop.
   Record the problem, outcome, verifiable checkbox acceptance criteria, constraints, non-goals, and blocking
-  questions; specify outcomes rather than implementation steps.
+  questions; specify outcomes rather than implementation steps. Name earlier requirements, plans, or
+  living docs the story supersedes, and the living docs whose rules it changes.
 
 - **AP** — Create/update `.docs/plans/{yyyy}/{mm}/{dd}/plan-{name}.md`; auto-run AR. Standalone AP stops there.
   Inspect first; keep the plan proportional to the work. Record outcomes, boundaries, consequential
   decisions, ordered executable checkbox tasks, sufficient validation, and real risks. Tasks name files,
   behavior, or commands and serve requirements or preserved contracts; leave routine implementation
   choices to SS. Omit downstream review/delivery bookkeeping. Apply AR's feasibility-probe rule.
+  Include tasks updating the living docs whose rules change. Identify one-way changes: data migrations,
+  persisted formats older versions cannot read, and breaking removals from a public contract.
   Create `.docs/tests/test-{name}.md` for executable user flows, observable public/external boundaries,
   or regression-prone critical paths; skip pure internals without such a surface. Scenarios need
   initial conditions, actions, and observable outcomes. AP executes no tests and edits no source;
   implementation requires AR to pass.
 
 - **AR** — Review REQ, AP, and any E2E spec for testability, simplicity, architecture, boundaries,
-  dependencies, edge cases, compatibility/rollback, executable tasks, coverage, constraints, and
-  non-goals. Challenge weak choices and unnecessary scope or complexity; resolve decisions that block correct
+  dependencies, edge cases, compatibility/rollback, one-way changes, executable tasks, coverage,
+  constraints, and non-goals. Challenge weak choices and unnecessary scope or complexity; resolve decisions that block correct
   implementation with viable options, tradeoffs, and a recommendation. Pass once the plan is feasible,
   sufficiently verifiable, and has no blocking flaws; do not manufacture alternatives or require routine
   implementation details. Inspect tests, configuration, and evidence without executing
@@ -127,8 +141,15 @@ facts change. Reuse existing documentation; omit code inventories and change his
 
 - **SS** — Implement the current plan; without an AR pass since its latest material change, enter
   planned routing. Read story artifacts, execute the approved implementation tasks in order without
-  adjacent improvements, and update the plan for material discoveries. Check off tasks only when
-  repository/command evidence proves their outcomes; TT/ET close their own tasks.
+  adjacent improvements. When implementation departs from the plan, update the plan with the reason
+  before continuing, not after the code. Check off tasks only when repository/command evidence proves
+  their outcomes; TT/ET close their own tasks.
+  Before editing a one-way change the user has not explicitly requested or approved as that specific
+  change, stop once for approval, even in explicit RPD; this is missing authorization, so independent
+  in-scope work continues. A one-way change found during SS is a material architecture change and
+  returns to AR. When stopping or yielding partway through a hard-to-undo step (a migration, removing
+  an old flow or its tests, switching a core flow), first reach a consistent point or record decisions,
+  open items, and risks in AP.
   Before editing, record the story's Git base in AP; recover the earlier story base when resuming and
   preserve it across reruns. Include relevant changes already present at entry in the story scope.
   After completing an independently revertible implementation milestone, automatically commit locally,
@@ -147,7 +168,9 @@ facts change. Reuse existing documentation; omit code inventories and change his
   staged, unstaged, and untracked changes. Recover a missing base from story/history before reviewing
   committed work; use the uncommitted diff when there are no story commits. Evaluate the change against
   requirements, plan, and tests for scope, architecture, correctness, edge cases, performance,
-  maintainability, security, migrations, compatibility, coverage, and stale docs.
+  maintainability, security, migrations, compatibility, coverage, and stale docs, including living docs
+  that contradict the change. Block deleted or rewritten tests whose guarantees have no passing
+  replacement unless the intended behavior change comes from the user's request or approval.
   Report `CR passed: no major findings`, `CR fixed: <summary>; rerun result passed`, or
   `CR blocked: <reason>`.
 
@@ -167,6 +190,8 @@ facts change. Reuse existing documentation; omit code inventories and change his
 - **DD** — After implementation and verification, write `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
   Use a short PR-style Summary, Verification, and specific Notes. Include the complete final VR result
   verbatim, preserving structure and detail. Otherwise avoid duplicating story documents or changelog.
+  Mark documents the REQ lists as superseded with a one-line note. Create or update `.docs/README.md`
+  only when a living doc is added, superseded, or changes status.
 
 - **GC** — Finalize delivery: inspect status, ensure relevant verification is current, and commit any
   remaining intended story changes with a conventional delivery message. Preserve earlier milestone
@@ -174,7 +199,7 @@ facts change. Reuse existing documentation; omit code inventories and change his
   Stop on ambiguous unrelated changes. GC does not trigger CR.
 
 - **!!** — Resolve the current story or stop on absence/ambiguity. Reconcile the correction across
-  REQ, AP, and E2E spec; reopen stale criteria/tasks, reapply AP's E2E decision, and invalidate AR.
+  REQ, AP, and E2E spec; reopen stale criteria/tasks, including affected living-doc tasks, reapply AP's E2E decision, and invalidate AR.
   Reconciliation is documentation-only. Run `AR* → SS(+CR*) → TT → ET? → VR* → DD`; stop before GC.
 
 - **RPD** — Run `REQ → AP → AR* → SS(+CR*) → TT → ET? → VR* → DD → GC` without inter-stage approval.

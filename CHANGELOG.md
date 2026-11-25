@@ -8,6 +8,34 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.12.0] - 2026-11-25
+
+### Added
+
+- Living docs and story records. Living docs describe current behavior (top-level `.docs/*.md` by
+  default, plus anything the `.docs/README.md` index or project instructions list). Story records are
+  changed by later stories only with a one-line superseded note; `!!` and reruns still update them in
+  place. Agents read the index when present and report document conflicts.
+- REQ names superseded documents and changed living docs; AP adds tasks to update those living docs, so
+  CR and VR review them. DD marks superseded documents and creates or updates the index only when a
+  living doc is added, superseded, or changes status. `!!` reopens affected living-doc tasks.
+- AP and AR identify one-way changes (data migrations, persisted formats older versions cannot read,
+  breaking public-contract removals). SS stops once for approval before editing one the user has not
+  explicitly requested or approved, even in explicit RPD; independent work continues.
+- A planned probe, gate, or rehearsal that is skipped, or removed or replaced by a plan update, cannot
+  pass without the user's approval of that change or of removing its claim from the REQ; plan or REQ
+  edits are not approval. The report names the unverified claim, affected users, potential loss, and
+  recovery path.
+
+### Changed
+
+- CR's stale-docs check includes living docs that contradict the change, and CR blocks deleted or
+  rewritten tests whose guarantees have no passing replacement unless the behavior change comes from
+  the user's request or approval.
+- Earlier stories' records are history: agents confirm their rules against code and living docs.
+- SS updates the plan with the reason before continuing after a departure, and reaches a consistent
+  point or records decisions, open items, and risks before stopping partway through a hard-to-undo step.
+
 ## [3.11.2] - 2026-11-12
 
 ### Fixed

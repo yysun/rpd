@@ -8,6 +8,15 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.12.2] - 2026-11-25
+
+### Fixed
+
+- AR can challenge a product or design decision the user stated or approved and pass a sound plan with
+  the suggestion open. The decision stands unless the user explicitly approves changing or removing it;
+  scope the agent added remains open to cutting. A genuinely unclear outcome goes through the existing
+  blocking-decision route instead of a separate question step.
+
 ## [3.12.1] - 2026-11-25
 
 ### Changed

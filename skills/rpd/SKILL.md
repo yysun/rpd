@@ -7,7 +7,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.12.1`
+**Version:** `3.12.2`
 **Repository:** https://github.com/yysun/rpd
 
 ## Principles
@@ -130,12 +130,16 @@ facts change. Reuse existing documentation; omit code inventories and change his
   dependencies, edge cases, compatibility/rollback, one-way changes, executable tasks, coverage,
   constraints, and non-goals. Challenge the REQ and plan rather than audit them: for each part, ask
   whether it needs to exist; whether project code, the platform or standard library, or an installed
-  dependency already covers it; and whether removing or changing code beats adding it. Cut what the
-  outcome does not justify, never safety, data protection, compatibility or verification the
-  requirements need. Resolve blocking decisions with viable options, tradeoffs, and a recommendation;
-  when one turns on what the user wants, block with one plain question. Pass once the plan is feasible,
-  sufficiently verifiable, and has no blocking flaws; do not manufacture alternatives or require routine
-  implementation details. Inspect tests, configuration, and evidence without executing
+  dependency already covers it; and whether removing or changing code beats adding it. Cut unnecessary
+  implementation work while preserving safety, data protection, compatibility, and required verification.
+  Review against the agreed outcome. A product or design decision the user stated or approved stays in
+  the REQ, plan, and E2E spec unless the user explicitly approves that specific change or removal; AR
+  may challenge it by stating what the alternative gains and what the user gives up, and may pass with
+  that suggestion open. Resolve blocking decisions, including a genuinely unclear outcome, with viable
+  options, tradeoffs, and a recommendation; when the choice is the user's, block with one focused
+  question. Pass a feasible, sufficiently verifiable plan
+  with no blocking flaws even when an optional suggestion is open. Do not manufacture alternatives or
+  require routine implementation details. Inspect tests, configuration, and evidence without executing
   verification commands. Required runtime feasibility becomes a bounded first SS probe with decision
   criteria, not a full suite or E2E. Failed probes or material architecture changes stop dependent work,
   update story artifacts, and return to AR.

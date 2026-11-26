@@ -1,8 +1,0 @@
-{
-  "name": "rpd-public-api-bug-fixture",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "test": "node --test"
-  }
-}

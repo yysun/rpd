@@ -1,7 +1,8 @@
 # Tier 2 - Review Dogfood
 
-**Cost:** five isolated fixture runs plus the current story's protected CR. Run only when an approved
-maintainer change affects routing or review behavior. These are not ordinary TT or ET scenarios.
+**Cost:** five isolated fixture runs (three for 2.1, one each for 2.3 and 2.4) plus the current
+story's protected CR. Scenario 2.4 has no checked-in fixture and must be built for each run. Run only
+when an approved maintainer change affects routing or review behavior. These are not ordinary TT or ET scenarios.
 
 No scenario uses a hash, digest, retained bundle, path manifest, mandatory evidence matrix, stable
 finding ID, or checklist ID. Record the actual risk line, reviewer/round line, findings, verdict, and

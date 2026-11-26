@@ -7,7 +7,7 @@ description: >
 
 # RPD - Requirements, Planning, and Development Workflow
 
-**Version:** `3.12.2`
+**Version:** `3.13.0`
 **Repository:** https://github.com/yysun/rpd
 
 ## Principles
@@ -57,12 +57,11 @@ For bugs, reproduce or localize the failure, fix its cause, and verify regressio
   current story from the user's selection, this session, then the most recently substantively changed
   REQ; checkbox-only edits do not change recency. Update existing documents in place.
 - Living docs describe current behavior and stay current: top-level `.docs/*.md` by default, plus
-  anything the index `.docs/README.md` (areas mapped to living docs) or project instructions list.
-  A story's REQ, AP, E2E spec, done note, and any project reports are story records: later stories
-  change them only with a one-line superseded note, while `!!` and reruns of the same story update them
-  in place. Read the index when present. Earlier stories' records are history: confirm their rules
-  against code and living docs before relying on them. Report conflicts between documents; stop only
-  when one blocks a decision.
+  anything the Docs Index or project instructions list. A story's REQ, AP, E2E spec, done note, and
+  any project reports are story records: later stories change them only with a one-line superseded
+  note, while `!!` and reruns of the same story update them in place. Earlier stories' records are
+  history: confirm their rules against code and living docs before relying on them. Report conflicts
+  between documents; stop only when one blocks a decision.
 - `*` repeats until pass or blocked; `?` runs only with a matching E2E spec. Stop stalled loops and
   report failures outside the current task's scope.
 - Discover verification commands from scripts, manifests, CI, and docs. Full unit/integration suites
@@ -70,6 +69,24 @@ For bugs, reproduce or localize the failure, fix its cause, and verify regressio
   and never substitute for the current story's TT/ET.
 - Commits include only intended story changes and preserve unrelated staged/unstaged work. They do
   not authorize automatic push or history rewriting.
+
+## Docs Index
+
+`.docs/README.md` maps project areas to their living docs. It records what is current, not how to work.
+
+- **Create:** the index is optional; users create it when they want one. Without it, living docs are
+  top-level `.docs/*.md`.
+- **Update:** when the index exists, DD updates it after a story adds, supersedes, or changes the
+  status of a living doc, and removes "Not yet covered" entries the new doc covers. DD never creates
+  it. Edits inside a living doc leave the index unchanged.
+- **Use:** when present, read it before relying on any `.docs/` document. Route by area to its living
+  doc; treat story records as history. REQ uses it to name changed and superseded living docs; CR uses
+  it for the stale-docs check. When no area matches, search story records, confirm against code, and
+  report the gap.
+- **Shape:** a header stating that code is the truth for behavior and dated records are history; one
+  row per area with what it covers (topics and governed paths), a link, and status (`current` or
+  `superseded → link`); optionally, "Not yet covered" areas with links to the records holding their
+  rules. Keep it to about one screen; leave out rule content, dates, owners, story lists, and procedure.
 
 ## File Comment Blocks
 
@@ -198,8 +215,8 @@ facts change. Reuse existing documentation; omit code inventories and change his
 - **DD** — After implementation and verification, write `.docs/done/{yyyy}/{mm}/{dd}/{name}.md`.
   Use a short PR-style Summary, Verification, and specific Notes. Include the complete final VR result
   verbatim, preserving structure and detail. Otherwise avoid duplicating story documents or changelog.
-  Mark documents the REQ lists as superseded with a one-line note. Create or update `.docs/README.md`
-  only when a living doc is added, superseded, or changes status.
+  Mark documents the REQ lists as superseded with a one-line note. When the Docs Index exists, maintain
+  it per Docs Index.
 
 - **GC** — Finalize delivery: inspect status, ensure relevant verification is current, and commit any
   remaining intended story changes with a conventional delivery message. Preserve earlier milestone

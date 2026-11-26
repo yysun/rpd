@@ -8,6 +8,22 @@ owner-directed compatibility exceptions for workflow-contract corrections.
 
 The version of record is the `**Version:**` line at the top of `skills/rpd/SKILL.md`.
 
+## [3.13.0] - 2026-11-26
+
+### Added
+
+- Docs Index section defining how the `.docs/README.md` index is created, updated, used, and shaped:
+  a header stating that code is the truth and dated records are history, one row per area (what it
+  covers, link, `current` or `superseded → link`), and optional "Not yet covered" areas pointing to the
+  story records that still hold their rules. Agents read it before relying on any `.docs/` document and
+  report areas it does not cover.
+
+### Changed
+
+- The index is optional and user-created. DD updates an existing index when a story adds, supersedes,
+  or changes the status of a living doc, but no longer creates one, so projects without an index see no
+  new files. Without an index, living docs remain top-level `.docs/*.md`.
+
 ## [3.12.2] - 2026-11-25
 
 ### Fixed
